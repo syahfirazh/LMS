@@ -225,10 +225,10 @@
                         <h2
                             class="text-2xl font-black text-slate-900 tracking-tight"
                         >
-                            Halo, Pak Aris! 👨‍🏫
+                            Halo, Pak {{ $dosen->nama }}! 👨‍🏫
                         </h2>
                         <p class="text-sm font-medium text-slate-500">
-                            Selasa, 4 Februari 2026
+                            {{ $hariIni }}
                         </p>
                     </div>
 
@@ -264,19 +264,19 @@
                                 <p
                                     class="text-sm font-black text-slate-900 group-hover:text-blue-600 transition-colors"
                                 >
-                                    Dr. Aris Martono
+                                    {{ $dosen->nama }}
                                 </p>
                                 <p
                                     class="text-[10px] font-bold text-slate-400 uppercase tracking-widest"
                                 >
-                                    NIDN: 0411058601
+                                    NIDN : {{ $dosen->nidn }}
                                 </p>
                             </div>
                             <div
                                 class="w-10 h-10 rounded-full bg-slate-200 overflow-hidden border-2 border-white shadow-md"
                             >
                                 <img
-                                    src="https://ui-avatars.com/api/?name=Aris+Martono&background=0D8ABC&color=fff"
+                                    src="https://ui-avatars.com/api/?name={{ urlencode($dosen->nama) }}&background=0D8ABC&color=fff"
                                     alt="Profile"
                                     class="w-full h-full object-cover"
                                 />
@@ -317,7 +317,7 @@
                                 Kelas Diampu
                             </p>
                             <h3 class="text-2xl font-black text-slate-900">
-                                4 Kelas
+                                {{ $totalMatkul }}
                             </h3>
                         </div>
                     </div>
@@ -349,7 +349,7 @@
                                 Total Mahasiswa
                             </p>
                             <h3 class="text-2xl font-black text-slate-900">
-                                128
+                                {{ $totalMahasiswa }}
                             </h3>
                         </div>
                     </div>
@@ -381,7 +381,7 @@
                                 Perlu Dinilai
                             </p>
                             <h3 class="text-2xl font-black text-slate-900">
-                                15 Tugas
+                                {{ $totalPenilaian }}
                             </h3>
                         </div>
                     </div>
@@ -402,112 +402,71 @@
                             >
                         </div>
 
-                        <div
-                            class="group bg-white p-6 rounded-[2rem] border border-slate-200 shadow-sm hover:border-blue-300 hover:shadow-md transition-all cursor-pointer flex items-center gap-6"
-                        >
-                            <div
-                                class="w-20 h-20 bg-blue-100 text-blue-600 rounded-3xl flex items-center justify-center shrink-0 font-black text-2xl group-hover:bg-blue-600 group-hover:text-white transition-all"
-                            >
-                                SD
-                            </div>
-                            <div class="flex-1">
-                                <div class="flex justify-between items-start">
-                                    <h4
-                                        class="text-lg font-black text-slate-900 group-hover:text-blue-700 transition-colors"
-                                    >
-                                        Struktur Data
-                                    </h4>
-                                    <span
-                                        class="px-3 py-1 bg-slate-100 rounded-lg text-[10px] font-bold uppercase tracking-widest text-slate-500"
-                                        >Kelas 3C</span
-                                    >
-                                </div>
-                                <p class="text-sm text-slate-500 mt-1 mb-3">
-                                    Selasa, 08:00 - 10:30 • Lab Komputer 2
-                                </p>
-                                <div class="flex gap-2">
-                                    <span
-                                        class="px-3 py-1 bg-emerald-50 text-emerald-600 text-[10px] font-bold rounded-lg border border-emerald-100"
-                                        >35 Mahasiswa</span
-                                    >
-                                    <span
-                                        class="px-3 py-1 bg-orange-50 text-orange-600 text-[10px] font-bold rounded-lg border border-orange-100"
-                                        >2 Tugas Aktif</span
-                                    >
-                                </div>
-                            </div>
-                            <div
-                                class="w-10 h-10 rounded-full border border-slate-200 flex items-center justify-center group-hover:bg-blue-50 transition-all"
-                            >
-                                <svg
-                                    class="w-4 h-4 text-slate-400 group-hover:text-blue-600"
-                                    fill="none"
-                                    stroke="currentColor"
-                                    viewBox="0 0 24 24"
-                                >
-                                    <path
-                                        stroke-linecap="round"
-                                        stroke-linejoin="round"
-                                        stroke-width="2"
-                                        d="M9 5l7 7-7 7"
-                                    ></path>
-                                </svg>
-                            </div>
-                        </div>
+                        @foreach ($kelasDiampu as $kelas)
+<div
+    class="group bg-white p-6 rounded-[2rem] border border-slate-200 shadow-sm hover:border-blue-300 hover:shadow-md transition-all cursor-pointer flex items-center gap-6"
+>
+    <div
+        class="w-20 h-20 bg-blue-100 text-blue-600 rounded-3xl flex items-center justify-center shrink-0 font-black text-2xl group-hover:bg-blue-600 group-hover:text-white transition-all"
+    >
+        {{ strtoupper(substr($kelas->mataKuliah->nama ?? 'MK', 0, 2)) }}
+    </div>
 
-                        <div
-                            class="group bg-white p-6 rounded-[2rem] border border-slate-200 shadow-sm hover:border-purple-300 hover:shadow-md transition-all cursor-pointer flex items-center gap-6"
-                        >
-                            <div
-                                class="w-20 h-20 bg-purple-100 text-purple-600 rounded-3xl flex items-center justify-center shrink-0 font-black text-2xl group-hover:bg-purple-600 group-hover:text-white transition-all"
-                            >
-                                PBO
-                            </div>
-                            <div class="flex-1">
-                                <div class="flex justify-between items-start">
-                                    <h4
-                                        class="text-lg font-black text-slate-900 group-hover:text-purple-700 transition-colors"
-                                    >
-                                        Pemrograman Berorientasi Objek
-                                    </h4>
-                                    <span
-                                        class="px-3 py-1 bg-slate-100 rounded-lg text-[10px] font-bold uppercase tracking-widest text-slate-500"
-                                        >Kelas 3A</span
-                                    >
-                                </div>
-                                <p class="text-sm text-slate-500 mt-1 mb-3">
-                                    Rabu, 13:00 - 15:30 • Lab Komputer 1
-                                </p>
-                                <div class="flex gap-2">
-                                    <span
-                                        class="px-3 py-1 bg-emerald-50 text-emerald-600 text-[10px] font-bold rounded-lg border border-emerald-100"
-                                        >40 Mahasiswa</span
-                                    >
-                                    <span
-                                        class="px-3 py-1 bg-slate-50 text-slate-400 text-[10px] font-bold rounded-lg border border-slate-100"
-                                        >Tidak ada tugas</span
-                                    >
-                                </div>
-                            </div>
-                            <div
-                                class="w-10 h-10 rounded-full border border-slate-200 flex items-center justify-center group-hover:bg-purple-50 transition-all"
-                            >
-                                <svg
-                                    class="w-4 h-4 text-slate-400 group-hover:text-purple-600"
-                                    fill="none"
-                                    stroke="currentColor"
-                                    viewBox="0 0 24 24"
-                                >
-                                    <path
-                                        stroke-linecap="round"
-                                        stroke-linejoin="round"
-                                        stroke-width="2"
-                                        d="M9 5l7 7-7 7"
-                                    ></path>
-                                </svg>
-                            </div>
-                        </div>
-                    </div>
+    <div class="flex-1">
+        <div class="flex justify-between items-start">
+            <h4
+                class="text-lg font-black text-slate-900 group-hover:text-blue-700 transition-colors"
+            >
+                {{ $kelas->mataKuliah->nama ?? '-' }}
+            </h4>
+
+            <span
+                class="px-3 py-1 bg-slate-100 rounded-lg text-[10px] font-bold uppercase tracking-widest text-slate-500"
+            >
+                {{ $kelas->kode_kelas }}
+            </span>
+        </div>
+
+        <p class="text-sm text-slate-500 mt-1 mb-3">
+            {{ $kelas->hari }},
+            {{ $kelas->jam_mulai }} - {{ $kelas->jam_selesai }}
+            • {{ $kelas->ruangan }}
+        </p>
+
+        <div class="flex gap-2">
+            <span
+                class="px-3 py-1 bg-emerald-50 text-emerald-600 text-[10px] font-bold rounded-lg border border-emerald-100"
+            >
+                {{ $kelas->mahasiswa->count() }} Mahasiswa
+            </span>
+
+            <span
+                class="px-3 py-1 bg-orange-50 text-orange-600 text-[10px] font-bold rounded-lg border border-orange-100"
+            >
+                0 Tugas Aktif
+            </span>
+        </div>
+    </div>
+
+    <div
+        class="w-10 h-10 rounded-full border border-slate-200 flex items-center justify-center group-hover:bg-blue-50 transition-all"
+    >
+        <svg
+            class="w-4 h-4 text-slate-400 group-hover:text-blue-600"
+            fill="none"
+            stroke="currentColor"
+            viewBox="0 0 24 24"
+        >
+            <path
+                stroke-linecap="round"
+                stroke-linejoin="round"
+                stroke-width="2"
+                d="M9 5l7 7-7 7"
+            ></path>
+        </svg>
+    </div>
+</div>
+@endforeach
 
                     <div>
                         <h3
@@ -518,57 +477,47 @@
                         <div
                             class="bg-white p-6 rounded-[2.5rem] border border-slate-200 shadow-sm space-y-6"
                         >
-                            <div class="flex gap-4 relative">
-                                <div class="flex flex-col items-center">
-                                    <div
-                                        class="w-3 h-3 bg-blue-500 rounded-full ring-4 ring-blue-100"
-                                    ></div>
-                                    <div
-                                        class="w-0.5 h-full bg-slate-100 my-1"
-                                    ></div>
-                                </div>
-                                <div class="pb-6">
-                                    <span
-                                        class="text-xs font-bold text-blue-600"
-                                        >08:00 - 10:30</span
-                                    >
-                                    <h4
-                                        class="font-bold text-slate-900 text-sm mt-1"
-                                    >
-                                        Struktur Data (3C)
-                                    </h4>
-                                    <p class="text-xs text-slate-500">
-                                        Lab Komputer 2
-                                    </p>
-                                    <span
-                                        class="inline-block mt-2 px-2 py-1 bg-emerald-100 text-emerald-700 text-[9px] font-bold rounded uppercase"
-                                        >Sedang Berlangsung</span
-                                    >
-                                </div>
-                            </div>
+                            @foreach ($jadwalHariIni as $jadwal)
+<div class="flex gap-4 relative">
+    <div class="flex flex-col items-center">
+        <div class="w-3 h-3 
+            {{ $jadwal['status'] === 'berlangsung' ? 'bg-blue-500 ring-4 ring-blue-100' : 'bg-slate-300' }}
+            rounded-full">
+        </div>
 
-                            <div class="flex gap-4 relative">
-                                <div class="flex flex-col items-center">
-                                    <div
-                                        class="w-3 h-3 bg-slate-300 rounded-full"
-                                    ></div>
-                                </div>
-                                <div>
-                                    <span
-                                        class="text-xs font-bold text-slate-400"
-                                        >13:00 - 15:00</span
-                                    >
-                                    <h4
-                                        class="font-bold text-slate-500 text-sm mt-1"
-                                    >
-                                        Bimbingan Skripsi
-                                    </h4>
-                                    <p class="text-xs text-slate-400">
-                                        Ruang Dosen
-                                    </p>
-                                </div>
-                            </div>
-                        </div>
+        @if (!$loop->last)
+        <div class="w-0.5 h-full bg-slate-100 my-1"></div>
+        @endif
+    </div>
+
+    <div class="pb-6">
+        <span class="text-xs font-bold 
+            {{ $jadwal['status'] === 'berlangsung' ? 'text-blue-600' : 'text-slate-400' }}">
+            {{ $jadwal['jam_mulai'] }} - {{ $jadwal['jam_selesai'] }}
+        </span>
+
+        <h4 class="font-bold text-sm mt-1
+            {{ $jadwal['status'] === 'berlangsung' ? 'text-slate-900' : 'text-slate-500' }}">
+            {{ $jadwal['mata_kuliah'] }}
+            @if($jadwal['kelas'])
+                ({{ $jadwal['kelas'] }})
+            @endif
+        </h4>
+
+        <p class="text-xs text-slate-500">
+            {{ $jadwal['ruangan'] }}
+        </p>
+
+        @if ($jadwal['status'] === 'berlangsung')
+            <span
+                class="inline-block mt-2 px-2 py-1 bg-emerald-100 text-emerald-700 text-[9px] font-bold rounded uppercase">
+                Sedang Berlangsung
+            </span>
+        @endif
+    </div>
+</div>
+@endforeach
+
 
                         <div
                             class="mt-6 bg-orange-50 p-6 rounded-[2rem] border border-orange-100"

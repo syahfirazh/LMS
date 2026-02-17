@@ -158,12 +158,14 @@
                                 >Kata Sandi</label
                             >
                             <input
-                                type="password"
-                                id="input-pass"
-                                readonly
-                                class="w-full bg-transparent text-lg font-bold text-blue-900 outline-none"
-                                placeholder="---"
-                            />
+                            type="password"
+                            id="input-pass"
+                            readonly
+                            autocomplete="off"
+                            inputmode="none"
+                            class="w-full bg-transparent text-lg font-bold text-blue-900 outline-none"
+                        />
+
                         </div>
 
                         <div class="pt-4 space-y-3">
@@ -205,7 +207,7 @@
             const rec = new SpeechRec();
             rec.lang = "id-ID";
 
-            const dataMahasiswa = { 202601: "sandi123", 202602: "ummi2026" };
+            // const dataMahasiswa = { 202601: "sandi123", 202602: "ummi2026" };
 
             let waveInterval;
             function setWave(active) {
@@ -239,21 +241,28 @@
             }
 
             function dengar(onResult) {
-                statusDesc.innerText = "MENDENGARKAN...";
-                setWave(true);
-                try {
-                    rec.start();
-                } catch (e) {}
-                rec.onresult = (e) => {
-                    setWave(false);
-                    onResult(e.results[0][0].transcript);
-                };
-                rec.onerror = () => {
-                    setWave(false);
-                    rec.stop();
-                    setTimeout(() => dengar(onResult), 300);
-                };
-            }
+    statusDesc.innerText = "MENDENGARKAN...";
+    setWave(true);
+
+    try {
+        rec.abort(); // ⬅️ HENTIKAN SESI SEBELUMNYA (INI KUNCINYA)
+    } catch (e) {}
+
+    rec.start();
+
+    rec.onresult = (e) => {
+        setWave(false);
+        rec.stop();
+        onResult(e.results[0][0].transcript);
+    };
+
+    rec.onerror = () => {
+        setWave(false);
+        rec.stop();
+        setTimeout(() => dengar(onResult), 500);
+    };
+}
+
 
             overlay.addEventListener("click", () => {
                 overlay.classList.add("opacity-0");
@@ -269,7 +278,7 @@
 
                 bicara("Selamat datang. Sebutkan NIM anda.", () => {
                     dengar((hasil) => {
-                        const nimFix = hasil.replace(/\s/g, "");
+                        const nimFix = hasil.replace(/[^0-9]/g, "");
                         inputNim.value = nimFix;
                         bicara(
                             `NIM anda adalah ${nimFix.split("").join(" ")}. Apakah sudah benar?`,
@@ -291,73 +300,133 @@
                 });
             }
 
-            function flowPassword() {
-                const fNim = document.getElementById("field-nim");
-                const fPass = document.getElementById("field-pass");
-                fNim.classList.remove(
-                    "border-blue-600",
-                    "bg-white",
-                    "shadow-md",
-                );
-                fPass.classList.remove("opacity-20");
-                fPass.classList.add("border-blue-600", "bg-white", "shadow-md");
+             function kataKeAngka(teks) {
+    if (!teks) return "";
 
-                bicara("Sebutkan kata sandi anda.", () => {
-                    dengar((hasil) => {
-                        const passFix = hasil.replace(/\s/g, "");
-                        inputPass.value = passFix;
-                        bicara(
-                            "Kata sandi sudah dicatat. Apakah sudah benar?",
-                            () => {
-                                dengar((konf) => {
-                                    if (
-                                        konf.toLowerCase().includes("benar") ||
-                                        konf.toLowerCase().includes("ya")
-                                    ) {
-                                        validasiAkhir();
-                                    } else {
-                                        inputPass.value = "";
-                                        bicara(
-                                            "Mari ulangi kata sandi.",
-                                            flowPassword,
-                                        );
-                                    }
-                                });
-                            },
-                        );
-                    });
-                });
+    const map = {
+        "nol": "0",
+        "kosong": "0",
+        "satu": "1",
+        "dua": "2",
+        "tiga": "3",
+        "empat": "4",
+        "lima": "5",
+        "enam": "6",
+        "tujuh": "7",
+        "delapan": "8",
+        "sembilan": "9"
+    };
+
+    // 1️⃣ Normalisasi
+    let hasil = teks.toLowerCase();
+
+    // 2️⃣ Ambil angka langsung (kalau user bilang "1 2 3" atau "123")
+    const angkaLangsung = hasil.match(/\d+/g);
+    if (angkaLangsung) {
+        return angkaLangsung.join("");
+    }
+
+    // 3️⃣ Konversi kata → angka
+    return hasil
+        .replace(/[^a-z\s]/g, " ")
+        .split(/\s+/)
+        .map(k => map[k] || "")
+        .join("");
+}
+
+           function flowPassword() {
+    const fNim = document.getElementById("field-nim");
+    const fPass = document.getElementById("field-pass");
+
+    fNim.classList.remove("border-blue-600", "bg-white", "shadow-md");
+    fPass.classList.remove("opacity-20");
+    fPass.classList.add("border-blue-600", "bg-white", "shadow-md");
+
+    bicara("Sebutkan kata sandi anda.", () => {
+        dengar((hasil) => {
+
+            // 🔑 KONVERSI KATA → ANGKA
+            const passFix = kataKeAngka(hasil);
+
+            // ❌ JIKA TIDAK TERBACA
+            if (!passFix || passFix.length === 0) {
+                inputPass.value = "";
+                bicara(
+                    "Kata sandi tidak terbaca. Silakan sebutkan ulang satu per satu.",
+                    flowPassword
+                );
+                return;
             }
+
+            // ✅ SIMPAN PASSWORD
+            inputPass.value = passFix;
+
+            const passSpoken = passFix.split("").join(" ");
+
+            bicara(
+                `Kata sandi anda adalah ${passSpoken}. Apakah sudah benar?`,
+                () => {
+                    dengar((konf) => {
+                        const jawab = konf.toLowerCase();
+
+                        if (jawab.includes("benar") || jawab.includes("ya")) {
+                            validasiAkhir();
+                        } else {
+                            inputPass.value = "";
+                            bicara("Mari ulangi kata sandi.", flowPassword);
+                        }
+                    });
+                }
+            );
+        });
+    });
+}
+
 
             function validasiAkhir() {
-                const nim = inputNim.value;
-                const pass = inputPass.value;
+    const nim = inputNim.value;
+    const pass = inputPass.value;
 
-                bicara("Sedang memeriksa data anda.", () => {
-                    if (!dataMahasiswa[nim]) {
-                        bicara(
-                            "Maaf, NIM tidak terdaftar. Silakan ulangi dari awal.",
-                            () => {
-                                inputNim.value = "";
-                                inputPass.value = "";
-                                startFlow();
-                            },
-                        );
-                    } else if (dataMahasiswa[nim] !== pass) {
-                        bicara(
-                            "Maaf, kata sandi salah. Silakan ulangi kata sandi anda.",
-                            () => {
-                                inputPass.value = "";
-                                flowPassword();
-                            },
-                        );
-                    } else {
-                        bicara("Akses diterima. Membuka Dashboard.", () => {
-                            window.location.href = "{{ route('dashboard') }}";
-                        });
-                    }
-                });
+    bicara("Sedang memeriksa data anda.", () => {
+        fetch("{{ route('login.mahasiswa.post') }}", {
+            method: "POST",
+            headers: {
+                "Content-Type": "application/json",
+                "X-CSRF-TOKEN": "{{ csrf_token() }}"
+            },
+            body: JSON.stringify({
+                nim: nim,
+                password: pass
+            })
+        })
+        .then(async res => {
+    let data = {};
+    try {
+        data = await res.json();
+    } catch (e) {}
+
+    if (res.ok && data.success) {
+        bicara("Akses diterima. Membuka dashboard mahasiswa.", () => {
+            window.location.href = data.redirect;
+        });
+    } else {
+        bicara(
+            data.message || "Login gagal. Silakan ulangi kata sandi.",
+            () => {
+                inputPass.value = "";
+                flowPassword();
             }
+        );
+    }
+})
+
+
+        .catch(() => {
+            bicara("Terjadi kesalahan sistem. Silakan coba kembali.");
+        });
+    });
+}
+
         </script>
     </body>
 </html>

@@ -51,16 +51,16 @@
                         <h1
                             class="text-xl font-extrabold text-slate-900 tracking-tight leading-none truncate max-w-[250px] md:max-w-none"
                         >
-                            Struktur Data
+                            {{ $kelas->mataKuliah->nama }}
                         </h1>
                         <div class="flex items-center gap-2 mt-1">
                             <span
                                 class="text-[10px] font-bold text-blue-600 uppercase tracking-widest bg-blue-50 px-2 py-0.5 rounded"
-                                >Kelas 3C</span
+                                >Kelas {{ $kelas->kode_kelas ?? '' }}</span
                             >
                             <span
                                 class="text-[10px] font-bold text-slate-400 uppercase tracking-widest truncate"
-                                >Dosen: Asril Adi Sunarto</span
+                                >Dosen: {{ auth()->guard('dosen')->user()->nama }}</span
                             >
                         </div>
                     </div>
@@ -72,19 +72,19 @@
                     class="w-full md:w-auto flex p-1 bg-slate-100 rounded-xl overflow-x-auto scrollbar-hide snap-x gap-1"
                 >
                     <a
-                        href="{{ route('dosen.course.manage') }}"
+                        href="{{ route('dosen.course.manage', $kelas->id) }}"
                         class="snap-start shrink-0 px-5 py-2 rounded-lg text-slate-500 hover:text-slate-900 font-bold text-[10px] uppercase tracking-widest transition-all whitespace-nowrap hover:bg-white/50 flex items-center justify-center"
                     >
                         Materi & Modul
                     </a>
                     <a
-                        href="{{ route('dosen.course.attendance') }}"
+                        href="{{ route('dosen.attendance.index', $kelas->id) }}"
                         class="snap-start shrink-0 px-5 py-2 rounded-lg text-slate-500 hover:text-slate-900 font-bold text-[10px] uppercase tracking-widest transition-all whitespace-nowrap hover:bg-white/50 flex items-center justify-center"
                     >
                         Absensi
                     </a>
                     <a
-                        href="{{ route('dosen.course.assignments') }}"
+                        href="{{ route('dosen.course.assignments', $kelas->id) }}"
                         class="snap-start shrink-0 px-5 py-2 rounded-lg text-slate-500 hover:text-slate-900 font-bold text-[10px] uppercase tracking-widest transition-all whitespace-nowrap hover:bg-white/50 flex items-center justify-center"
                     >
                         Penugasan
@@ -95,7 +95,7 @@
                         Peserta
                     </button>
                     <a
-                        href="{{ route('dosen.course.grades') }}"
+                        href="{{ route('dosen.grades.recap', $kelas->id) }}"
                         class="snap-start shrink-0 px-5 py-2 rounded-lg text-slate-500 hover:text-slate-900 font-bold text-[10px] uppercase tracking-widest transition-all whitespace-nowrap hover:bg-white/50 flex items-center justify-center"
                     >
                         Rekap Nilai
@@ -144,16 +144,18 @@
                             >
                                 <span
                                     class="block text-4xl font-black tracking-widest font-mono"
-                                    >X7Y-99</span
+                                    >{{ $kelas->kode_akses }}</span
                                 >
                             </div>
                         </div>
                         <div class="relative z-10 mt-4 flex gap-3">
                             <button
-                                class="flex-1 py-3 bg-white text-blue-600 rounded-xl font-bold text-xs uppercase tracking-widest hover:bg-blue-50 transition-all shadow-lg"
-                            >
-                                Salin Kode
-                            </button>
+    onclick="copyKodeAkses()"
+    class="flex-1 py-3 bg-white text-blue-600 rounded-xl font-bold text-xs uppercase tracking-widest hover:bg-blue-50 transition-all shadow-lg"
+>
+    Salin Kode
+</button>
+
                         </div>
                         <div
                             class="absolute -right-10 -bottom-10 w-40 h-40 bg-white/10 rounded-full blur-3xl"
@@ -169,28 +171,21 @@
                             Tambah Manual
                         </h3>
                         <div class="flex gap-2">
-                            <input
-                                type="text"
-                                placeholder="NIM..."
-                                class="flex-1 bg-slate-50 border border-slate-200 rounded-xl px-4 py-3 text-sm font-bold focus:ring-2 focus:ring-blue-500 outline-none w-full"
-                            />
-                            <button
-                                class="bg-slate-900 text-white p-3 rounded-xl hover:bg-slate-700 transition-all"
-                            >
-                                <svg
-                                    class="w-5 h-5"
-                                    fill="none"
-                                    stroke="currentColor"
-                                    viewBox="0 0 24 24"
-                                >
-                                    <path
-                                        stroke-linecap="round"
-                                        stroke-linejoin="round"
-                                        stroke-width="2"
-                                        d="M12 4v16m8-8H4"
-                                    ></path>
-                                </svg>
-                            </button>
+                            <form method="POST" action="{{ route('dosen.course.addStudent', $kelas->id) }}" class="flex gap-2">
+    @csrf
+    <input
+        type="text"
+        name="nim"
+        placeholder="NIM..."
+        class="flex-1 bg-slate-50 border border-slate-200 rounded-xl px-4 py-3 text-sm font-bold focus:ring-2 focus:ring-blue-500 outline-none w-full"
+    />
+    <button
+        class="bg-slate-900 text-white p-3 rounded-xl hover:bg-slate-700 transition-all"
+    >
+        +
+    </button>
+</form>
+
                         </div>
                     </div>
                 </div>
@@ -203,7 +198,7 @@
                             class="p-6 border-b border-slate-100 flex justify-between items-center bg-slate-50/50"
                         >
                             <h3 class="font-bold text-slate-700">
-                                Daftar Mahasiswa (35)
+                                Daftar Mahasiswa ({{ $kelas->mahasiswa->count() }})
                             </h3>
                             <div class="flex gap-2">
                                 <button
@@ -245,141 +240,76 @@
 
                         <div class="overflow-y-auto max-h-[600px]">
                             <table class="w-full text-left text-sm">
-                                <thead
-                                    class="bg-slate-50 text-slate-500 uppercase tracking-widest text-[10px] sticky top-0 z-10"
-                                >
-                                    <tr>
-                                        <th class="px-6 py-4 font-black">
-                                            Mahasiswa
-                                        </th>
-                                        <th class="px-6 py-4 font-black">
-                                            NIM
-                                        </th>
-                                        <th
-                                            class="px-6 py-4 font-black text-center"
-                                        >
-                                            Status
-                                        </th>
-                                        <th
-                                            class="px-6 py-4 font-black text-right"
-                                        >
-                                            Aksi
-                                        </th>
-                                    </tr>
-                                </thead>
-                                <tbody class="divide-y divide-slate-100">
-                                    <tr
-                                        class="hover:bg-blue-50/50 transition-colors group"
-                                    >
-                                        <td class="px-6 py-4">
-                                            <div
-                                                class="flex items-center gap-3"
-                                            >
-                                                <div
-                                                    class="w-8 h-8 rounded-full bg-slate-200 overflow-hidden shrink-0"
-                                                >
-                                                    <img
-                                                        src="https://ui-avatars.com/api/?name=Ridwan+Firdaus&background=0D8ABC&color=fff"
-                                                        class="w-full h-full object-cover"
-                                                    />
-                                                </div>
-                                                <span
-                                                    class="font-bold text-slate-900"
-                                                    >Muhammad Ridwan
-                                                    Firdaus</span
-                                                >
-                                            </div>
-                                        </td>
-                                        <td
-                                            class="px-6 py-4 font-mono text-slate-500 font-bold"
-                                        >
-                                            2430511083
-                                        </td>
-                                        <td class="px-6 py-4 text-center">
-                                            <span
-                                                class="px-2 py-1 bg-emerald-50 text-emerald-600 rounded text-[10px] font-bold uppercase tracking-wide"
-                                                >Aktif</span
-                                            >
-                                        </td>
-                                        <td class="px-6 py-4 text-right">
-                                            <button
-                                                class="text-slate-400 hover:text-red-600 transition-colors font-bold text-xs p-2 hover:bg-red-50 rounded-lg"
-                                            >
-                                                <svg
-                                                    class="w-4 h-4"
-                                                    fill="none"
-                                                    stroke="currentColor"
-                                                    viewBox="0 0 24 24"
-                                                >
-                                                    <path
-                                                        stroke-linecap="round"
-                                                        stroke-linejoin="round"
-                                                        stroke-width="2"
-                                                        d="M19 7l-.867 12.142A2 2 0 0116.138 21H7.862a2 2 0 01-1.995-1.858L5 7m5 4v6m4-6v6m1-10V4a1 1 0 00-1-1h-4a1 1 0 00-1 1v3M4 7h16"
-                                                    ></path>
-                                                </svg>
-                                            </button>
-                                        </td>
-                                    </tr>
+    <thead class="bg-slate-50 text-slate-500 uppercase tracking-widest text-[10px] sticky top-0 z-10">
+        <tr>
+            <th class="px-6 py-4 font-black">Mahasiswa</th>
+            <th class="px-6 py-4 font-black">NIM</th>
+            <th class="px-6 py-4 font-black text-center">Status</th>
+            <th class="px-6 py-4 font-black text-right">Aksi</th>
+        </tr>
+    </thead>
 
-                                    <tr
-                                        class="hover:bg-blue-50/50 transition-colors group"
-                                    >
-                                        <td class="px-6 py-4">
-                                            <div
-                                                class="flex items-center gap-3"
-                                            >
-                                                <div
-                                                    class="w-8 h-8 rounded-full bg-slate-200 overflow-hidden shrink-0"
-                                                >
-                                                    <img
-                                                        src="https://ui-avatars.com/api/?name=Siti+Aisyah&background=F472B6&color=fff"
-                                                        class="w-full h-full object-cover"
-                                                    />
-                                                </div>
-                                                <span
-                                                    class="font-bold text-slate-900"
-                                                    >Siti Aisyah</span
-                                                >
-                                            </div>
-                                        </td>
-                                        <td
-                                            class="px-6 py-4 font-mono text-slate-500 font-bold"
-                                        >
-                                            2430511084
-                                        </td>
-                                        <td class="px-6 py-4 text-center">
-                                            <span
-                                                class="px-2 py-1 bg-emerald-50 text-emerald-600 rounded text-[10px] font-bold uppercase tracking-wide"
-                                                >Aktif</span
-                                            >
-                                        </td>
-                                        <td class="px-6 py-4 text-right">
-                                            <button
-                                                class="text-slate-400 hover:text-red-600 transition-colors font-bold text-xs p-2 hover:bg-red-50 rounded-lg"
-                                            >
-                                                <svg
-                                                    class="w-4 h-4"
-                                                    fill="none"
-                                                    stroke="currentColor"
-                                                    viewBox="0 0 24 24"
-                                                >
-                                                    <path
-                                                        stroke-linecap="round"
-                                                        stroke-linejoin="round"
-                                                        stroke-width="2"
-                                                        d="M19 7l-.867 12.142A2 2 0 0116.138 21H7.862a2 2 0 01-1.995-1.858L5 7m5 4v6m4-6v6m1-10V4a1 1 0 00-1-1h-4a1 1 0 00-1 1v3M4 7h16"
-                                                    ></path>
-                                                </svg>
-                                            </button>
-                                        </td>
-                                    </tr>
-                                </tbody>
-                            </table>
+    <tbody class="divide-y divide-slate-100">
+        @forelse($kelas->mahasiswa as $mhs)
+        <tr class="hover:bg-blue-50/50 transition-colors group">
+            <td class="px-6 py-4">
+                <div class="flex items-center gap-3">
+                    <div class="w-8 h-8 rounded-full bg-slate-200 overflow-hidden shrink-0">
+                        <img
+                            src="https://ui-avatars.com/api/?name={{ urlencode($mhs->nama) }}&background=0D8ABC&color=fff"
+                            class="w-full h-full object-cover"
+                        />
+                    </div>
+                    <span class="font-bold text-slate-900">
+                        {{ $mhs->nama }}
+                    </span>
+                </div>
+            </td>
+            <td class="px-6 py-4 font-mono text-slate-500 font-bold">
+                {{ $mhs->nim }}
+            </td>
+            <td class="px-6 py-4 text-center">
+                <span class="px-2 py-1 bg-emerald-50 text-emerald-600 rounded text-[10px] font-bold uppercase tracking-wide">
+                    {{ $mhs->status ?? 'Aktif' }}
+                </span>
+            </td>
+            <td class="px-6 py-4 text-right">
+                <form method="POST" action="{{ route('dosen.course.removeStudent', [$kelas->id, $mhs->id]) }}">
+                    @csrf
+                    @method('DELETE')
+                    <button class="text-slate-400 hover:text-red-600 transition-colors font-bold text-xs p-2 hover:bg-red-50 rounded-lg">
+                        Hapus
+                    </button>
+                </form>
+            </td>
+        </tr>
+        @empty
+        <tr>
+            <td colspan="4" class="text-center py-6 text-slate-400">
+                Belum ada mahasiswa
+            </td>
+        </tr>
+        @endforelse
+    </tbody>
+</table>
                         </div>
                     </div>
                 </div>
             </div>
         </main>
+        <script>
+function copyKodeAkses() {
+    const kode = "{{ $kelas->kode_akses }}";
+    navigator.clipboard.writeText(kode);
+
+    const btn = event.target;
+    btn.innerText = "Tersalin!";
+    
+    setTimeout(() => {
+        btn.innerText = "Salin Kode";
+    }, 2000);
+}
+</script>
+
     </body>
 </html>

@@ -23,7 +23,7 @@
         >
             <div class="max-w-6xl mx-auto flex items-center gap-4">
                 <a
-                    href="{{ route('dosen.course.grades') }}"
+                    href="{{ route('dosen.course.grades', $kelas->id) }}"
                     class="w-10 h-10 rounded-full bg-slate-50 hover:bg-slate-100 text-slate-400 hover:text-slate-600 flex items-center justify-center transition-all border border-slate-200 shrink-0"
                 >
                     <svg

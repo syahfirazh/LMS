@@ -40,7 +40,37 @@ return [
             'driver' => 'session',
             'provider' => 'users',
         ],
+
+        'mahasiswa' => [
+            'driver' => 'session',
+            'provider' => 'mahasiswas',
+        ],
+
+        // TAMBAHKAN INI UNTUK DOSEN
+        'dosen' => [
+            'driver' => 'session',
+            'provider' => 'dosens',
+        ],
     ],
+
+    'providers' => [
+        'users' => [
+            'driver' => 'eloquent',
+            'model' => App\Models\User::class,
+        ],
+
+        'mahasiswas' => [
+            'driver' => 'eloquent',
+            'model' => App\Models\Mahasiswa::class,
+        ],
+
+        // TAMBAHKAN INI UNTUK DOSEN
+        'dosens' => [
+            'driver' => 'eloquent',
+            'model' => App\Models\Dosen::class,
+        ],
+    ],
+
 
     /*
     |--------------------------------------------------------------------------
@@ -59,17 +89,17 @@ return [
     |
     */
 
-    'providers' => [
-        'users' => [
-            'driver' => 'eloquent',
-            'model' => env('AUTH_MODEL', App\Models\User::class),
-        ],
+    // 'providers' => [
+    //     'users' => [
+    //         'driver' => 'eloquent',
+    //         'model' => env('AUTH_MODEL', App\Models\User::class),
+    //     ],
 
-        // 'users' => [
-        //     'driver' => 'database',
-        //     'table' => 'users',
-        // ],
-    ],
+    //     // 'users' => [
+    //     //     'driver' => 'database',
+    //     //     'table' => 'users',
+    //     // ],
+    // ],
 
     /*
     |--------------------------------------------------------------------------

@@ -246,137 +246,126 @@
                     </button>   
             </header>
 
-            <div class="p-6 lg:p-10 max-w-7xl mx-auto w-full space-y-6">
-                <div class="flex gap-6">
-                    <div class="w-24 pt-4 text-right shrink-0">
-                        <h3
-                            class="font-black text-slate-400 uppercase tracking-widest text-sm"
-                        >
-                            Senin
-                        </h3>
-                    </div>
-                    <div
-                        class="flex-1 bg-white p-6 rounded-[2rem] border border-slate-100 border-l-4 border-l-slate-300"
-                    >
-                        <p class="text-slate-400 font-bold text-sm italic">
-                            Tidak ada jadwal mengajar.
+            @foreach ($hariList as $hari)
+<div class="flex gap-6 mb-2">
+
+    <div class="w-24 pt-4 text-right shrink-0">
+        <h3
+            class="font-black uppercase tracking-widest text-sm
+            {{ now()->translatedFormat('l') === $hari ? 'text-blue-600' : 'text-slate-400' }}">
+            {{ $hari }}
+        </h3>
+
+        @if (now()->translatedFormat('l') === $hari)
+            <span
+                class="text-[10px] font-bold bg-blue-100 text-blue-600 px-2 py-0.5 rounded inline-block mt-1">
+                Hari Ini
+            </span>
+        @endif
+    </div>
+
+    {{-- AREA KONTEN (TIDAK BERUBAH STRUKTUR) --}}
+    <div class="flex-1 space-y-4">
+
+        @forelse ($jadwal[$hari] ?? [] as $kelas)
+        <div
+            class="bg-white p-6 rounded-[2rem] border border-slate-200 border-l-8 border-l-blue-500 shadow-sm hover:shadow-md transition-all group"
+        >
+            <div class="flex justify-between items-start">
+                <div>
+                    <span
+                        class="text-xs font-bold text-blue-600 mb-1 block">
+                        {{ $kelas->jam_mulai }} - {{ $kelas->jam_selesai }} WIB
+                    </span>
+
+                    <h4
+                        class="text-lg font-black text-slate-900 group-hover:text-blue-600 transition-colors">
+                        {{ $kelas->mataKuliah->nama ?? '-' }}
+                        ({{ $kelas->kode_kelas }})
+                    </h4>
+
+                    <p
+                        class="text-sm text-slate-500 flex items-center gap-2 mt-1">
+                        {{ $kelas->ruangan }}
+                    </p>
+                </div>
+            </div>
+        </div>
+        @empty
+
+        {{-- BLOK KOSONG (SAMA PERSIS SEPERTI UI AWAL) --}}
+        <div
+            class="bg-white p-6 rounded-[2rem] border border-slate-100 border-l-4 border-l-slate-300"
+        >
+            <p class="text-slate-400 font-bold text-sm italic">
+                Tidak ada jadwal mengajar.
+            </p>
+        </div>
+
+        @endforelse
+    </div>
+</div>
+@endforeach
+
+                {{-- @foreach ($hariList as $hari)
+<div class="flex gap-6">
+    <div class="w-24 pt-4 text-right shrink-0">
+        <h3
+            class="font-black uppercase tracking-widest text-sm
+            {{ now()->translatedFormat('l') === $hari ? 'text-blue-600' : 'text-slate-400' }}">
+            {{ $hari }}
+        </h3>
+
+        @if (now()->translatedFormat('l') === $hari)
+            <span
+                class="text-[10px] font-bold bg-blue-100 text-blue-600 px-2 py-0.5 rounded inline-block mt-1">
+                Hari Ini
+            </span>
+        @endif
+    </div>
+
+    <div class="flex-1 space-y-4">
+        @forelse ($jadwal[$hari] ?? [] as $kelas)
+            <div
+                class="bg-white p-6 rounded-[2rem] border border-slate-200 border-l-8 border-l-blue-500 shadow-sm hover:shadow-md transition-all group"
+            >
+                <div class="flex justify-between items-start">
+                    <div>
+                        <span
+                            class="text-xs font-bold text-blue-600 mb-1 block">
+                            {{ $kelas->jam_mulai }} - {{ $kelas->jam_selesai }} WIB
+                        </span>
+
+                        <h4
+                            class="text-lg font-black text-slate-900 group-hover:text-blue-600 transition-colors">
+                            {{ $kelas->mataKuliah->nama_mk }} ({{ $kelas->kode_kelas }})
+                        </h4>
+
+                        <p
+                            class="text-sm text-slate-500 flex items-center gap-2 mt-1">
+                            <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2"
+                                    d="M17.657 16.657L13.414 20.9a1.998 1.998 0 01-2.827 0l-4.244-4.243a8 8 0 1111.314 0z" />
+                                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2"
+                                    d="M15 11a3 3 0 11-6 0 3 3 0 016 0z" />
+                            </svg>
+                            {{ $kelas->ruangan }}
                         </p>
                     </div>
                 </div>
+            </div>
+        @empty
+            <div
+                class="bg-white p-6 rounded-[2rem] border border-slate-100 border-l-4 border-l-slate-300">
+                <p class="text-slate-400 font-bold text-sm italic">
+                    Tidak ada jadwal mengajar.
+                </p>
+            </div>
+        @endforelse
+    </div>
+</div>
+@endforeach --}}
 
-                <div class="flex gap-6">
-                    <div class="w-24 pt-4 text-right shrink-0">
-                        <h3
-                            class="font-black text-blue-600 uppercase tracking-widest text-sm"
-                        >
-                            Selasa
-                        </h3>
-                        <span
-                            class="text-[10px] font-bold bg-blue-100 text-blue-600 px-2 py-0.5 rounded inline-block mt-1"
-                            >Hari Ini</span
-                        >
-                    </div>
-                    <div class="flex-1 space-y-4">
-                        <div
-                            class="bg-white p-6 rounded-[2rem] border border-slate-200 border-l-8 border-l-blue-500 shadow-sm hover:shadow-md transition-all group"
-                        >
-                            <div class="flex justify-between items-start">
-                                <div>
-                                    <span
-                                        class="text-xs font-bold text-blue-600 mb-1 block"
-                                        >08:00 - 10:30 WIB</span
-                                    >
-                                    <h4
-                                        class="text-lg font-black text-slate-900 group-hover:text-blue-600 transition-colors"
-                                    >
-                                        Struktur Data (3C)
-                                    </h4>
-                                    <p
-                                        class="text-sm text-slate-500 flex items-center gap-2 mt-1"
-                                    >
-                                        <svg
-                                            class="w-4 h-4"
-                                            fill="none"
-                                            stroke="currentColor"
-                                            viewBox="0 0 24 24"
-                                        >
-                                            <path
-                                                stroke-linecap="round"
-                                                stroke-linejoin="round"
-                                                stroke-width="2"
-                                                d="M17.657 16.657L13.414 20.9a1.998 1.998 0 01-2.827 0l-4.244-4.243a8 8 0 1111.314 0z"
-                                            ></path>
-                                            <path
-                                                stroke-linecap="round"
-                                                stroke-linejoin="round"
-                                                stroke-width="2"
-                                                d="M15 11a3 3 0 11-6 0 3 3 0 016 0z"
-                                            ></path>
-                                        </svg>
-                                        Lab Komputer 2
-                                    </p>
-                                </div>
-                                <span
-                                    class="px-3 py-1 bg-blue-50 text-blue-700 text-xs font-bold rounded-lg border border-blue-100 uppercase tracking-wider"
-                                    >Wajib</span
-                                >
-                            </div>
-                        </div>
-                    </div>
-                </div>
-
-                <div class="flex gap-6">
-                    <div class="w-24 pt-4 text-right shrink-0">
-                        <h3
-                            class="font-black text-slate-400 uppercase tracking-widest text-sm"
-                        >
-                            Rabu
-                        </h3>
-                    </div>
-                    <div class="flex-1 space-y-4">
-                        <div
-                            class="bg-white p-6 rounded-[2rem] border border-slate-200 border-l-8 border-l-purple-500 shadow-sm hover:shadow-md transition-all group"
-                        >
-                            <div class="flex justify-between items-start">
-                                <div>
-                                    <span
-                                        class="text-xs font-bold text-purple-600 mb-1 block"
-                                        >13:00 - 15:30 WIB</span
-                                    >
-                                    <h4
-                                        class="text-lg font-black text-slate-900 group-hover:text-purple-600 transition-colors"
-                                    >
-                                        Pemrograman Berorientasi Objek (3A)
-                                    </h4>
-                                    <p
-                                        class="text-sm text-slate-500 flex items-center gap-2 mt-1"
-                                    >
-                                        <svg
-                                            class="w-4 h-4"
-                                            fill="none"
-                                            stroke="currentColor"
-                                            viewBox="0 0 24 24"
-                                        >
-                                            <path
-                                                stroke-linecap="round"
-                                                stroke-linejoin="round"
-                                                stroke-width="2"
-                                                d="M17.657 16.657L13.414 20.9a1.998 1.998 0 01-2.827 0l-4.244-4.243a8 8 0 1111.314 0z"
-                                            ></path>
-                                            <path
-                                                stroke-linecap="round"
-                                                stroke-linejoin="round"
-                                                stroke-width="2"
-                                                d="M15 11a3 3 0 11-6 0 3 3 0 016 0z"
-                                            ></path>
-                                        </svg>
-                                        Lab Komputer 1
-                                    </p>
-                                </div>
-                            </div>
-                        </div>
-                    </div>
-                </div>
             </div>
         </main>
     </body>

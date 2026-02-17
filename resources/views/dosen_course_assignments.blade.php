@@ -51,16 +51,16 @@
                         <h1
                             class="text-xl font-extrabold text-slate-900 tracking-tight leading-none truncate max-w-[250px] md:max-w-none"
                         >
-                            Struktur Data
+                                {{ $kelas->mataKuliah->nama }}
                         </h1>
                         <div class="flex items-center gap-2 mt-1">
                             <span
                                 class="text-[10px] font-bold text-blue-600 uppercase tracking-widest bg-blue-50 px-2 py-0.5 rounded"
-                                >Kelas 3C</span
+                                >Kelas {{ $kelas->kode_kelas ?? '' }}</span
                             >
                             <span
                                 class="text-[10px] font-bold text-slate-400 uppercase tracking-widest truncate"
-                                >Dosen: Asril Adi Sunarto</span
+                                >Dosen: {{ auth()->guard('dosen')->user()->nama }}</span
                             >
                         </div>
                     </div>
@@ -72,12 +72,12 @@
                     class="w-full md:w-auto flex p-1 bg-slate-100 rounded-xl overflow-x-auto scrollbar-hide snap-x gap-1"
                 >
                     <a
-                        href="{{ route('dosen.course.manage') }}"
+                        href="{{ route('dosen.course.manage', $kelas->id) }}"
                         class="snap-start shrink-0 px-5 py-2 rounded-lg text-slate-500 hover:text-slate-900 font-bold text-[10px] uppercase tracking-widest transition-all whitespace-nowrap hover:bg-white/50 flex items-center justify-center"
                         >Materi & Modul</a
                     >
                     <a
-                        href="{{ route('dosen.course.attendance') }}"
+                        href="{{ route('dosen.attendance.index', $kelas->id) }}"
                         class="snap-start shrink-0 px-5 py-2 rounded-lg text-slate-500 hover:text-slate-900 font-bold text-[10px] uppercase tracking-widest transition-all whitespace-nowrap hover:bg-white/50 flex items-center justify-center"
                         >Absensi</a
                     >
@@ -87,12 +87,12 @@
                         Penugasan
                     </button>
                     <a
-                        href="{{ route('dosen.course.students') }}"
+                        href="{{ route('dosen.course.students', $kelas->id) }}"
                         class="snap-start shrink-0 px-5 py-2 rounded-lg text-slate-500 hover:text-slate-900 font-bold text-[10px] uppercase tracking-widest transition-all whitespace-nowrap hover:bg-white/50 flex items-center justify-center"
                         >Peserta</a
                     >
                     <a
-                        href="{{ route('dosen.course.grades') }}"
+                        href="{{ route('dosen.grades.recap', $kelas->id) }}"
                         class="snap-start shrink-0 px-5 py-2 rounded-lg text-slate-500 hover:text-slate-900 font-bold text-[10px] uppercase tracking-widest transition-all whitespace-nowrap hover:bg-white/50 flex items-center justify-center"
                         >Rekap Nilai</a
                     >
@@ -119,7 +119,7 @@
                     </p>
                 </div>
                 <a
-                    href="{{ route('dosen.assignment.create') }}"
+                    href="{{ route('dosen.assignment.create', $kelas) }}"
                     class="bg-blue-600 text-white px-6 py-3 rounded-xl font-bold text-xs uppercase tracking-widest hover:bg-blue-700 transition-all flex items-center gap-2 shadow-lg shadow-blue-200 group"
                 >
                     <svg
@@ -140,122 +140,138 @@
             </div>
 
             <div class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
-                <div
-                    class="block bg-white p-6 rounded-[2.5rem] border border-slate-200 shadow-sm hover:shadow-md transition-all group relative overflow-hidden"
-                >
-                    <div
-                        class="absolute top-0 right-0 bg-orange-100 text-orange-700 px-4 py-2 rounded-bl-2xl text-[10px] font-bold uppercase tracking-widest"
-                    >
-                        Deadline: Besok
-                    </div>
-                    <div class="mt-4">
-                        <div
-                            class="w-14 h-14 bg-blue-100 text-blue-600 rounded-2xl flex items-center justify-center font-black text-xl mb-4"
-                        >
-                            T1
-                        </div>
-                        <h3
-                            class="text-lg font-black text-slate-900 group-hover:text-blue-600 transition-colors"
-                        >
-                            Implementasi Array
-                        </h3>
-                        <p
-                            class="text-sm text-slate-500 mt-2 line-clamp-2 leading-relaxed"
-                        >
-                            Buat program sederhana menggunakan array 2 dimensi
-                            untuk pengelolaan data mahasiswa.
-                        </p>
-                    </div>
-                    <div
-                        class="mt-6 pt-6 border-t border-slate-100 flex justify-between items-center"
-                    >
-                        <div>
-                            <span
-                                class="block text-2xl font-black text-slate-900"
-                                >28<span
-                                    class="text-sm text-slate-400 font-bold"
-                                    >/35</span
-                                ></span
-                            >
-                            <span
-                                class="text-[9px] font-bold text-slate-400 uppercase tracking-widest"
-                                >Sudah Submit</span
-                            >
-                        </div>
-                        <a
-                            href="{{ route('dosen.assignment.grade', 1) }}"
-                            class="px-4 py-2 border border-slate-200 rounded-xl text-xs font-bold hover:bg-blue-50 hover:text-blue-600 hover:border-blue-200 transition-all text-center"
-                        >
-                            Periksa
-                        </a>
-                    </div>
-                </div>
 
-                <div
-                    class="block bg-white p-6 rounded-[2.5rem] border border-slate-200 shadow-sm hover:shadow-md transition-all group relative overflow-hidden"
-                >
-                    <div class="mt-4">
-                        <div
-                            class="w-14 h-14 bg-purple-100 text-purple-600 rounded-2xl flex items-center justify-center font-black text-xl mb-4"
-                        >
-                            T2
-                        </div>
-                        <h3
-                            class="text-lg font-black text-slate-900 group-hover:text-purple-600 transition-colors"
-                        >
-                            Analisis Linked List
-                        </h3>
-                        <p
-                            class="text-sm text-slate-500 mt-2 line-clamp-2 leading-relaxed"
-                        >
-                            Analisis kelebihan dan kekurangan Linked List
-                            dibandingkan Array statis.
-                        </p>
-                    </div>
-                    <div
-                        class="mt-6 pt-6 border-t border-slate-100 flex justify-between items-center"
+    @forelse($assignments as $assignment)
+    <div
+        class="block bg-white p-6 rounded-[2.5rem] border border-slate-200 shadow-sm hover:shadow-md transition-all group relative overflow-hidden"
+    >
+
+        {{-- Deadline --}}
+        @if($assignment->deadline)
+        <div
+            class="absolute top-0 right-0 bg-orange-100 text-orange-700 px-4 py-2 rounded-bl-2xl text-[10px] font-bold uppercase tracking-widest"
+        >
+            Deadline: {{ \Carbon\Carbon::parse($assignment->deadline)->translatedFormat('d M Y') }}
+        </div>
+        @endif
+
+        <div class="mt-4">
+            {{-- Icon Box (warna sesuai urutan seperti desain awal) --}}
+            @php
+                $colors = [
+                    ['bg' => 'bg-blue-100', 'text' => 'text-blue-600'],
+                    ['bg' => 'bg-purple-100', 'text' => 'text-purple-600'],
+                ];
+                $color = $colors[$loop->index % 2];
+            @endphp
+
+            <div
+                class="w-14 h-14 {{ $color['bg'] }} {{ $color['text'] }} rounded-2xl flex items-center justify-center font-black text-xl mb-4"
+            >
+                T{{ $loop->iteration }}
+            </div>
+
+            <h3
+                class="text-lg font-black text-slate-900 group-hover:text-blue-600 transition-colors"
+            >
+                {{ $assignment->judul }}
+            </h3>
+
+            <p
+                class="text-sm text-slate-500 mt-2 line-clamp-2 leading-relaxed"
+            >
+                {{ $assignment->deskripsi }}
+            </p>
+        </div>
+
+        <div
+            class="mt-6 pt-6 border-t border-slate-100 flex justify-between items-center"
+        >
+
+            @if($assignment->status === 'published')
+                <div>
+                    <span
+                        class="block text-2xl font-black text-slate-900"
                     >
-                        <div>
-                            <span
-                                class="px-3 py-1 bg-slate-100 text-slate-500 rounded-lg text-[10px] font-bold uppercase tracking-widest"
-                                >Draft</span
-                            >
-                        </div>
-                        <a
-                            href="{{ route('dosen.assignment.edit', 2) }}"
-                            class="px-4 py-2 border border-slate-200 rounded-xl text-xs font-bold hover:bg-slate-50 transition-all text-center text-slate-600"
+                        {{ $assignment->submissions_count }}
+                        <span
+                            class="text-sm text-slate-400 font-bold"
                         >
-                            Edit
-                        </a>
-                    </div>
+                            /{{ $kelas->mahasiswa_count }}
+                        </span>
+                    </span>
+                    <span
+                        class="text-[9px] font-bold text-slate-400 uppercase tracking-widest"
+                    >
+                        Sudah Submit
+                    </span>
                 </div>
 
                 <a
-                    href="{{ route('dosen.assignment.create') }}"
-                    class="block border-2 border-dashed border-slate-300 rounded-[2.5rem] p-6 flex flex-col items-center justify-center text-slate-400 hover:border-blue-400 hover:text-blue-600 hover:bg-blue-50 transition-all gap-3 min-h-[250px] group cursor-pointer"
+                    href="{{ route('dosen.assignment.grade', [
+        'kelas' => $kelas->id,
+        'assignment' => $assignment->id
+    ]) }}"
+                    class="px-4 py-2 border border-slate-200 rounded-xl text-xs font-bold hover:bg-blue-50 hover:text-blue-600 hover:border-blue-200 transition-all text-center"
                 >
-                    <div
-                        class="w-16 h-16 bg-white rounded-full flex items-center justify-center shadow-sm group-hover:scale-110 transition-transform"
-                    >
-                        <svg
-                            class="w-8 h-8"
-                            fill="none"
-                            stroke="currentColor"
-                            viewBox="0 0 24 24"
-                        >
-                            <path
-                                stroke-linecap="round"
-                                stroke-linejoin="round"
-                                stroke-width="2"
-                                d="M12 4v16m8-8H4"
-                            ></path>
-                        </svg>
-                    </div>
-                    <span class="font-bold text-sm uppercase tracking-widest"
-                        >Buat Tugas Baru</span
-                    >
+                    Periksa
                 </a>
-            </div>
+            @else
+                <div>
+                    <span
+                        class="px-3 py-1 bg-slate-100 text-slate-500 rounded-lg text-[10px] font-bold uppercase tracking-widest"
+                    >
+                        Draft
+                    </span>
+                </div>
+
+                <a
+                    href="{{ route('dosen.assignment.edit', [$kelas->id, $assignment->id]) }}"
+                    class="px-4 py-2 border border-slate-200 rounded-xl text-xs font-bold hover:bg-slate-50 transition-all text-center text-slate-600"
+                >
+                    Edit
+                </a>
+            @endif
+
+        </div>
+    </div>
+    @empty
+        <div class="col-span-full text-center text-slate-400 font-medium py-20">
+            Belum ada tugas dibuat.
+        </div>
+    @endforelse
+
+
+    {{-- Tombol tambah (IDENTIK seperti desain awal) --}}
+    <a
+        href="{{ route('dosen.assignment.create', $kelas->id) }}"
+        class="block border-2 border-dashed border-slate-300 rounded-[2.5rem] p-6 flex flex-col items-center justify-center text-slate-400 hover:border-blue-400 hover:text-blue-600 hover:bg-blue-50 transition-all gap-3 min-h-[250px] group cursor-pointer"
+    >
+        <div
+            class="w-16 h-16 bg-white rounded-full flex items-center justify-center shadow-sm group-hover:scale-110 transition-transform"
+        >
+            <svg
+                class="w-8 h-8"
+                fill="none"
+                stroke="currentColor"
+                viewBox="0 0 24 24"
+            >
+                <path
+                    stroke-linecap="round"
+                    stroke-linejoin="round"
+                    stroke-width="2"
+                    d="M12 4v16m8-8H4"
+                ></path>
+            </svg>
+        </div>
+        <span class="font-bold text-sm uppercase tracking-widest">
+            Buat Tugas Baru
+        </span>
+    </a>
+
+</div>
+
+
         </main>
     </body>
 </html>

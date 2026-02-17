@@ -51,16 +51,16 @@
                         <h1
                             class="text-xl font-extrabold text-slate-900 tracking-tight leading-none truncate max-w-[250px] md:max-w-none"
                         >
-                            Struktur Data
+                            {{ $kelas->mataKuliah->nama }}
                         </h1>
                         <div class="flex items-center gap-2 mt-1">
                             <span
                                 class="text-[10px] font-bold text-blue-600 uppercase tracking-widest bg-blue-50 px-2 py-0.5 rounded"
-                                >Kelas 3C</span
+                                >Kelas {{ $kelas->kode_kelas }}</span
                             >
                             <span
                                 class="text-[10px] font-bold text-slate-400 uppercase tracking-widest truncate"
-                                >Dosen: Asril Adi Sunarto</span
+                                >Dosen: {{ auth()->guard('dosen')->user()->nama }}</span
                             >
                         </div>
                     </div>
@@ -72,25 +72,25 @@
                     class="w-full md:w-auto flex p-1 bg-slate-100 rounded-xl overflow-x-auto scrollbar-hide snap-x gap-1"
                 >
                     <a
-                        href="{{ route('dosen.course.manage') }}"
+                        href="{{ route('dosen.course.manage', $kelas->id) }}"
                         class="snap-start shrink-0 px-5 py-2 rounded-lg text-slate-500 hover:text-slate-900 font-bold text-[10px] uppercase tracking-widest transition-all whitespace-nowrap hover:bg-white/50 flex items-center justify-center"
                     >
                         Materi & Modul
                     </a>
                     <a
-                        href="{{ route('dosen.course.attendance') }}"
+                        href="{{ route('dosen.attendance.index', $kelas->id) }}"
                         class="snap-start shrink-0 px-5 py-2 rounded-lg text-slate-500 hover:text-slate-900 font-bold text-[10px] uppercase tracking-widest transition-all whitespace-nowrap hover:bg-white/50 flex items-center justify-center"
                     >
                         Absensi
                     </a>
                     <a
-                        href="{{ route('dosen.course.assignments') }}"
+                        href="{{ route('dosen.course.assignments', $kelas->id) }}"
                         class="snap-start shrink-0 px-5 py-2 rounded-lg text-slate-500 hover:text-slate-900 font-bold text-[10px] uppercase tracking-widest transition-all whitespace-nowrap hover:bg-white/50 flex items-center justify-center"
                     >
                         Penugasan (2)
                     </a>
                     <a
-                        href="{{ route('dosen.course.students') }}"
+                        href="{{ route('dosen.course.students', $kelas->id) }}"
                         class="snap-start shrink-0 px-5 py-2 rounded-lg text-slate-500 hover:text-slate-900 font-bold text-[10px] uppercase tracking-widest transition-all whitespace-nowrap hover:bg-white/50 flex items-center justify-center"
                     >
                         Peserta (35)
@@ -125,7 +125,7 @@
                     </div>
                     <div class="flex gap-3">
                         <a
-                            href="{{ route('dosen.grades.settings') }}"
+                            href="{{ route('dosen.grades.settings', $kelas->id) }}"
                             class="px-5 py-2.5 bg-white border border-slate-200 rounded-xl text-xs font-bold text-slate-600 hover:bg-slate-50 hover:text-slate-900 transition-all shadow-sm flex items-center justify-center"
                         >
                             Edit Bobot
@@ -162,7 +162,7 @@
                             >
                                 Rata-rata Kelas
                             </p>
-                            <h3 class="text-3xl font-black">82.5</h3>
+                            <h3 class="text-3xl font-black">{{ $rataRata ?? '-' }}</h3>
                             <p
                                 class="text-xs font-medium mt-2 bg-white/20 inline-block px-2 py-1 rounded"
                             >
@@ -183,11 +183,11 @@
                         </p>
                         <div class="flex items-end gap-2">
                             <h3 class="text-3xl font-black text-emerald-600">
-                                98.0
+                                {{ $tertinggi['akhir'] ?? '-' }}
                             </h3>
                             <span
                                 class="text-xs font-bold text-slate-500 mb-1.5"
-                                >Siti Rahmawati</span
+                                >{{ $tertinggi['nama'] ?? '-' }}</span
                             >
                         </div>
                     </div>
@@ -201,11 +201,11 @@
                         </p>
                         <div class="flex items-end gap-2">
                             <h3 class="text-3xl font-black text-red-500">
-                                45.0
+                                 {{ $terendah['akhir'] ?? '-' }}
                             </h3>
                             <span
                                 class="text-xs font-bold text-slate-500 mb-1.5"
-                                >Budi Jaya</span
+                                >{{ $terendah['nama'] ?? '-' }}</span
                             >
                         </div>
                     </div>
@@ -224,12 +224,12 @@
                                 <th class="px-6 py-5 w-10">#</th>
                                 <th class="px-6 py-5">Mahasiswa</th>
                                 <th class="px-6 py-5 text-center">
-                                    Tugas (20%)
+                                    Tugas ({{ $bobot->tugas }}%)
                                 </th>
-                                <th class="px-6 py-5 text-center">UTS (30%)</th>
-                                <th class="px-6 py-5 text-center">UAS (40%)</th>
+                                <th class="px-6 py-5 text-center">UTS ({{ $bobot->uts }}%)</th>
+                                <th class="px-6 py-5 text-center">UAS ({{ $bobot->uas }}%)</th>
                                 <th class="px-6 py-5 text-center">
-                                    Absen (10%)
+                                    Absen ({{ $bobot->absen }}%)
                                 </th>
                                 <th class="px-6 py-5 text-center">Akhir</th>
                                 <th class="px-6 py-5 text-center">Huruf</th>
@@ -237,197 +237,67 @@
                             </tr>
                         </thead>
                         <tbody class="divide-y divide-slate-100">
-                            <tr class="hover:bg-slate-50 transition-colors">
-                                <td class="px-6 py-4 font-bold text-slate-400">
-                                    1
-                                </td>
-                                <td class="px-6 py-4">
-                                    <div class="flex items-center gap-3">
-                                        <div
-                                            class="w-8 h-8 rounded-full bg-pink-100 text-pink-600 flex items-center justify-center font-bold text-xs shrink-0"
-                                        >
-                                            SR
-                                        </div>
-                                        <div>
-                                            <p class="font-bold text-slate-900">
-                                                Siti Rahmawati
-                                            </p>
-                                            <p
-                                                class="text-[10px] text-slate-400 font-mono"
-                                            >
-                                                2230511043
-                                            </p>
-                                        </div>
-                                    </div>
-                                </td>
-                                <td
-                                    class="px-6 py-4 text-center font-medium text-slate-600"
-                                >
-                                    95
-                                </td>
-                                <td
-                                    class="px-6 py-4 text-center font-medium text-slate-600"
-                                >
-                                    90
-                                </td>
-                                <td
-                                    class="px-6 py-4 text-center font-medium text-slate-600"
-                                >
-                                    92
-                                </td>
-                                <td
-                                    class="px-6 py-4 text-center font-medium text-slate-600"
-                                >
-                                    100
-                                </td>
-                                <td
-                                    class="px-6 py-4 text-center font-black text-slate-900"
-                                >
-                                    93.5
-                                </td>
-                                <td class="px-6 py-4 text-center">
-                                    <span
-                                        class="bg-emerald-100 text-emerald-700 px-2.5 py-1 rounded-lg text-[10px] font-black uppercase"
-                                        >A</span
-                                    >
-                                </td>
-                                <td class="px-6 py-4 text-center">
-                                    <a
-                                        href="{{ route('dosen.grades.edit') }}"
-                                        class="text-blue-600 hover:text-blue-800 font-bold text-xs"
-                                        >Edit</a
-                                    >
-                                </td>
-                            </tr>
+@foreach ($mahasiswas as $i => $mhs)
+<tr class="hover:bg-slate-50 transition-colors">
+    <td class="px-6 py-4 font-bold text-slate-400">
+        {{ $i + 1 }}
+    </td>
 
-                            <tr class="hover:bg-slate-50 transition-colors">
-                                <td class="px-6 py-4 font-bold text-slate-400">
-                                    2
-                                </td>
-                                <td class="px-6 py-4">
-                                    <div class="flex items-center gap-3">
-                                        <div
-                                            class="w-8 h-8 rounded-full bg-indigo-100 text-indigo-600 flex items-center justify-center font-bold text-xs shrink-0"
-                                        >
-                                            RF
-                                        </div>
-                                        <div>
-                                            <p class="font-bold text-slate-900">
-                                                Ridwan Firdaus
-                                            </p>
-                                            <p
-                                                class="text-[10px] text-slate-400 font-mono"
-                                            >
-                                                2230511041
-                                            </p>
-                                        </div>
-                                    </div>
-                                </td>
-                                <td
-                                    class="px-6 py-4 text-center font-medium text-slate-600"
-                                >
-                                    80
-                                </td>
-                                <td
-                                    class="px-6 py-4 text-center font-medium text-slate-600"
-                                >
-                                    75
-                                </td>
-                                <td
-                                    class="px-6 py-4 text-center font-medium text-slate-600"
-                                >
-                                    78
-                                </td>
-                                <td
-                                    class="px-6 py-4 text-center font-medium text-slate-600"
-                                >
-                                    90
-                                </td>
-                                <td
-                                    class="px-6 py-4 text-center font-black text-slate-900"
-                                >
-                                    79.2
-                                </td>
-                                <td class="px-6 py-4 text-center">
-                                    <span
-                                        class="bg-blue-100 text-blue-700 px-2.5 py-1 rounded-lg text-[10px] font-black uppercase"
-                                        >B</span
-                                    >
-                                </td>
-                                <td class="px-6 py-4 text-center">
-                                    <a
-                                        href="{{ route('dosen.grades.edit') }}"
-                                        class="text-blue-600 hover:text-blue-800 font-bold text-xs"
-                                        >Edit</a
-                                    >
-                                </td>
-                            </tr>
+    <td class="px-6 py-4">
+        <div class="flex items-center gap-3">
+            <div class="w-8 h-8 rounded-full bg-slate-100 text-slate-600 flex items-center justify-center font-bold text-xs">
+                {{ strtoupper(substr($mhs['nama'], 0, 2)) }}
+            </div>
+            <div>
+                <p class="font-bold text-slate-900">
+                    {{ $mhs['nama'] }}
+                </p>
+                <p class="text-[10px] text-slate-400 font-mono">
+                    {{ $mhs['nim'] }}
+                </p>
+            </div>
+        </div>
+    </td>
 
-                            <tr
-                                class="bg-red-50/30 hover:bg-red-50/60 transition-colors"
-                            >
-                                <td class="px-6 py-4 font-bold text-slate-400">
-                                    3
-                                </td>
-                                <td class="px-6 py-4">
-                                    <div class="flex items-center gap-3">
-                                        <div
-                                            class="w-8 h-8 rounded-full bg-red-100 text-red-600 flex items-center justify-center font-bold text-xs shrink-0"
-                                        >
-                                            BJ
-                                        </div>
-                                        <div>
-                                            <p class="font-bold text-slate-900">
-                                                Budi Jaya
-                                            </p>
-                                            <p
-                                                class="text-[10px] text-slate-400 font-mono"
-                                            >
-                                                2230511045
-                                            </p>
-                                        </div>
-                                    </div>
-                                </td>
-                                <td
-                                    class="px-6 py-4 text-center font-medium text-slate-600"
-                                >
-                                    40
-                                </td>
-                                <td
-                                    class="px-6 py-4 text-center font-medium text-slate-600"
-                                >
-                                    50
-                                </td>
-                                <td
-                                    class="px-6 py-4 text-center font-medium text-slate-600"
-                                >
-                                    30
-                                </td>
-                                <td
-                                    class="px-6 py-4 text-center font-medium text-red-500"
-                                >
-                                    50
-                                </td>
-                                <td
-                                    class="px-6 py-4 text-center font-black text-slate-900"
-                                >
-                                    40.0
-                                </td>
-                                <td class="px-6 py-4 text-center">
-                                    <span
-                                        class="bg-red-100 text-red-700 px-2.5 py-1 rounded-lg text-[10px] font-black uppercase"
-                                        >D</span
-                                    >
-                                </td>
-                                <td class="px-6 py-4 text-center">
-                                    <a
-                                        href="{{ route('dosen.grades.edit') }}"
-                                        class="text-blue-600 hover:text-blue-800 font-bold text-xs"
-                                        >Edit</a
-                                    >
-                                </td>
-                            </tr>
-                        </tbody>
+    <td class="px-6 py-4 text-center font-medium text-slate-600">
+        {{ $mhs['tugas'] }}
+    </td>
+    <td class="px-6 py-4 text-center font-medium text-slate-600">
+        {{ $mhs['uts'] }}
+    </td>
+    <td class="px-6 py-4 text-center font-medium text-slate-600">
+        {{ $mhs['uas'] }}
+    </td>
+    <td class="px-6 py-4 text-center font-medium text-slate-600">
+        {{ $mhs['absen'] }}
+    </td>
+
+    <td class="px-6 py-4 text-center font-black text-slate-900">
+        {{ $mhs['akhir'] }}
+    </td>
+
+    <td class="px-6 py-4 text-center">
+        <span class="px-2.5 py-1 rounded-lg text-[10px] font-black uppercase
+            @if($mhs['huruf'] === 'A') bg-emerald-100 text-emerald-700
+            @elseif($mhs['huruf'] === 'B') bg-blue-100 text-blue-700
+            @elseif($mhs['huruf'] === 'C') bg-yellow-100 text-yellow-700
+            @elseif($mhs['huruf'] === 'D') bg-red-100 text-red-700
+            @else bg-slate-200 text-slate-700
+            @endif">
+            {{ $mhs['huruf'] }}
+        </span>
+    </td>
+
+    <td class="px-6 py-4 text-center">
+        <a href="{{ route('dosen.grades.edit', [$kelas->id, $mhs['id']]) }}"
+           class="text-blue-600 hover:text-blue-800 font-bold text-xs">
+            Edit
+        </a>
+    </td>
+</tr>
+@endforeach
+</tbody>
+
                     </table>
                 </div>
 

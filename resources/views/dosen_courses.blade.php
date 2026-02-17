@@ -9,6 +9,9 @@
             href="https://fonts.googleapis.com/css2?family=Plus+Jakarta+Sans:wght@400;500;600;700;800&display=swap"
             rel="stylesheet"
         />
+        <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/flatpickr/dist/flatpickr.min.css">
+        <script src="https://cdn.jsdelivr.net/npm/flatpickr"></script>
+
     </head>
     <body
         class="m-0 font-['Plus_Jakarta_Sans'] bg-[#f8fafc] min-h-full flex overflow-hidden border-box text-slate-800"
@@ -221,18 +224,154 @@
                 </div>
             </header>
 
-            <div
-                class="p-6 lg:p-10 max-w-7xl mx-auto w-full grid grid-cols-1 md:grid-cols-2 xl:grid-cols-3 gap-6"
+           <div
+    class="p-6 lg:p-10 max-w-7xl mx-auto w-full grid grid-cols-1 md:grid-cols-2 xl:grid-cols-3 gap-6"
+>
+    <!-- CARD TAMBAH KELAS (STATIS, AMAN) -->
+    <div
+        onclick="toggleModal('modalKelas', true)"
+        class="bg-slate-50 border-2 border-dashed border-slate-300 rounded-[2.5rem] p-8 flex flex-col items-center justify-center cursor-pointer hover:border-blue-400 hover:bg-blue-50 transition-all group min-h-[300px]"
+    >
+        <div
+            class="w-20 h-20 bg-white rounded-full flex items-center justify-center mb-4 group-hover:scale-110 transition-transform shadow-sm"
+        >
+            <svg
+                class="w-8 h-8 text-slate-400 group-hover:text-blue-500"
+                fill="none"
+                stroke="currentColor"
+                viewBox="0 0 24 24"
             >
+                <path
+                    stroke-linecap="round"
+                    stroke-linejoin="round"
+                    stroke-width="2"
+                    d="M12 4v16m8-8H4"
+                ></path>
+            </svg>
+        </div>
+        <h3
+            class="text-lg font-black text-slate-400 group-hover:text-blue-600 transition-colors uppercase tracking-widest"
+        >
+            Buat Kelas Baru
+        </h3>
+    </div>
+
+    <!-- CARD REAL-TIME -->
+    @foreach ($kelasDiampu as $kelas)
+        <div
+            class="bg-white p-8 rounded-[2.5rem] border border-slate-200 shadow-sm hover:shadow-xl hover:-translate-y-1 transition-all group cursor-pointer relative overflow-hidden"
+        >
+            <div class="flex justify-between items-start mb-6 relative z-10">
                 <div
-                    onclick="toggleModal('modalKelas', true)"
-                    class="bg-slate-50 border-2 border-dashed border-slate-300 rounded-[2.5rem] p-8 flex flex-col items-center justify-center cursor-pointer hover:border-blue-400 hover:bg-blue-50 transition-all group min-h-[300px]"
+                    class="w-16 h-16 bg-{{ $kelas['warna'] }}-100 text-{{ $kelas['warna'] }}-600
+                    rounded-3xl flex items-center justify-center font-black text-xl shadow-inner"
                 >
-                    <div
-                        class="w-20 h-20 bg-white rounded-full flex items-center justify-center mb-4 group-hover:scale-110 transition-transform shadow-sm"
+                    {{ $kelas['kode'] }}
+                </div>
+
+                <div class="flex items-center gap-2">
+                 <form
+    action="{{ route('dosen.kelas.destroy', $kelas['id']) }}"
+    method="POST"
+    onsubmit="return confirm('Yakin ingin menghapus kelas ini?')"
+>
+    @csrf
+    @method('DELETE')
+
+    <button
+        type="submit"
+        class="p-2 rounded-xl text-slate-300 hover:bg-red-50 hover:text-red-500 transition-all"
+        title="Hapus Kelas"
+    >
+        <svg
+            class="w-5 h-5"
+            fill="none"
+            stroke="currentColor"
+            viewBox="0 0 24 24"
+        >
+            <path
+                stroke-linecap="round"
+                stroke-linejoin="round"
+                stroke-width="2"
+                d="M19 7l-.867 12.142A2 2 0 0116.138 21H7.862a2 2 0 01-1.995-1.858L5 7m5 4v6m4-6v6m1-10V4a1 1 0 00-1-1h-4a1 1 0 00-1 1v3M4 7h16"
+            />
+        </svg>
+    </button>
+</form>
+
+                    <span
+                        class="px-4 py-2 bg-blue-50 text-blue-700 text-xs font-bold rounded-xl uppercase tracking-widest"
+                    >
+                        Kelas {{ $kelas['kelas'] }}
+                    </span>
+                </div>
+            </div>
+
+            <div class="relative z-10">
+                <h3
+                    class="text-xl font-black text-slate-900 mb-2 group-hover:text-blue-600 transition-colors"
+                >
+                    {{ $kelas['nama'] }}
+                </h3>
+
+                <p class="text-sm text-slate-500 mb-8 font-medium">
+                    {{ $kelas['jadwal'] }}
+                </p>
+
+                <div
+                    class="flex items-center justify-between border-t border-slate-100 pt-6"
+                >
+                    <span
+                        class="text-xs font-bold text-slate-400 uppercase tracking-widest"
+                    >
+                        {{ $kelas['mahasiswa'] }} Mahasiswa
+                    </span>
+
+                    <a
+                        href="{{ route('dosen.course.manage', $kelas['id']) }}"
+                        class="text-blue-600 font-bold text-sm hover:underline"
+                    >
+                        Kelola Kelas &rarr;
+                    </a>
+                </div>
+            </div>
+
+            <div
+                class="absolute -right-8 -top-8 w-32 h-32 bg-blue-50 rounded-full blur-2xl opacity-0 group-hover:opacity-100 transition-opacity"
+            ></div>
+        </div>
+    @endforeach
+</div>
+
+
+
+        <div id="modalKelas" class="fixed inset-0 z-50 hidden">
+    <div
+        class="absolute inset-0 bg-slate-900/50 backdrop-blur-sm transition-opacity"
+        onclick="toggleModal('modalKelas', false)"
+    ></div>
+
+    <div class="absolute inset-0 flex items-center justify-center p-4">
+        <div
+            class="bg-white rounded-[2rem] shadow-2xl w-full max-w-lg transform scale-100 transition-transform"
+        >
+
+            <form action="{{ route('dosen.kelas.store') }}" method="POST">
+                @csrf
+
+                <div
+                    class="p-8 border-b border-slate-100 flex justify-between items-center"
+                >
+                    <h3 class="text-xl font-black text-slate-900">
+                        Buat Kelas Baru
+                    </h3>
+                    <button
+                        type="button"
+                        onclick="toggleModal('modalKelas', false)"
+                        class="p-2 bg-slate-50 rounded-full hover:bg-red-50 hover:text-red-500 transition-colors"
                     >
                         <svg
-                            class="w-8 h-8 text-slate-400 group-hover:text-blue-500"
+                            class="w-5 h-5"
                             fill="none"
                             stroke="currentColor"
                             viewBox="0 0 24 24"
@@ -241,324 +380,142 @@
                                 stroke-linecap="round"
                                 stroke-linejoin="round"
                                 stroke-width="2"
-                                d="M12 4v16m8-8H4"
+                                d="M6 18L18 6M6 6l12 12"
                             ></path>
                         </svg>
-                    </div>
-                    <h3
-                        class="text-lg font-black text-slate-400 group-hover:text-blue-600 transition-colors uppercase tracking-widest"
-                    >
-                        Buat Kelas Baru
-                    </h3>
+                    </button>
                 </div>
 
-                <div
-                    class="bg-white p-8 rounded-[2.5rem] border border-slate-200 shadow-sm hover:shadow-xl hover:-translate-y-1 transition-all group cursor-pointer relative overflow-hidden"
-                >
-                    <div
-                        class="flex justify-between items-start mb-6 relative z-10"
-                    >
-                        <div
-                            class="w-16 h-16 bg-blue-100 text-blue-600 rounded-3xl flex items-center justify-center font-black text-xl shadow-inner"
+                <div class="p-8 space-y-6">
+                    <!-- Nama Mata Kuliah -->
+                    <div>
+                        <label
+                            class="block text-xs font-bold text-slate-500 uppercase tracking-widest mb-2"
                         >
-                            SD
-                        </div>
-
-                        <div class="flex items-center gap-2">
-                            <button
-                                onclick="
-                                    return confirm(
-                                        'Yakin ingin menghapus kelas ini?',
-                                    );
-                                "
-                                class="p-2 rounded-xl text-slate-300 hover:bg-red-50 hover:text-red-500 transition-all"
-                                title="Hapus Kelas"
-                            >
-                                <svg
-                                    class="w-5 h-5"
-                                    fill="none"
-                                    stroke="currentColor"
-                                    viewBox="0 0 24 24"
-                                >
-                                    <path
-                                        stroke-linecap="round"
-                                        stroke-linejoin="round"
-                                        stroke-width="2"
-                                        d="M19 7l-.867 12.142A2 2 0 0116.138 21H7.862a2 2 0 01-1.995-1.858L5 7m5 4v6m4-6v6m1-10V4a1 1 0 00-1-1h-4a1 1 0 00-1 1v3M4 7h16"
-                                    ></path>
-                                </svg>
-                            </button>
-                            <span
-                                class="px-4 py-2 bg-blue-50 text-blue-700 text-xs font-bold rounded-xl uppercase tracking-widest"
-                                >Kelas 3C</span
-                            >
-                        </div>
+                            Nama Mata Kuliah
+                        </label>
+                        <input
+                            type="text"
+                            name="nama_mata_kuliah"
+                            placeholder="Contoh: Algoritma Pemrograman"
+                            required
+                            class="w-full bg-slate-50 border border-slate-200 rounded-xl px-4 py-3 font-bold text-slate-800 focus:outline-none focus:ring-2 focus:ring-blue-500"
+                        />
                     </div>
 
-                    <div class="relative z-10">
-                        <h3
-                            class="text-xl font-black text-slate-900 mb-2 group-hover:text-blue-600 transition-colors"
-                        >
-                            Struktur Data
-                        </h3>
-                        <p class="text-sm text-slate-500 mb-8 font-medium">
-                            Selasa, 08:00 - 10:30 • Lab Komputer 2
-                        </p>
-                        <div
-                            class="flex items-center justify-between border-t border-slate-100 pt-6"
-                        >
-                            <span
-                                class="text-xs font-bold text-slate-400 uppercase tracking-widest"
-                                >35 Mahasiswa</span
-                            >
-                            <a
-                                href="{{ route('dosen.course.manage') }}"
-                                class="text-blue-600 font-bold text-sm hover:underline"
-                                >Kelola Kelas &rarr;</a
-                            >
-                        </div>
-                    </div>
-                    <div
-                        class="absolute -right-8 -top-8 w-32 h-32 bg-blue-50 rounded-full blur-2xl opacity-0 group-hover:opacity-100 transition-opacity"
-                    ></div>
-                </div>
-
-                <div
-                    class="bg-white p-8 rounded-[2.5rem] border border-slate-200 shadow-sm hover:shadow-xl hover:-translate-y-1 transition-all group cursor-pointer relative overflow-hidden"
-                >
-                    <div
-                        class="flex justify-between items-start mb-6 relative z-10"
-                    >
-                        <div
-                            class="w-16 h-16 bg-purple-100 text-purple-600 rounded-3xl flex items-center justify-center font-black text-xl shadow-inner"
-                        >
-                            PBO
-                        </div>
-
-                        <div class="flex items-center gap-2">
-                            <button
-                                onclick="
-                                    return confirm(
-                                        'Yakin ingin menghapus kelas ini?',
-                                    );
-                                "
-                                class="p-2 rounded-xl text-slate-300 hover:bg-red-50 hover:text-red-500 transition-all"
-                                title="Hapus Kelas"
-                            >
-                                <svg
-                                    class="w-5 h-5"
-                                    fill="none"
-                                    stroke="currentColor"
-                                    viewBox="0 0 24 24"
-                                >
-                                    <path
-                                        stroke-linecap="round"
-                                        stroke-linejoin="round"
-                                        stroke-width="2"
-                                        d="M19 7l-.867 12.142A2 2 0 0116.138 21H7.862a2 2 0 01-1.995-1.858L5 7m5 4v6m4-6v6m1-10V4a1 1 0 00-1-1h-4a1 1 0 00-1 1v3M4 7h16"
-                                    ></path>
-                                </svg>
-                            </button>
-                            <span
-                                class="px-4 py-2 bg-purple-50 text-purple-700 text-xs font-bold rounded-xl uppercase tracking-widest"
-                                >Kelas 3A</span
-                            >
-                        </div>
-                    </div>
-
-                    <div class="relative z-10">
-                        <h3
-                            class="text-xl font-black text-slate-900 mb-2 group-hover:text-purple-600 transition-colors"
-                        >
-                            Pemrograman Objek
-                        </h3>
-                        <p class="text-sm text-slate-500 mb-8 font-medium">
-                            Rabu, 13:00 - 15:30 • Lab Komputer 1
-                        </p>
-                        <div
-                            class="flex items-center justify-between border-t border-slate-100 pt-6"
-                        >
-                            <span
-                                class="text-xs font-bold text-slate-400 uppercase tracking-widest"
-                                >40 Mahasiswa</span
-                            >
-                            <button
-                                class="text-purple-600 font-bold text-sm hover:underline"
-                            >
-                                Kelola Kelas &rarr;
-                            </button>
-                        </div>
-                    </div>
-                    <div
-                        class="absolute -right-8 -top-8 w-32 h-32 bg-purple-50 rounded-full blur-2xl opacity-0 group-hover:opacity-100 transition-opacity"
-                    ></div>
-                </div>
-
-                <div
-                    class="bg-white p-8 rounded-[2.5rem] border border-slate-200 shadow-sm hover:shadow-xl hover:-translate-y-1 transition-all group cursor-pointer relative overflow-hidden"
-                >
-                    <div class="flex justify-between items-start mb-6">
-                        <div
-                            class="w-16 h-16 bg-slate-100 text-slate-500 rounded-3xl flex items-center justify-center font-black text-xl shadow-inner"
-                        >
-                            KB
-                        </div>
-
-                        <div class="flex items-center gap-2">
-                            <button
-                                onclick="
-                                    return confirm(
-                                        'Yakin ingin menghapus kelas ini?',
-                                    );
-                                "
-                                class="p-2 rounded-xl text-slate-300 hover:bg-red-50 hover:text-red-500 transition-all"
-                                title="Hapus Kelas"
-                            >
-                                <svg
-                                    class="w-5 h-5"
-                                    fill="none"
-                                    stroke="currentColor"
-                                    viewBox="0 0 24 24"
-                                >
-                                    <path
-                                        stroke-linecap="round"
-                                        stroke-linejoin="round"
-                                        stroke-width="2"
-                                        d="M19 7l-.867 12.142A2 2 0 0116.138 21H7.862a2 2 0 01-1.995-1.858L5 7m5 4v6m4-6v6m1-10V4a1 1 0 00-1-1h-4a1 1 0 00-1 1v3M4 7h16"
-                                    ></path>
-                                </svg>
-                            </button>
-                            <span
-                                class="px-4 py-2 bg-slate-100 text-slate-600 text-xs font-bold rounded-xl uppercase tracking-widest"
-                                >Kelas 5B</span
-                            >
-                        </div>
-                    </div>
-                    <h3
-                        class="text-xl font-black text-slate-900 mb-2 group-hover:text-slate-600 transition-colors"
-                    >
-                        Kecerdasan Buatan
-                    </h3>
-                    <p class="text-sm text-slate-500 mb-8 font-medium">
-                        Jumat, 09:00 - 11:30 • R. 402
-                    </p>
-                    <div
-                        class="flex items-center justify-between border-t border-slate-100 pt-6"
-                    >
-                        <span
-                            class="text-xs font-bold text-slate-400 uppercase tracking-widest"
-                            >28 Mahasiswa</span
-                        >
-                        <button
-                            class="text-slate-600 font-bold text-sm hover:underline"
-                        >
-                            Lihat Arsip &rarr;
-                        </button>
-                    </div>
-                </div>
-            </div>
-        </main>
-
-        <div id="modalKelas" class="fixed inset-0 z-50 hidden">
-            <div
-                class="absolute inset-0 bg-slate-900/50 backdrop-blur-sm transition-opacity"
-                onclick="toggleModal('modalKelas', false)"
-            ></div>
-            <div class="absolute inset-0 flex items-center justify-center p-4">
-                <div
-                    class="bg-white rounded-[2rem] shadow-2xl w-full max-w-lg transform scale-100 transition-transform"
-                >
-                    <div
-                        class="p-8 border-b border-slate-100 flex justify-between items-center"
-                    >
-                        <h3 class="text-xl font-black text-slate-900">
-                            Buat Kelas Baru
-                        </h3>
-                        <button
-                            onclick="toggleModal('modalKelas', false)"
-                            class="p-2 bg-slate-50 rounded-full hover:bg-red-50 hover:text-red-500 transition-colors"
-                        >
-                            <svg
-                                class="w-5 h-5"
-                                fill="none"
-                                stroke="currentColor"
-                                viewBox="0 0 24 24"
-                            >
-                                <path
-                                    stroke-linecap="round"
-                                    stroke-linejoin="round"
-                                    stroke-width="2"
-                                    d="M6 18L18 6M6 6l12 12"
-                                ></path>
-                            </svg>
-                        </button>
-                    </div>
-                    <div class="p-8 space-y-6">
+                    <!-- Kode & SKS -->
+                    <div class="grid grid-cols-2 gap-6">
                         <div>
                             <label
                                 class="block text-xs font-bold text-slate-500 uppercase tracking-widest mb-2"
-                                >Nama Mata Kuliah</label
                             >
+                                Kode Kelas
+                            </label>
                             <input
                                 type="text"
-                                placeholder="Contoh: Algoritma Pemrograman"
+                                name="kode_kelas"
+                                placeholder="Contoh: 3A"
+                                required
                                 class="w-full bg-slate-50 border border-slate-200 rounded-xl px-4 py-3 font-bold text-slate-800 focus:outline-none focus:ring-2 focus:ring-blue-500"
                             />
                         </div>
-                        <div class="grid grid-cols-2 gap-6">
-                            <div>
-                                <label
-                                    class="block text-xs font-bold text-slate-500 uppercase tracking-widest mb-2"
-                                    >Kode Kelas</label
-                                >
-                                <input
-                                    type="text"
-                                    placeholder="Contoh: 3A"
-                                    class="w-full bg-slate-50 border border-slate-200 rounded-xl px-4 py-3 font-bold text-slate-800 focus:outline-none focus:ring-2 focus:ring-blue-500"
-                                />
-                            </div>
-                            <div>
-                                <label
-                                    class="block text-xs font-bold text-slate-500 uppercase tracking-widest mb-2"
-                                    >SKS</label
-                                >
-                                <input
-                                    type="number"
-                                    placeholder="3"
-                                    class="w-full bg-slate-50 border border-slate-200 rounded-xl px-4 py-3 font-bold text-slate-800 focus:outline-none focus:ring-2 focus:ring-blue-500"
-                                />
-                            </div>
-                        </div>
+
                         <div>
                             <label
                                 class="block text-xs font-bold text-slate-500 uppercase tracking-widest mb-2"
-                                >Jadwal (Hari & Jam)</label
                             >
+                                SKS
+                            </label>
                             <input
-                                type="text"
-                                placeholder="Contoh: Senin, 08:00 - 10:00"
+                                type="number"
+                                name="sks"
+                                min="1"
+                                max="6"
+                                placeholder="3"
+                                required
                                 class="w-full bg-slate-50 border border-slate-200 rounded-xl px-4 py-3 font-bold text-slate-800 focus:outline-none focus:ring-2 focus:ring-blue-500"
                             />
                         </div>
                     </div>
-                    <div
-                        class="p-8 border-t border-slate-100 flex justify-end gap-3"
+
+                    <!-- Jadwal -->
+<div class="space-y-4">
+    <label class="block text-xs font-bold text-slate-500 uppercase tracking-widest mb-2">
+        Jadwal (Hari & Jam)
+    </label>
+
+    <select
+        name="hari"
+        required
+        class="w-full bg-slate-50 border border-slate-200 rounded-xl px-4 py-3 font-bold text-slate-800 focus:outline-none focus:ring-2 focus:ring-blue-500"
+    >
+        <option value="">Pilih Hari</option>
+        <option>Senin</option>
+        <option>Selasa</option>
+        <option>Rabu</option>
+        <option>Kamis</option>
+        <option>Jumat</option>
+        <option>Sabtu</option>
+    </select>
+
+    <div class="grid grid-cols-2 gap-6">
+        <input
+            type="text"
+            name="jam_mulai"
+            placeholder="Pilih jam mulai"
+            required
+            class="w-full bg-slate-50 border border-slate-200 rounded-xl px-4 py-3 font-bold"
+        />
+
+        <input
+            type="text"
+            name="jam_selesai"
+            placeholder="Pilih jam selesai"
+            required
+            class="w-full bg-slate-50 border border-slate-200 rounded-xl px-4 py-3 font-bold"
+        />
+    </div>
+</div>
+
+<!-- Ruangan -->
+<div>
+    <label class="block text-xs font-bold text-slate-500 uppercase tracking-widest mb-2">
+        Ruangan
+    </label>
+
+    <input
+        type="text"
+        name="ruangan"
+        placeholder="Contoh: Lab 3 / R-201"
+        required
+        class="w-full bg-slate-50 border border-slate-200 rounded-xl px-4 py-3 font-bold"
+    />
+</div>
+
+                <div
+                    class="p-8 border-t border-slate-100 flex justify-end gap-3"
+                >
+                    <button
+                        type="button"
+                        onclick="toggleModal('modalKelas', false)"
+                        class="px-6 py-3 rounded-xl font-bold text-slate-500 hover:bg-slate-50 transition-all"
                     >
-                        <button
-                            onclick="toggleModal('modalKelas', false)"
-                            class="px-6 py-3 rounded-xl font-bold text-slate-500 hover:bg-slate-50 transition-all"
-                        >
-                            Batal
-                        </button>
-                        <button
-                            class="px-8 py-3 bg-blue-600 text-white rounded-xl font-bold hover:bg-blue-700 transition-all shadow-lg shadow-blue-200"
-                        >
-                            Simpan Kelas
-                        </button>
-                    </div>
+                        Batal
+                    </button>
+
+                    <button
+                        type="submit"
+                        class="px-8 py-3 bg-blue-600 text-white rounded-xl font-bold hover:bg-blue-700 transition-all shadow-lg shadow-blue-200"
+                    >
+                        Simpan Kelas
+                    </button>
                 </div>
-            </div>
+            </form>
+
         </div>
+    </div>
+</div>
+
 
         <script>
             function toggleModal(modalID, show) {
@@ -574,6 +531,30 @@
                     modal.classList.add("hidden");
                 }
             }
+
+            flatpickr("#jam_mulai", {
+    enableTime: true,
+    noCalendar: true,
+    time_24hr: true,
+    dateFormat: "H:i",
+});
+
+flatpickr("#jam_selesai", {
+    enableTime: true,
+    noCalendar: true,
+    time_24hr: true,
+    dateFormat: "H:i",
+});
+
+document.getElementById('jam_selesai').addEventListener('change', function () {
+    const mulai = document.getElementById('jam_mulai').value;
+    const selesai = this.value;
+
+    if (mulai && selesai && selesai <= mulai) {
+        alert('Jam selesai harus lebih besar dari jam mulai');
+        this.value = '';
+    }
+});
         </script>
     </body>
 </html>

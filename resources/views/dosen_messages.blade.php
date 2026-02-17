@@ -1,4 +1,9 @@
 <!DOCTYPE html>
+@php
+$selectedMahasiswa = $selectedMahasiswa ?? null;
+$chatMessages = $chatMessages ?? collect();
+@endphp
+
 <html lang="id" class="h-full">
     <head>
         <meta charset="UTF-8" />
@@ -260,73 +265,39 @@
                             class="w-full bg-slate-50 border border-slate-100 rounded-xl px-4 py-3 text-xs font-bold focus:ring-2 focus:ring-blue-500 outline-none transition-all placeholder:text-slate-400"
                         />
                     </div>
-                    <div class="flex-1 overflow-y-auto p-2 space-y-1">
-                        <div
-                            class="p-3 bg-blue-50 rounded-xl flex gap-3 cursor-pointer border border-blue-100 relative group transition-all"
-                        >
-                            <div
-                                class="w-10 h-10 rounded-xl bg-blue-200 shrink-0 overflow-hidden"
-                            >
-                                <img
-                                    src="https://ui-avatars.com/api/?name=Ridwan+Firdaus&background=0D8ABC&color=fff"
-                                    class="w-full h-full object-cover"
-                                />
-                            </div>
-                            <div class="flex-1 overflow-hidden">
-                                <div
-                                    class="flex justify-between items-center mb-0.5"
-                                >
-                                    <h4
-                                        class="font-bold text-slate-900 text-xs truncate"
-                                    >
-                                        Ridwan Firdaus
-                                    </h4>
-                                    <span
-                                        class="text-[9px] font-bold text-blue-600"
-                                        >10:42</span
-                                    >
-                                </div>
-                                <p
-                                    class="text-[10px] text-slate-500 truncate font-medium"
-                                >
-                                    Belum ada pak, sedang saya kerjakan...
-                                </p>
-                            </div>
-                        </div>
+                    @foreach($conversations as $mahasiswa_id => $msgs)
+@php
+    $last = $msgs->last();
+    $mahasiswa = \App\Models\Mahasiswa::find($mahasiswa_id);
+@endphp
 
-                        <div
-                            class="p-3 hover:bg-slate-50 rounded-xl flex gap-3 cursor-pointer border border-transparent hover:border-slate-100 relative group transition-all"
-                        >
-                            <div
-                                class="w-10 h-10 rounded-xl bg-slate-200 shrink-0 overflow-hidden"
-                            >
-                                <img
-                                    src="https://ui-avatars.com/api/?name=Siti+Aisyah&background=F1F5F9&color=64748B"
-                                    class="w-full h-full object-cover"
-                                />
-                            </div>
-                            <div class="flex-1 overflow-hidden">
-                                <div
-                                    class="flex justify-between items-center mb-0.5"
-                                >
-                                    <h4
-                                        class="font-bold text-slate-700 text-xs truncate"
-                                    >
-                                        Siti Aisyah
-                                    </h4>
-                                    <span
-                                        class="text-[9px] font-bold text-slate-400"
-                                        >Kemarin</span
-                                    >
-                                </div>
-                                <p
-                                    class="text-[10px] text-slate-400 truncate font-medium"
-                                >
-                                    Maaf pak izin bertanya mengenai...
-                                </p>
-                            </div>
-                        </div>
-                    </div>
+<a href="{{ route('dosen.messages', ['mahasiswa' => $mahasiswa_id]) }}">
+    <div class="p-3 {{ $selectedMahasiswa == $mahasiswa_id ? 'bg-blue-50 border border-blue-100' : 'hover:bg-slate-50 border border-transparent hover:border-slate-100' }} rounded-xl flex gap-3 cursor-pointer relative group transition-all">
+        
+        <div class="w-10 h-10 rounded-xl bg-slate-200 shrink-0 overflow-hidden">
+            <img
+                src="https://ui-avatars.com/api/?name={{ urlencode($mahasiswa->nama) }}"
+                class="w-full h-full object-cover"
+            />
+        </div>
+
+        <div class="flex-1 overflow-hidden">
+            <div class="flex justify-between items-center mb-0.5">
+                <h4 class="font-bold text-slate-900 text-xs truncate">
+                    {{ $mahasiswa->nama }}
+                </h4>
+                <span class="text-[9px] font-bold text-slate-400">
+                    {{ $last->created_at->format('H:i') }}
+                </span>
+            </div>
+            <p class="text-[10px] text-slate-500 truncate font-medium">
+                {{ $last->body }}
+            </p>
+        </div>
+    </div>
+</a>
+@endforeach
+
                 </div>
 
                 <div
@@ -345,11 +316,14 @@
                                 />
                             </div>
                             <div>
-                                <h4
-                                    class="font-black text-slate-900 text-sm leading-tight"
-                                >
-                                    Ridwan Firdaus
-                                </h4>
+                                @php
+$currentMahasiswa = $selectedMahasiswa ? \App\Models\Mahasiswa::find($selectedMahasiswa) : null;
+@endphp
+
+<h4 class="font-black text-slate-900 text-sm leading-tight">
+    {{ $currentMahasiswa->nama ?? 'Pilih Mahasiswa' }}
+</h4>
+
                                 <span
                                     class="inline-flex items-center text-[9px] font-bold text-emerald-600 uppercase tracking-widest"
                                 >
@@ -362,116 +336,202 @@
                         </div>
                     </div>
 
-                    <div
-                        class="flex-1 p-6 overflow-y-auto space-y-6 custom-scrollbar"
-                    >
-                        <div
-                            class="flex flex-col items-end ml-auto max-w-[80%]"
-                        >
-                            <div
-                                class="bg-blue-600 p-4 rounded-2xl rounded-tr-none shadow-md shadow-blue-100"
-                            >
-                                <p
-                                    class="text-sm text-white leading-relaxed font-medium"
-                                >
-                                    Ridwan, apakah ada kendala dalam pengerjaan
-                                    tugas nomor 2?
-                                </p>
-                            </div>
-                            <span
-                                class="text-[9px] font-bold text-slate-400 mt-1 mr-1"
-                                >10:40 AM</span
-                            >
-                        </div>
+                    <div id="chatBox" class="flex-1 p-6 overflow-y-auto space-y-6 custom-scrollbar">
 
-                        <div class="flex flex-col items-start max-w-[80%]">
-                            <div
-                                class="bg-white p-4 rounded-2xl rounded-tl-none shadow-sm border border-slate-100"
-                            >
-                                <p
-                                    class="text-sm text-slate-700 leading-relaxed font-medium"
-                                >
-                                    Belum ada pak, sedang saya kerjakan bagian
-                                    logikanya. Nanti saya kabari lagi.
-                                </p>
-                            </div>
-                            <span
-                                class="text-[9px] font-bold text-slate-400 mt-1 ml-1"
-                                >10:42 AM</span
-                            >
-                        </div>
+                       @foreach($chatMessages as $msg)
+
+<div id="msg-{{ $msg->id }}">
+@if($msg->sender_type === 'dosen')
+
+<div class="flex flex-col items-end ml-auto max-w-[80%]">
+    <div class="bg-blue-600 p-4 rounded-2xl rounded-tr-none shadow-md shadow-blue-100">
+
+        @if($msg->body)
+        <p class="text-sm text-white leading-relaxed font-medium">
+            {{ $msg->body }}
+        </p>
+        @endif
+
+        @if($msg->image_path)
+        <img src="{{ asset('storage/'.$msg->image_path) }}"
+             class="mt-2 rounded-lg max-w-xs">
+        @endif
+
+    </div>
+    <span class="text-[9px] font-bold text-slate-400 mt-1 mr-1">
+        {{ $msg->created_at->format('H:i') }}
+    </span>
+</div>
+
+@else
+
+<div class="flex flex-col items-start max-w-[80%]">
+    <div class="bg-white p-4 rounded-2xl rounded-tl-none shadow-sm border border-slate-100">
+
+        @if($msg->body)
+        <p class="text-sm text-slate-700 leading-relaxed font-medium">
+            {{ $msg->body }}
+        </p>
+        @endif
+
+        @if($msg->image_path)
+        <img src="{{ asset('storage/'.$msg->image_path) }}"
+             class="mt-2 rounded-lg max-w-xs">
+        @endif
+
+    </div>
+    <span class="text-[9px] font-bold text-slate-400 mt-1 ml-1">
+        {{ $msg->created_at->format('H:i') }}
+    </span>
+</div>
+
+@endif
+</div>
+
+@endforeach
+
+
                     </div>
 
                     <div class="p-4 bg-white border-t border-slate-200">
-                        <div
-                            class="flex items-center gap-2 bg-slate-50 p-2 rounded-2xl border border-slate-200 focus-within:border-blue-400 focus-within:ring-2 focus-within:ring-blue-100 transition-all"
-                        >
-                            <button
-                                class="w-10 h-10 flex items-center justify-center text-slate-400 hover:text-blue-600 hover:bg-white rounded-xl transition-all"
-                                title="Kirim Gambar"
-                            >
-                                <svg
-                                    class="w-6 h-6"
-                                    fill="none"
-                                    stroke="currentColor"
-                                    viewBox="0 0 24 24"
-                                >
-                                    <path
-                                        stroke-linecap="round"
-                                        stroke-linejoin="round"
-                                        stroke-width="2"
-                                        d="M4 16l4.586-4.586a2 2 0 012.828 0L16 16m-2-2l1.586-1.586a2 2 0 012.828 0L20 14m-6-6h.01M6 20h12a2 2 0 002-2V6a2 2 0 00-2-2H6a2 2 0 00-2 2v12a2 2 0 002 2z"
-                                    ></path>
-                                </svg>
-                            </button>
 
-                            <input
-                                type="text"
-                                placeholder="Ketik pesan..."
-                                class="flex-1 bg-transparent text-sm font-medium text-slate-700 placeholder-slate-400 focus:outline-none px-2"
-                            />
+<form id="chatForm" method="POST" enctype="multipart/form-data">
+@csrf
 
-                            <button
-                                class="w-10 h-10 flex items-center justify-center text-slate-400 hover:text-red-500 hover:bg-red-50 rounded-xl transition-all"
-                                title="Voice Note"
-                            >
-                                <svg
-                                    class="w-6 h-6"
-                                    fill="none"
-                                    stroke="currentColor"
-                                    viewBox="0 0 24 24"
-                                >
-                                    <path
-                                        stroke-linecap="round"
-                                        stroke-linejoin="round"
-                                        stroke-width="2"
-                                        d="M19 11a7 7 0 01-7 7m0 0a7 7 0 01-7-7m7 7v4m0 0H8m4 0h4m-4-8a3 3 0 01-3-3V5a3 3 0 116 0v6a3 3 0 01-3 3z"
-                                    ></path>
-                                </svg>
-                            </button>
+@if($selectedMahasiswa)
+    <input type="hidden" name="receiver_id" value="{{ $selectedMahasiswa }}">
+@endif
 
-                            <button
-                                class="w-12 h-10 bg-blue-600 text-white rounded-xl flex items-center justify-center shadow-md hover:bg-blue-700 transition-all"
-                                title="Kirim"
-                            >
-                                <svg
-                                    class="w-5 h-5 transform rotate-90 ml-0.5"
-                                    fill="none"
-                                    stroke="currentColor"
-                                    viewBox="0 0 24 24"
-                                >
-                                    <path
-                                        stroke-linecap="round"
-                                        stroke-linejoin="round"
-                                        stroke-width="2"
-                                        d="M12 19l9 2-9-18-9 18 9-2zm0 0v-8"
-                                    ></path>
-                                </svg>
-                            </button>
+<div class="flex items-center gap-2 bg-slate-50 p-2 rounded-2xl border border-slate-200 focus-within:border-blue-400 focus-within:ring-2 focus-within:ring-blue-100 transition-all">
+
+    <!-- Tombol Upload (tidak ubah tampilan) -->
+    <button type="button"
+        onclick="document.getElementById('imageInput').click()"
+        class="w-10 h-10 flex items-center justify-center text-slate-400 hover:text-blue-600 hover:bg-white rounded-xl transition-all">
+        ...
+    </button>
+
+    <!-- Input File (hidden) -->
+    <input type="file" name="image" id="imageInput" hidden>
+
+    <!-- Input Pesan -->
+    <input
+        type="text"
+        name="body"
+        id="messageInput"
+        placeholder="Ketik pesan..."
+        {{ !$selectedMahasiswa ? 'disabled' : '' }}
+        class="flex-1 bg-transparent text-sm font-medium text-slate-700 placeholder-slate-400 focus:outline-none px-2"
+    />
+
+    <!-- Tombol Kirim -->
+    <button
+        type="submit"
+        {{ !$selectedMahasiswa ? 'disabled' : '' }}
+        class="w-12 h-10 bg-blue-600 text-white rounded-xl flex items-center justify-center shadow-md hover:bg-blue-700 transition-all disabled:opacity-50 disabled:cursor-not-allowed"
+    >
+        <svg class="w-5 h-5 transform rotate-90 ml-0.5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2"
+                d="M12 19l9 2-9-18-9 18 9-2zm0 0v-8">
+            </path>
+        </svg>
+    </button>
+
+</div>
+</form>
+
+</div>
+
                         </div>
                     </div>
                 </div>
             </div>
         </main>
+        <script>
+document.addEventListener("DOMContentLoaded", function () {
+
+    let form = document.getElementById("chatForm");
+    let chatBox = document.getElementById("chatBox");
+    let messageInput = document.getElementById("messageInput");
+    let imageInput = document.getElementById("imageInput");
+
+    // Auto scroll ke bawah
+    function scrollBottom(){
+        chatBox.scrollTop = chatBox.scrollHeight;
+    }
+
+    scrollBottom();
+
+    // =========================
+    // KIRIM PESAN TANPA RELOAD
+    // =========================
+    form.addEventListener("submit", function(e){
+        e.preventDefault();
+
+        if (!messageInput.value.trim() && !imageInput.files.length) {
+            return;
+        }
+
+        let formData = new FormData(form);
+
+        fetch("{{ route('dosen.messages.send') }}", {
+            method: "POST",
+            headers: {
+                'X-CSRF-TOKEN': '{{ csrf_token() }}'
+            },
+            body: formData
+        })
+        .then(res => res.json())
+        .then(data => {
+
+            if(data.success){
+
+                let html = `
+                <div class="flex flex-col items-end ml-auto max-w-[80%]">
+                    <div class="bg-blue-600 p-4 rounded-2xl rounded-tr-none shadow-md shadow-blue-100">
+                        ${data.body ? `<p class="text-sm text-white">${data.body}</p>` : ''}
+                        ${data.image ? `<img src="/storage/${data.image}" class="mt-2 rounded-lg max-w-xs">` : ''}
+                    </div>
+                    <span class="text-[9px] font-bold text-slate-400 mt-1 mr-1">
+                        ${data.time}
+                    </span>
+                </div>
+                `;
+
+                chatBox.innerHTML += html;
+
+                messageInput.value = "";
+                imageInput.value = "";
+
+                scrollBottom();
+            }
+        });
+
+    });
+
+    // =========================
+    // AUTO REFRESH SETIAP 3 DETIK
+    // =========================
+    @if($selectedMahasiswa)
+setInterval(function(){
+
+    fetch("{{ route('dosen.messages.fetch', $selectedMahasiswa) }}")
+    .then(res => res.json())
+    .then(data => {
+
+        if(data.html){
+            chatBox.innerHTML = data.html;
+            scrollBottom();
+        }
+
+    });
+
+}, 3000);
+@endif
+
+
+});
+</script>
+
     </body>
 </html>

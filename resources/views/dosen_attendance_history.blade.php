@@ -30,7 +30,7 @@
         >
             <div class="max-w-6xl mx-auto flex items-center gap-4">
                 <a
-                    href="{{ route('dosen.course.attendance') }}"
+                    href="{{ route('dosen.attendance.index', $session->kelas_id) }}"
                     class="w-10 h-10 rounded-full bg-slate-50 hover:bg-slate-100 text-slate-400 hover:text-slate-600 flex items-center justify-center transition-all border border-slate-200 shrink-0"
                 >
                     <svg
@@ -57,7 +57,7 @@
                     <p
                         class="text-[10px] font-bold text-slate-400 uppercase tracking-widest mt-1 truncate"
                     >
-                        Pertemuan 1: Kontrak Perkuliahan
+                        Pertemuan {{ $session->urutan }}: {{ $session->judul }}
                     </p>
                 </div>
             </div>
@@ -74,14 +74,15 @@
                 >
                     <div>
                         <h2 class="text-2xl font-black text-slate-900">
-                            Kontrak Perkuliahan & Silabus
+                            {{ $session->judul }}
                         </h2>
                         <p class="text-sm text-slate-500 font-medium mt-1">
-                            Rabu, 28 Jan 2026 • 08:00 - 10:30 WIB
+                            {{ \Carbon\Carbon::parse($session->tanggal)->translatedFormat('l, d M Y') }}
+    • {{ $session->jam_mulai }} - {{ $session->jam_selesai }} WIB
                         </p>
                     </div>
                     <a
-                        href="{{ route('dosen.attendance.input') }}"
+                        href="{{ route('dosen.attendance.manual', $session->id) }}"
                         class="px-5 py-2 bg-slate-100 text-slate-600 rounded-xl font-bold text-xs uppercase tracking-widest hover:bg-blue-50 hover:text-blue-600 transition-all border border-slate-200 flex items-center gap-2"
                     >
                         <svg
@@ -106,7 +107,7 @@
                         class="p-4 rounded-2xl bg-emerald-50 border border-emerald-100 text-center"
                     >
                         <span class="block text-2xl font-black text-emerald-600"
-                            >30</span
+                            >{{ $rekap['hadir'] }}</span
                         >
                         <span
                             class="text-[10px] font-bold text-emerald-400 uppercase tracking-widest"
@@ -117,7 +118,7 @@
                         class="p-4 rounded-2xl bg-blue-50 border border-blue-100 text-center"
                     >
                         <span class="block text-2xl font-black text-blue-600"
-                            >2</span
+                            >{{ $rekap['izin'] }}</span
                         >
                         <span
                             class="text-[10px] font-bold text-blue-400 uppercase tracking-widest"
@@ -128,7 +129,7 @@
                         class="p-4 rounded-2xl bg-orange-50 border border-orange-100 text-center"
                     >
                         <span class="block text-2xl font-black text-orange-600"
-                            >1</span
+                            >{{ $rekap['sakit'] }}</span
                         >
                         <span
                             class="text-[10px] font-bold text-orange-400 uppercase tracking-widest"
@@ -139,7 +140,7 @@
                         class="p-4 rounded-2xl bg-red-50 border border-red-100 text-center"
                     >
                         <span class="block text-2xl font-black text-red-600"
-                            >1</span
+                            >{{ $rekap['alpha'] }}</span
                         >
                         <span
                             class="text-[10px] font-bold text-red-400 uppercase tracking-widest"
@@ -183,6 +184,7 @@
                 </div>
 
                 <div class="divide-y divide-slate-100">
+                    @foreach ($detail as $mhs)
                     <div
                         class="p-4 md:p-6 flex items-center justify-between hover:bg-slate-50 transition-colors"
                     >
@@ -190,96 +192,28 @@
                             <div
                                 class="w-10 h-10 rounded-full bg-indigo-100 text-indigo-600 flex items-center justify-center font-bold text-xs shrink-0"
                             >
-                                RF
+                                {{ strtoupper(substr($mhs->nama, 0, 2)) }}
                             </div>
                             <div>
                                 <h4 class="font-bold text-slate-900 text-sm">
-                                    Ridwan Firdaus
+                                    {{ $mhs->nama }}
                                 </h4>
                                 <p class="text-[10px] text-slate-400 font-mono">
-                                    2230511041
+                                    {{ $mhs->nim }}
                                 </p>
                             </div>
                         </div>
                         <span
                             class="px-3 py-1 bg-emerald-100 text-emerald-700 rounded-lg text-[10px] font-bold uppercase tracking-widest"
-                            >Hadir</span
+                            >@if ($mhs->status == 'hadir') bg-emerald-100 text-emerald-700
+                @elseif ($mhs->status == 'izin') bg-blue-100 text-blue-700
+                @elseif ($mhs->status == 'sakit') bg-orange-100 text-orange-700
+                @else bg-red-100 text-red-700 @endif">
+                {{ ucfirst($mhs->status) }}</span
                         >
                     </div>
-
-                    <div
-                        class="p-4 md:p-6 flex items-center justify-between hover:bg-slate-50 transition-colors"
-                    >
-                        <div class="flex items-center gap-4">
-                            <div
-                                class="w-10 h-10 rounded-full bg-orange-100 text-orange-600 flex items-center justify-center font-bold text-xs shrink-0"
-                            >
-                                DA
-                            </div>
-                            <div>
-                                <h4 class="font-bold text-slate-900 text-sm">
-                                    Dina Aulia
-                                </h4>
-                                <p class="text-[10px] text-slate-400 font-mono">
-                                    2230511042
-                                </p>
-                            </div>
-                        </div>
-                        <span
-                            class="px-3 py-1 bg-orange-100 text-orange-700 rounded-lg text-[10px] font-bold uppercase tracking-widest"
-                            >Sakit</span
-                        >
-                    </div>
-
-                    <div
-                        class="p-4 md:p-6 flex items-center justify-between hover:bg-slate-50 transition-colors"
-                    >
-                        <div class="flex items-center gap-4">
-                            <div
-                                class="w-10 h-10 rounded-full bg-blue-100 text-blue-600 flex items-center justify-center font-bold text-xs shrink-0"
-                            >
-                                AS
-                            </div>
-                            <div>
-                                <h4 class="font-bold text-slate-900 text-sm">
-                                    Agus Santoso
-                                </h4>
-                                <p class="text-[10px] text-slate-400 font-mono">
-                                    2230511044
-                                </p>
-                            </div>
-                        </div>
-                        <span
-                            class="px-3 py-1 bg-blue-100 text-blue-700 rounded-lg text-[10px] font-bold uppercase tracking-widest"
-                            >Izin</span
-                        >
-                    </div>
-
-                    <div
-                        class="p-4 md:p-6 flex items-center justify-between hover:bg-slate-50 transition-colors"
-                    >
-                        <div class="flex items-center gap-4">
-                            <div
-                                class="w-10 h-10 rounded-full bg-red-100 text-red-600 flex items-center justify-center font-bold text-xs shrink-0"
-                            >
-                                BJ
-                            </div>
-                            <div>
-                                <h4 class="font-bold text-slate-900 text-sm">
-                                    Budi Jaya
-                                </h4>
-                                <p class="text-[10px] text-slate-400 font-mono">
-                                    2230511045
-                                </p>
-                            </div>
-                        </div>
-                        <span
-                            class="px-3 py-1 bg-red-100 text-red-700 rounded-lg text-[10px] font-bold uppercase tracking-widest"
-                            >Alpha</span
-                        >
-                    </div>
-                </div>
-            </div>
+@endforeach
+                    
         </main>
     </body>
 </html>

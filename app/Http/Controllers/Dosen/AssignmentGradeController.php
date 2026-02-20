@@ -92,10 +92,6 @@ class AssignmentGradeController extends Controller
 
     public function sendMessage(Request $request, $submissionId)
     {
-        $request->validate([
-            'body' => 'required|string'
-        ]);
-
         // 🔒 Pastikan submission milik kelas dosen
         $submission = Submission::where('id', $submissionId)
             ->whereHas('assignment.kelas', function ($q) {
@@ -103,12 +99,43 @@ class AssignmentGradeController extends Controller
             })
             ->firstOrFail();
 
-        Message::create([
+        $pathImage = null;
+        $pathVoice = null;
+
+        // Simpan gambar jika ada
+        if ($request->hasFile('image')) {
+            $pathImage = $request->file('image')->store('diskusi_tugas', 'public');
+        }
+
+        // Simpan voice/rekaman suara jika ada
+        if ($request->hasFile('voice')) {
+            $pathVoice = $request->file('voice')->store('diskusi_tugas', 'public');
+        }
+
+        // Simpan pesan ke database
+        $message = Message::create([
             'submission_id' => $submission->id,
-            'from' => 'dosen',
-            'body' => $request->body
+            'from'          => 'dosen',
+            'body'          => $request->body,
+            'image'         => $pathImage,
+            'voice'         => $pathVoice,
         ]);
 
+        // Jika request berasal dari AJAX (fetch API di frontend)
+        if ($request->ajax() || $request->wantsJson()) {
+            return response()->json([
+                'success' => true,
+                'message' => [
+                    'id'    => $message->id,
+                    'body'  => $message->body,
+                    'image' => $message->image ? asset('storage/' . $message->image) : null,
+                    'voice' => $message->voice ? asset('storage/' . $message->voice) : null,
+                    'time'  => $message->created_at->format('H:i')
+                ]
+            ]);
+        }
+
+        // Fallback jika tidak pakai javascript
         return back()->with('success', 'Pesan berhasil dikirim');
     }
 }

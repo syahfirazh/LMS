@@ -11,9 +11,9 @@ class DosenSeeder extends Seeder
     public function run(): void
     {
         Dosen::create([
-            'nidn' => '2430511033',
+            'nidn' => '12345678',
             'nama' => 'Elgar Ahmadal',
-            'password' => Hash::make('elgar123'),
+            'password' => Hash::make('12345678'),
         ]);
     }
 }

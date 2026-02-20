@@ -3,159 +3,158 @@
 namespace App\Http\Controllers\Dosen;
 
 use App\Http\Controllers\Controller;
+use Illuminate\Http\Request;
+use Illuminate\Support\Facades\Auth;
+use Illuminate\Support\Facades\Storage;
 use App\Models\Kelas;
+use App\Models\MataKuliah;
 use App\Models\CourseSession;
 use App\Models\Mahasiswa;
-use Illuminate\Http\Request;
-use Illuminate\Support\Facades\Storage;
 
 class CourseController extends Controller
 {
     /**
-     * 🔒 Helper: pastikan kelas milik dosen login
+     * 🔒 Helper: Pastikan kelas milik dosen yang sedang login
      */
     protected function authorizeKelas(Kelas $kelas)
     {
-        if ($kelas->dosen_id !== auth('dosen')->id()) {
+        if ($kelas->dosen_id !== Auth::guard('dosen')->id()) {
             abort(403, 'Anda tidak berhak mengakses kelas ini');
         }
     }
 
     // =========================================================
-    // LIST SEMUA KELAS DOSEN
+    // 1. LIST SEMUA KELAS DOSEN
     // =========================================================
     public function index()
     {
-        $kelasModel = Kelas::with(['mataKuliah', 'mahasiswa'])
-            ->where('dosen_id', auth('dosen')->id())
-            ->get();
+        $dosen = Auth::guard('dosen')->user();
 
-        $kelasDiampu = $kelasModel->map(function ($kelas) {
-            return [
-                'id' => $kelas->id,
-                'kode' => strtoupper(substr($kelas->mataKuliah->nama, 0, 3)),
-                'nama' => $kelas->mataKuliah->nama,
-                'kelas' => $kelas->kode_kelas,
-                'jadwal' => $kelas->hari . ', ' . $kelas->jam_mulai . ' - ' . $kelas->jam_selesai,
-                'mahasiswa' => $kelas->mahasiswa->count(),
-                'warna' => 'blue',
-            ];
-        });
+        $kelasDiampu = Kelas::with(['mataKuliah', 'mahasiswa'])
+            ->where('dosen_id', $dosen->id)
+            ->latest()
+            ->get();
 
         return view('dosen_courses', compact('kelasDiampu'));
     }
 
     // =========================================================
-    // HALAMAN MANAGE KELAS
+    // 2. SIMPAN KELAS BARU (Upload Foto Sampul)
     // =========================================================
-    public function manage(Kelas $kelas)
+    public function store(Request $request)
     {
-        $this->authorizeKelas($kelas);
+        $request->validate([
+            'nama_mata_kuliah' => 'required|string|max:255',
+            'kode_kelas'       => 'required|string|max:10',
+            'sks'              => 'required|integer|min:1',
+            'hari'             => 'required|string',
+            'jam_mulai'        => 'required',
+            'jam_selesai'      => 'required',
+            'ruangan'          => 'required|string',
+            'sampul'           => 'nullable|image|mimes:jpeg,png,jpg|max:2048',
+        ]);
 
-        $kelas->load(['mataKuliah', 'courseSessions']);
+        $matkul = MataKuliah::firstOrCreate(
+            ['nama' => $request->nama_mata_kuliah],
+            ['sks' => $request->sks, 'kode' => strtoupper(substr($request->nama_mata_kuliah, 0, 3))]
+        );
 
-        return view('dosen_manage_course', compact('kelas'));
+        $pathSampul = null;
+        if ($request->hasFile('sampul')) {
+            $pathSampul = $request->file('sampul')->store('covers', 'public');
+        }
+
+        Kelas::create([
+            'dosen_id'       => Auth::guard('dosen')->id(),
+            'mata_kuliah_id' => $matkul->id,
+            'kode_kelas'     => $request->kode_kelas,
+            'hari'           => $request->hari,
+            'jam_mulai'      => $request->jam_mulai,
+            'jam_selesai'    => $request->jam_selesai,
+            'ruangan'        => $request->ruangan,
+            'sampul'         => $pathSampul,
+            'warna'          => collect(['blue', 'emerald', 'orange', 'purple', 'pink'])->random(),
+        ]);
+
+        return redirect()->back()->with('success', 'Kelas berhasil dibuat!');
     }
 
     // =========================================================
-    // UPDATE DESKRIPSI & SAMPUL MATA KULIAH
+    // 3. HALAMAN MANAGE KELAS (Detail)
     // =========================================================
-    public function updateDeskripsi(Request $request, Kelas $kelas)
+    public function manage($id)
     {
+        $kelas = Kelas::with(['mataKuliah', 'courseSessions'])->findOrFail($id);
+        $this->authorizeKelas($kelas);
+
+        return view('dosen_course_manage', compact('kelas'));
+    }
+
+    // =========================================================
+    // 4. UPDATE DESKRIPSI & SAMPUL MATA KULIAH
+    // =========================================================
+    public function updateDeskripsi(Request $request, $id)
+    {
+        $kelas = Kelas::findOrFail($id);
         $this->authorizeKelas($kelas);
 
         $request->validate([
             'deskripsi' => 'required|string',
-            'sampul' => 'nullable|image|mimes:jpg,jpeg,png|max:2048',
+            'sampul'    => 'nullable|image|mimes:jpg,jpeg,png|max:2048',
         ]);
-
-        $data = [];
 
         if ($request->hasFile('sampul')) {
-            if (
-                $kelas->mataKuliah->sampul &&
-                Storage::disk('public')->exists($kelas->mataKuliah->sampul)
-            ) {
+            // Hapus sampul lama jika ada
+            if ($kelas->mataKuliah->sampul && Storage::disk('public')->exists($kelas->mataKuliah->sampul)) {
                 Storage::disk('public')->delete($kelas->mataKuliah->sampul);
             }
-
-            $data['sampul'] = $request
-                ->file('sampul')
-                ->store('sampul_mata_kuliah', 'public');
+            $path = $request->file('sampul')->store('sampul_mata_kuliah', 'public');
+            $kelas->mataKuliah->update(['sampul' => $path]);
         }
 
-        $kelas->mataKuliah->update([
-            'deskripsi' => $request->deskripsi,
-            'sampul' => $data['sampul'] ?? $kelas->mataKuliah->sampul,
-        ]);
+        $kelas->mataKuliah->update(['deskripsi' => $request->deskripsi]);
 
-        return back()->with('success', 'Deskripsi & sampul berhasil diperbarui');
+        return back()->with('success', 'Informasi mata kuliah berhasil diperbarui');
     }
 
     // =========================================================
-    // UPDATE SAMPUL KELAS
+    // 5. TAMBAH SESSION (PERTEMUAN)
     // =========================================================
-    public function updateSampul(Request $request, Kelas $kelas)
+    public function storeSession(Request $request, $id)
     {
+        $kelas = Kelas::findOrFail($id);
         $this->authorizeKelas($kelas);
 
-        $request->validate([
-            'sampul' => 'required|image|max:2048',
-        ]);
-
-        $path = $request->file('sampul')->store('kelas', 'public');
-
-        $kelas->update([
-            'sampul' => $path,
-        ]);
-
-        return back()->with('success', 'Sampul berhasil diperbarui');
-    }
-
-    // =========================================================
-    // TAMBAH SESSION (PERTEMUAN)
-    // =========================================================
-    public function storeSession(Request $request, Kelas $kelas)
-    {
-        $this->authorizeKelas($kelas);
-
-        $request->validate([
-            'judul' => 'required|string|max:255',
-        ]);
+        $request->validate(['judul' => 'required|string|max:255']);
 
         $urutanTerakhir = $kelas->courseSessions()->max('urutan') ?? 0;
 
         CourseSession::create([
             'kelas_id' => $kelas->id,
-            'judul' => $request->judul,
-            'urutan' => $urutanTerakhir + 1,
+            'judul'    => $request->judul,
+            'urutan'   => $urutanTerakhir + 1,
         ]);
 
         return back()->with('success', 'Pertemuan berhasil ditambahkan');
     }
 
     // =========================================================
-    // LIST MAHASISWA DI KELAS
+    // 6. KELOLA MAHASISWA DI KELAS
     // =========================================================
-    public function students(Kelas $kelas)
+    public function students($id)
     {
+        $kelas = Kelas::with(['mahasiswa', 'mataKuliah'])->findOrFail($id);
         $this->authorizeKelas($kelas);
-
-        $kelas->load(['mahasiswa', 'mataKuliah']);
 
         return view('dosen_course_students', compact('kelas'));
     }
 
-    // =========================================================
-    // TAMBAH MAHASISWA KE KELAS
-    // =========================================================
-    public function addStudent(Request $request, Kelas $kelas)
+    public function addStudent(Request $request, $id)
     {
+        $kelas = Kelas::findOrFail($id);
         $this->authorizeKelas($kelas);
 
-        $request->validate([
-            'nim' => 'required|string'
-        ]);
+        $request->validate(['nim' => 'required|string']);
 
         $mahasiswa = Mahasiswa::where('nim', $request->nim)->first();
 
@@ -173,17 +172,47 @@ class CourseController extends Controller
     }
 
     // =========================================================
-    // HALAMAN NILAI
+    // 7. HALAMAN NILAI
     // =========================================================
-    public function grades(Kelas $kelas)
+    public function grades($id)
     {
+        $kelas = Kelas::with('mahasiswa')->findOrFail($id);
         $this->authorizeKelas($kelas);
 
-        $mahasiswas = $kelas->mahasiswa()->get();
+        $mahasiswas = $kelas->mahasiswa;
 
-        return view('dosen_course_grades', compact(
-            'kelas',
-            'mahasiswas'
-        ));
+        return view('dosen_course_grades', compact('kelas', 'mahasiswas'));
     }
+
+    // =========================================================
+    // 8. HAPUS KELAS
+    // =========================================================
+    public function destroy($id)
+    {
+        $kelas = Kelas::findOrFail($id);
+        $this->authorizeKelas($kelas);
+
+        if ($kelas->sampul && Storage::disk('public')->exists($kelas->sampul)) {
+            Storage::disk('public')->delete($kelas->sampul);
+        }
+
+        $kelas->delete();
+
+        return redirect()->back()->with('success', 'Kelas berhasil dihapus.');
+    }
+  // Tambahkan atau ganti fungsi destroySession kamu dengan ini
+public function destroySession(Kelas $kelas, CourseSession $session)
+{
+    // Pastikan kelas ini milik dosen yang login
+    $this->authorizeKelas($kelas);
+
+    // Pastikan sesi ini memang milik kelas tersebut
+    if ($session->kelas_id !== $kelas->id) {
+        abort(404);
+    }
+    
+    $session->delete();
+
+    return back()->with('success', 'Pertemuan berhasil dihapus.');
+}
 }

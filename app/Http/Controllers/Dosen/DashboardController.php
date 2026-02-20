@@ -9,132 +9,106 @@ use Carbon\Carbon;
 
 class DashboardController extends Controller
 {
-   public function index()
-{
-    $dosen = Auth::guard('dosen')->user();
-
-    $hariIni = now()->translatedFormat('l');
-    $now = Carbon::now();
-
-    // Ambil kelas dosen hari ini
-    $kelasHariIni = Kelas::with('mataKuliah')
-        ->where('dosen_id', $dosen->id)
-        ->where('hari', $hariIni)
-        ->orderBy('jam_mulai')
-        ->get();
-
-    $jadwalHariIni = $kelasHariIni
-    ->filter(function ($kelas) use ($now) {
-        $mulai = Carbon::parse($kelas->jam_mulai);
-$selesai = Carbon::parse($kelas->jam_selesai);
-
-
-        // tampilkan semua jadwal hari ini yang BELUM SELESAI
-        return $now->lte($selesai);
-    })
-    ->map(function ($kelas) use ($now) {
-       $mulai = Carbon::parse($kelas->jam_mulai);
-$selesai = Carbon::parse($kelas->jam_selesai);
-
-        if ($now->between($mulai, $selesai)) {
-            $status = 'berlangsung';
-        } elseif ($now->lt($mulai)) {
-            $status = 'akan_datang';
-        } else {
-            $status = 'selesai';
-        }
-
-        return [
-            'jam_mulai'   => $kelas->jam_mulai,
-            'jam_selesai' => $kelas->jam_selesai,
-            'mata_kuliah' => $kelas->mataKuliah->nama ?? '-',
-            'kelas'       => $kelas->kode_kelas,
-            'ruangan'     => $kelas->ruangan,
-            'status'      => $status,
-        ];
-    });
-
-
-    return view('dosen_dashboard', [
-    'dosen'          => $dosen,
-    'hariIni'        => now()->translatedFormat('l, d F Y'),
-    'kelasDiampu'    => $dosen->kelas ?? collect(),
-
-    'totalMatkul'    => optional($dosen->kelas)->count() ?? 0,
-
-    'totalMahasiswa' => optional($dosen->kelas)
-        ? $dosen->kelas->sum(fn ($k) => $k->mahasiswa->count())
-        : 0,
-
-    'totalPenilaian' => 0,
-    'jadwalHariIni'  => $jadwalHariIni,
-]);
-
-}
-
-    /**
-     * Jadwal mengajar HARI INI (untuk dashboard)
-     */
-    private function jadwalHariIni($dosen)
+    public function index()
     {
-        $hariIni = Carbon::now()->translatedFormat('l'); // Senin, Selasa, dst
+        $dosen = Auth::guard('dosen')->user();
+
+        // 1. Setting Waktu
+        Carbon::setLocale('id');
+        $hariIni = Carbon::now()->isoFormat('dddd'); 
+        $tanggalLengkap = Carbon::now()->isoFormat('dddd, D MMMM Y');
         $now = Carbon::now();
 
-        $kelasHariIni = Kelas::with('mataKuliah')
+        // 2. Ambil Semua Kelas (Return: OBJECT Eloquent)
+        $kelasDiampu = Kelas::with(['mataKuliah', 'mahasiswa'])
             ->where('dosen_id', $dosen->id)
-            ->where('hari', $hariIni)
-            ->orderBy('jam_mulai')
             ->get();
 
-        return $kelasHariIni->map(function ($kelas) use ($now) {
-           $mulai = Carbon::parse($kelas->jam_mulai);
-$selesai = Carbon::parse($kelas->jam_selesai);
+        // 3. Ambil Jadwal Hari Ini (Return: Collection of Objects)
+        $kelasHariIniRaw = Kelas::with('mataKuliah')
+            ->where('dosen_id', $dosen->id)
+            ->where('hari', $hariIni) 
+            ->orderBy('jam_mulai', 'asc')
+            ->get();
 
-
-            $status = 'akan_datang';
-            if ($now->between($mulai, $selesai)) {
+        // 4. Proses Status Jadwal (Return: ARRAY hasil map)
+        $jadwalHariIni = $kelasHariIniRaw->map(function ($kelas) use ($now) {
+            $jamMulai = Carbon::parse($kelas->jam_mulai);
+            $jamSelesai = Carbon::parse($kelas->jam_selesai);
+            
+            // Set tanggal ke hari ini agar perbandingan jam valid
+            $jamMulai->setDate($now->year, $now->month, $now->day);
+            $jamSelesai->setDate($now->year, $now->month, $now->day);
+            
+            if ($now->between($jamMulai, $jamSelesai)) {
                 $status = 'berlangsung';
-            } elseif ($now->gt($selesai)) {
+            } elseif ($now->gt($jamSelesai)) {
                 $status = 'selesai';
+            } else {
+                $status = 'akan_datang';
             }
 
             return [
-                'mata_kuliah' => $kelas->mataKuliah->nama_mk ?? '-',
+                'jam_mulai'   => $jamMulai->format('H:i'),
+                'jam_selesai' => $jamSelesai->format('H:i'),
+                'mata_kuliah' => $kelas->mataKuliah->nama ?? 'Mata Kuliah',
                 'kelas'       => $kelas->kode_kelas,
-                'jam_mulai'   => $kelas->jam_mulai,
-                'jam_selesai' => $kelas->jam_selesai,
                 'ruangan'     => $kelas->ruangan,
                 'status'      => $status,
             ];
         });
+
+        // 5. Statistik
+        $totalMatkul = $kelasDiampu->count();
+        $totalMahasiswa = $kelasDiampu->flatMap->mahasiswa->unique('id')->count();
+        $totalPenilaian = 0; 
+
+        // 6. Kirim ke View
+        return view('dosen_dashboard', compact(
+            'dosen', 'hariIni', 'tanggalLengkap', 'kelasDiampu', 
+            'jadwalHariIni', 'totalMatkul', 'totalMahasiswa', 'totalPenilaian'
+        ));
     }
 
-    /**
-     * Halaman Jadwal Mengajar (full week)
-     */
+    public function notifications()
+    {
+        // Langsung ke view notifikasi (Sesuai dengan kode asli Anda)
+        return view('dosen_notifications');
+    }
+
     public function schedule()
     {
         $dosen = Auth::guard('dosen')->user();
 
-        $jadwal = Kelas::with('mataKuliah')
+        // 1. Ambil semua data dari database (diurutkan berdasarkan jam mulai)
+        $jadwalRaw = Kelas::with('mataKuliah')
             ->where('dosen_id', $dosen->id)
-            ->orderBy('hari')
-            ->orderBy('jam_mulai')
-            ->get()
-            ->groupBy('hari');
+            ->orderBy('jam_mulai', 'asc')
+            ->get();
 
-        $hariList = [
-            'Senin',
-            'Selasa',
-            'Rabu',
-            'Kamis',
-            'Jumat',
-            'Sabtu',
+        // 2. Siapkan wadah 7 hari pasti agar urutannya selalu Senin - Minggu
+        $jadwalPerHari = [
+            'Senin'  => [],
+            'Selasa' => [],
+            'Rabu'   => [],
+            'Kamis'  => [],
+            'Jumat'  => [],
+            'Sabtu'  => [],
+            'Minggu' => [],
         ];
 
-        return view('dosen_schedule', [
-            'jadwal'   => $jadwal,
-            'hariList' => $hariList,
-        ]);
+        // 3. Masukkan jadwal ke masing-masing hari (Anti-Gagal & Kebal Spasi)
+        foreach ($jadwalRaw as $kelas) {
+            // Membersihkan teks: Hapus spasi, kecilkan huruf, lalu huruf awal besar
+            $hariDB = ucfirst(strtolower(trim($kelas->hari))); 
+            
+            // Jika nama harinya valid, masukkan ke dalam wadah
+            if (array_key_exists($hariDB, $jadwalPerHari)) {
+                $jadwalPerHari[$hariDB][] = $kelas;
+            }
+        }
+
+        // 4. Kirim ke View
+        return view('dosen_schedule', compact('dosen', 'jadwalPerHari'));
     }
 }

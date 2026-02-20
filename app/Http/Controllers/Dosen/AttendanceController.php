@@ -13,10 +13,12 @@ class AttendanceController extends Controller
     /**
      * 🔒 Pastikan kelas milik dosen login
      */
-    protected function authorizeKelas(Kelas $kelas)
+    protected function authorizeKelas($kelas)
     {
-        if ($kelas->dosen_id !== auth('dosen')->id()) {
-            abort(403, 'Anda tidak berhak mengakses kelas ini');
+        $loggedInId = auth()->guard('dosen')->id() ?? auth()->id();
+        
+        if ($kelas->dosen_id != $loggedInId) {
+            abort(403, "Anda tidak berhak mengakses kelas ini.");
         }
     }
 
@@ -25,11 +27,10 @@ class AttendanceController extends Controller
      * INDEX - HALAMAN ABSENSI PER KELAS
      * =========================================================
      */
-    public function index(Kelas $kelas)
+    public function index($kelas_id)
     {
+        $kelas = Kelas::with(['dosen', 'mataKuliah', 'mahasiswa', 'courseSessions'])->findOrFail($kelas_id);
         $this->authorizeKelas($kelas);
-
-        $kelas->load(['dosen', 'mataKuliah', 'mahasiswa', 'courseSessions']);
 
         $totalMahasiswa = $kelas->mahasiswa->count();
 
@@ -70,19 +71,17 @@ class AttendanceController extends Controller
      * HISTORY - RIWAYAT ABSENSI PER SESSION
      * =========================================================
      */
-    public function history(Kelas $kelas, CourseSession $session)
+    public function history($session_id)
     {
-        $this->authorizeKelas($kelas);
-
-        if ($session->kelas_id !== $kelas->id) {
-            abort(404);
-        }
-
-        $session->load([
+        $session = CourseSession::with([
             'attendances.mahasiswa',
             'kelas.mahasiswa',
             'kelas.mataKuliah'
-        ]);
+        ])->findOrFail($session_id);
+
+        $this->authorizeKelas($session->kelas);
+
+        $kelas = $session->kelas;
 
         $rekap = [
             'hadir' => $session->attendances->where('status', 'H')->count(),
@@ -115,16 +114,13 @@ class AttendanceController extends Controller
      * FORM INPUT MANUAL
      * =========================================================
      */
-    public function manual(Kelas $kelas, CourseSession $session)
+    public function manual($session_id)
     {
-        $this->authorizeKelas($kelas);
+        $session = CourseSession::with('kelas.mahasiswa')->findOrFail($session_id);
+        
+        $this->authorizeKelas($session->kelas);
 
-        if ($session->kelas_id !== $kelas->id) {
-            abort(404);
-        }
-
-        $session->load('kelas.mahasiswa');
-
+        $kelas = $session->kelas;
         $mahasiswa = $kelas->mahasiswa;
 
         $attendances = Attendance::where('course_session_id', $session->id)
@@ -144,13 +140,10 @@ class AttendanceController extends Controller
      * SIMPAN MANUAL
      * =========================================================
      */
-    public function storeManual(Request $request, Kelas $kelas, CourseSession $session)
+    public function storeManual(Request $request, $session_id)
     {
-        $this->authorizeKelas($kelas);
-
-        if ($session->kelas_id !== $kelas->id) {
-            abort(404);
-        }
+        $session = CourseSession::with('kelas')->findOrFail($session_id);
+        $this->authorizeKelas($session->kelas);
 
         $validated = $request->validate([
             'attendance'   => 'required|array',
@@ -170,59 +163,7 @@ class AttendanceController extends Controller
         }
 
         return redirect()
-            ->route('dosen.attendance.history', [$kelas->id, $session->id])
+            ->route('dosen.attendance.history', $session->id)
             ->with('success', 'Presensi berhasil disimpan');
-    }
-
-    /**
-     * =========================================================
-     * SAVE CEPAT
-     * =========================================================
-     */
-    public function save(Request $request, Kelas $kelas, CourseSession $session)
-    {
-        $this->authorizeKelas($kelas);
-
-        if ($session->kelas_id !== $kelas->id) {
-            abort(404);
-        }
-
-        if (!$request->attendance) {
-            return back()->with('error', 'Tidak ada data presensi.');
-        }
-
-        foreach ($request->attendance as $mahasiswaId => $status) {
-            Attendance::updateOrCreate(
-                [
-                    'course_session_id' => $session->id,
-                    'mahasiswa_id'      => $mahasiswaId,
-                ],
-                [
-                    'status' => $status
-                ]
-            );
-        }
-
-        return redirect()
-            ->route('dosen.attendance.history', [$kelas->id, $session->id])
-            ->with('success', 'Presensi berhasil disimpan.');
-    }
-
-    /**
-     * =========================================================
-     * RESET ABSENSI
-     * =========================================================
-     */
-    public function reset(Kelas $kelas, CourseSession $session)
-    {
-        $this->authorizeKelas($kelas);
-
-        if ($session->kelas_id !== $kelas->id) {
-            abort(404);
-        }
-
-        Attendance::where('course_session_id', $session->id)->delete();
-
-        return back()->with('success', 'Presensi berhasil direset.');
     }
 }

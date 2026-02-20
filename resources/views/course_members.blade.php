@@ -7,12 +7,32 @@
             content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no"
         />
         <title>Anggota - Struktur Data 3C | LMS Inklusi UMMI</title>
+
+        <link
+            href="https://unpkg.com/aos@2.3.1/dist/aos.css"
+            rel="stylesheet"
+        />
         @vite(['resources/css/app.css', 'resources/js/app.js'])
         <link
             href="https://fonts.googleapis.com/css2?family=Plus+Jakarta+Sans:wght@400;500;600;700;800&display=swap"
             rel="stylesheet"
         />
+
         <style>
+            html {
+                scrollbar-gutter: stable;
+            }
+            .custom-scrollbar::-webkit-scrollbar {
+                width: 5px;
+                height: 5px;
+            }
+            .custom-scrollbar::-webkit-scrollbar-track {
+                background: transparent;
+            }
+            .custom-scrollbar::-webkit-scrollbar-thumb {
+                background-color: #cbd5e1;
+                border-radius: 20px;
+            }
             .scrollbar-hide::-webkit-scrollbar {
                 display: none;
             }
@@ -23,22 +43,37 @@
         </style>
     </head>
     <body
-        class="m-0 font-['Plus_Jakarta_Sans'] bg-[#f1f5f9] min-h-full flex flex-col border-box overflow-x-hidden text-slate-800"
+        class="m-0 font-['Plus_Jakarta_Sans'] bg-[#f8fafc] min-h-full flex flex-col border-box overflow-x-hidden text-slate-800"
     >
-        <main class="flex-1 flex flex-col h-screen overflow-y-auto">
+        <div
+            class="fixed top-0 left-0 w-full h-full overflow-hidden -z-10 pointer-events-none"
+        >
             <div
-                class="bg-white px-4 md:px-6 py-4 border-b border-slate-200 sticky top-0 z-30 shadow-sm/50 backdrop-blur-xl bg-white/90 transition-all"
+                class="absolute top-[-10%] right-[-5%] w-[400px] h-[400px] bg-blue-100/40 rounded-full blur-3xl opacity-50"
+            ></div>
+            <div
+                class="absolute bottom-[-10%] left-[-10%] w-[400px] h-[400px] bg-indigo-50/40 rounded-full blur-3xl opacity-50"
+            ></div>
+        </div>
+
+        <main
+            class="flex-1 flex flex-col h-screen overflow-y-scroll custom-scrollbar relative"
+        >
+            <div
+                class="bg-white/90 backdrop-blur-2xl border-b border-slate-200/60 sticky top-0 z-40 px-4 md:px-8 py-4 shadow-sm transition-all w-full"
             >
                 <div
-                    class="max-w-6xl mx-auto flex flex-col md:flex-row md:items-center md:justify-between gap-4 md:gap-6"
+                    class="max-w-7xl mx-auto flex flex-col lg:flex-row lg:items-center justify-between gap-4 lg:gap-6 relative"
                 >
-                    <div class="flex items-center gap-4 w-full md:w-auto">
+                    <div
+                        class="flex items-center gap-4 relative z-10 w-full lg:w-auto"
+                    >
                         <button
                             onclick="navigasiKe(0)"
-                            class="w-10 h-10 rounded-full bg-slate-50 hover:bg-blue-50 text-slate-400 hover:text-blue-600 flex items-center justify-center transition-all border border-slate-200 shrink-0"
+                            class="w-11 h-11 md:w-12 md:h-12 rounded-full bg-slate-100 hover:bg-blue-600 text-slate-500 hover:text-white flex items-center justify-center transition-all duration-300 shadow-sm shrink-0 group border border-slate-200 hover:border-blue-600 relative cursor-pointer active:scale-95"
                         >
                             <svg
-                                class="w-5 h-5"
+                                class="w-5 h-5 md:w-6 md:h-6 transform group-hover:-translate-x-1 transition-transform"
                                 fill="none"
                                 stroke="currentColor"
                                 viewBox="0 0 24 24"
@@ -50,8 +85,31 @@
                                     d="M15 19l-7-7 7-7"
                                 ></path>
                             </svg>
+                            <span
+                                class="absolute -bottom-1 -right-1 bg-slate-800 text-white text-[9px] font-black px-1.5 py-0.5 rounded-md border border-white"
+                                >0</span
+                            >
                         </button>
-                        <div class="overflow-hidden">
+
+                        <div
+                            class="hidden sm:block text-left cursor-pointer group shrink-0"
+                            onclick="navigasiKe(0)"
+                        >
+                            <span
+                                class="block text-[9px] font-bold text-slate-400 uppercase tracking-widest"
+                                >Navigasi Suara</span
+                            >
+                            <span
+                                class="block text-xs font-black text-slate-700 group-hover:text-blue-600 transition-colors"
+                                >0 - Kembali</span
+                            >
+                        </div>
+
+                        <div
+                            class="hidden sm:block w-px h-10 bg-slate-200 mx-2"
+                        ></div>
+
+                        <div class="overflow-hidden flex-1">
                             <h1
                                 class="text-lg md:text-xl font-extrabold text-slate-900 tracking-tight leading-none truncate max-w-[250px] md:max-w-none"
                             >
@@ -65,67 +123,71 @@
                         </div>
                     </div>
 
-                    <div class="hidden md:block w-px h-8 bg-slate-200"></div>
-
-                    <nav
-                        class="w-full md:w-auto flex p-1 bg-slate-100 rounded-xl overflow-x-auto scrollbar-hide snap-x gap-1"
-                    >
-                        <button
-                            onclick="navigasiKe(1)"
-                            class="snap-start shrink-0 px-5 py-2 rounded-lg text-slate-500 hover:text-slate-900 font-bold text-[10px] uppercase tracking-widest transition-all whitespace-nowrap hover:bg-white/50"
-                        >
-                            1. Pembelajaran
-                        </button>
-                        <button
-                            onclick="navigasiKe(2)"
-                            class="snap-start shrink-0 px-5 py-2 rounded-lg text-slate-500 hover:text-slate-900 font-bold text-[10px] uppercase tracking-widest transition-all whitespace-nowrap hover:bg-white/50"
-                        >
-                            2. Presensi
-                        </button>
-                        <button
-                            onclick="navigasiKe(3)"
-                            class="snap-start shrink-0 px-5 py-2 rounded-lg text-slate-500 hover:text-slate-900 font-bold text-[10px] uppercase tracking-widest transition-all whitespace-nowrap hover:bg-white/50"
-                        >
-                            3. Penugasan
-                        </button>
-                        <button
-                            onclick="navigasiKe(4)"
-                            class="snap-start shrink-0 px-5 py-2 rounded-lg bg-white text-blue-700 font-bold text-[10px] uppercase tracking-widest shadow-sm border border-slate-200 whitespace-nowrap transition-all"
-                        >
-                            4. Anggota
-                        </button>
-                    </nav>
-
                     <div
-                        class="hidden md:flex items-center gap-3 pl-6 border-l border-slate-200"
+                        class="flex flex-col sm:flex-row items-center gap-4 w-full lg:w-auto"
                     >
+                        <nav
+                            class="w-full lg:w-auto flex p-1.5 bg-slate-100/80 rounded-xl overflow-x-auto custom-scrollbar snap-x gap-1 border border-slate-200/50"
+                        >
+                            <button
+                                onclick="navigasiKe(1)"
+                                class="cursor-pointer active:scale-95 snap-start shrink-0 px-5 py-2 rounded-lg text-slate-500 hover:text-slate-900 hover:bg-white/50 font-bold text-[10px] uppercase tracking-widest border border-transparent whitespace-nowrap transition-all"
+                            >
+                                1. Pembelajaran
+                            </button>
+                            <button
+                                onclick="navigasiKe(2)"
+                                class="cursor-pointer active:scale-95 snap-start shrink-0 px-5 py-2 rounded-lg text-slate-500 hover:text-slate-900 hover:bg-white/50 font-bold text-[10px] uppercase tracking-widest border border-transparent whitespace-nowrap transition-all"
+                            >
+                                2. Presensi
+                            </button>
+                            <button
+                                onclick="navigasiKe(3)"
+                                class="cursor-pointer active:scale-95 snap-start shrink-0 px-5 py-2 rounded-lg text-slate-500 hover:text-slate-900 hover:bg-white/50 font-bold text-[10px] uppercase tracking-widest border border-transparent whitespace-nowrap transition-all"
+                            >
+                                3. Penugasan
+                            </button>
+                            <button
+                                onclick="navigasiKe(4)"
+                                class="cursor-pointer active:scale-95 snap-start shrink-0 px-5 py-2 rounded-lg bg-white text-blue-700 font-bold text-[10px] uppercase tracking-widest shadow-sm border border-slate-200 whitespace-nowrap transition-all"
+                            >
+                                4. Anggota
+                            </button>
+                        </nav>
+
                         <div
-                            class="flex items-center gap-[2px] h-4 w-10 justify-center"
-                            id="wave-container"
+                            class="hidden md:flex items-center gap-3 pl-4 border-l border-slate-200 relative z-10 justify-end shrink-0 w-32"
                         >
                             <div
-                                class="wave-bar w-[2px] bg-blue-500 rounded-full h-1"
-                            ></div>
-                            <div
-                                class="wave-bar w-[2px] bg-blue-400 rounded-full h-1"
-                            ></div>
-                            <div
-                                class="wave-bar w-[2px] bg-blue-600 rounded-full h-1"
-                            ></div>
+                                class="flex items-center gap-[2px] h-4 w-10 justify-center"
+                                id="wave-container"
+                            >
+                                <div
+                                    class="wave-bar w-[2px] bg-blue-500 rounded-full h-1 transition-all"
+                                ></div>
+                                <div
+                                    class="wave-bar w-[2px] bg-blue-400 rounded-full h-1 transition-all"
+                                ></div>
+                                <div
+                                    class="wave-bar w-[2px] bg-blue-600 rounded-full h-1 transition-all"
+                                ></div>
+                            </div>
+                            <span
+                                id="status-desc"
+                                class="text-[9px] font-black text-slate-400 uppercase tracking-widest w-full text-left"
+                                >SIAP</span
+                            >
                         </div>
-                        <span
-                            id="status-desc"
-                            class="text-[9px] font-black text-slate-400 uppercase tracking-widest"
-                            >Listening</span
-                        >
                     </div>
                 </div>
             </div>
 
-            <div class="max-w-6xl mx-auto w-full p-6 lg:p-8 space-y-8">
+            <div class="max-w-6xl mx-auto w-full p-6 lg:p-8 space-y-8 pb-20">
                 <div
+                    data-aos="fade-up"
+                    data-aos-duration="600"
                     onclick="navigasiKe(5)"
-                    class="group bg-gradient-to-br from-blue-600 to-blue-800 rounded-[2rem] p-8 text-white shadow-xl shadow-blue-200 cursor-pointer relative overflow-hidden transition-transform hover:scale-[1.01]"
+                    class="group bg-gradient-to-br from-blue-600 to-blue-800 rounded-[2rem] p-8 text-white shadow-xl shadow-blue-200/50 cursor-pointer relative overflow-hidden transition-transform hover:scale-[1.01] active:scale-[0.98]"
                 >
                     <div
                         class="relative z-10 flex flex-col md:flex-row items-center gap-6"
@@ -138,8 +200,9 @@
                         <div class="flex-1 text-center md:text-left space-y-1">
                             <span
                                 class="bg-blue-500/50 px-3 py-1 rounded-full text-[9px] font-black uppercase tracking-widest border border-white/10"
-                                >Dosen Pengampu</span
                             >
+                                Dosen Pengampu
+                            </span>
                             <h2 class="text-2xl font-black tracking-tight">
                                 Asril Adi Sunarto, S.T., M.Kom.
                             </h2>
@@ -153,7 +216,7 @@
                             </p>
                         </div>
                         <button
-                            class="bg-white text-blue-700 px-6 py-3 rounded-xl font-black text-[10px] uppercase tracking-widest hover:bg-blue-50 transition-all shadow-lg"
+                            class="bg-white text-blue-700 px-6 py-3 rounded-xl font-black text-[10px] uppercase tracking-widest hover:bg-blue-50 transition-all shadow-lg pointer-events-none"
                         >
                             <span class="mr-2 opacity-50">5</span> Hubungi
                         </button>
@@ -165,6 +228,7 @@
 
                 <div class="space-y-6">
                     <div
+                        data-aos="fade-in"
                         class="flex flex-col md:flex-row items-center justify-between gap-4"
                     >
                         <h3
@@ -179,7 +243,7 @@
 
                         <div
                             onclick="navigasiKe(6)"
-                            class="w-full md:w-auto bg-white px-4 py-2 rounded-xl border border-slate-200 flex items-center gap-3 shadow-sm cursor-pointer hover:border-blue-300 transition-all group"
+                            class="w-full md:w-auto bg-white px-4 py-2 rounded-xl border border-slate-200 flex items-center gap-3 shadow-sm cursor-pointer hover:border-blue-300 transition-all group active:scale-95"
                         >
                             <svg
                                 class="w-4 h-4 text-slate-400 group-hover:text-blue-500"
@@ -196,8 +260,10 @@
                             </svg>
                             <span
                                 class="text-xs font-bold text-slate-400 group-hover:text-blue-500"
-                                >Cari Teman (6)...</span
                             >
+                                Cari Teman
+                                <span class="opacity-50">(6)</span>...
+                            </span>
                         </div>
                     </div>
 
@@ -205,7 +271,10 @@
                         class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4"
                     >
                         <div
-                            class="bg-white p-5 rounded-3xl border border-slate-200 shadow-sm hover:shadow-md transition-all flex items-center gap-4"
+                            data-aos="fade-up"
+                            data-aos-duration="600"
+                            data-aos-delay="100"
+                            class="bg-white p-5 rounded-3xl border border-slate-200 shadow-sm hover:shadow-md transition-all flex items-center gap-4 cursor-pointer hover:-translate-y-1 active:scale-[0.98]"
                         >
                             <div
                                 class="w-12 h-12 rounded-2xl bg-indigo-50 text-indigo-600 flex items-center justify-center font-black text-sm border border-indigo-100"
@@ -231,7 +300,10 @@
                         </div>
 
                         <div
-                            class="bg-white p-5 rounded-3xl border border-slate-200 shadow-sm hover:shadow-md transition-all flex items-center gap-4"
+                            data-aos="fade-up"
+                            data-aos-duration="600"
+                            data-aos-delay="150"
+                            class="bg-white p-5 rounded-3xl border border-slate-200 shadow-sm hover:shadow-md transition-all flex items-center gap-4 cursor-pointer hover:-translate-y-1 active:scale-[0.98]"
                         >
                             <div
                                 class="w-12 h-12 rounded-2xl bg-orange-50 text-orange-600 flex items-center justify-center font-black text-sm border border-orange-100"
@@ -257,7 +329,10 @@
                         </div>
 
                         <div
-                            class="bg-white p-5 rounded-3xl border border-slate-200 shadow-sm hover:shadow-md transition-all flex items-center gap-4"
+                            data-aos="fade-up"
+                            data-aos-duration="600"
+                            data-aos-delay="200"
+                            class="bg-white p-5 rounded-3xl border border-slate-200 shadow-sm hover:shadow-md transition-all flex items-center gap-4 cursor-pointer hover:-translate-y-1 active:scale-[0.98]"
                         >
                             <div
                                 class="w-12 h-12 rounded-2xl bg-pink-50 text-pink-600 flex items-center justify-center font-black text-sm border border-pink-100"
@@ -286,15 +361,25 @@
             </div>
         </main>
 
+        <script src="https://unpkg.com/aos@2.3.1/dist/aos.js"></script>
         <script>
+            // INIT ANIMASI SCROLL
+            AOS.init({ once: true, easing: "ease-out-cubic" });
+
+            // LOGIKA VOICE ASSISTANT
             const statusDesc = document.getElementById("status-desc");
             const waveBars = document.querySelectorAll(".wave-bar");
             const synth = window.speechSynthesis;
             const SpeechRec =
                 window.webkitSpeechRecognition || window.SpeechRecognition;
-            const rec = new SpeechRec();
-            rec.lang = "id-ID";
-            rec.continuous = true;
+            let rec = null;
+            let interval;
+
+            if (SpeechRec) {
+                rec = new SpeechRec();
+                rec.lang = "id-ID";
+                rec.continuous = true;
+            }
 
             function setWave(active) {
                 if (waveBars.length > 0) {
@@ -306,16 +391,19 @@
                 }
             }
 
-            let interval;
             function bicara(teks, callback) {
+                synth.cancel();
                 const utter = new SpeechSynthesisUtterance(teks);
                 utter.lang = "id-ID";
+                const savedRate = localStorage.getItem("speechRate");
+                utter.rate = savedRate ? parseFloat(savedRate) : 1.0;
+
                 utter.onstart = () => {
-                    if (statusDesc) statusDesc.innerText = "Speaking";
+                    if (statusDesc) statusDesc.innerText = "BERBICARA...";
                     interval = setInterval(() => setWave(true), 150);
                 };
                 utter.onend = () => {
-                    if (statusDesc) statusDesc.innerText = "Listening";
+                    if (statusDesc) statusDesc.innerText = "MENDENGARKAN...";
                     clearInterval(interval);
                     setWave(false);
                     if (callback) callback();
@@ -328,78 +416,118 @@
                 let teks = "";
 
                 if (nomor === 0) {
-                    tujuan = "{{ route('dashboard') }}";
+                    tujuan = "{{ route('dashboard') ?? '#' }}";
                     teks = "Kembali ke Beranda.";
                 } else if (nomor === 1) {
-                    tujuan = "{{ route('course.detail') }}";
+                    tujuan = "{{ route('course.detail') ?? '#' }}";
                     teks = "Membuka Menu Pembelajaran.";
                 } else if (nomor === 2) {
-                    tujuan = "{{ route('course.attendance') }}";
+                    tujuan = "{{ route('course.attendance') ?? '#' }}";
                     teks = "Membuka halaman Presensi.";
                 } else if (nomor === 3) {
-                    tujuan = "{{ route('course.assignments') }}";
+                    tujuan = "{{ route('course.assignments') ?? '#' }}";
                     teks = "Membuka halaman Penugasan.";
                 } else if (nomor === 4) {
                     teks = "Anda sudah di Halaman Anggota.";
                 }
-
-                // LOGIKA KONTEN HALAMAN INI (5 & 6)
+                // KONTEN ANGGOTA
                 else if (nomor === 5) {
                     teks = "Membuka chat dengan Dosen Asril.";
-                    setTimeout(() => alert("Fitur Chat Dosen Terbuka"), 1000);
+                    bicara(teks, () => {
+                        setTimeout(
+                            () => alert("Fitur Chat Dosen Terbuka"),
+                            500,
+                        );
+                    });
+                    return; // Mencegah reload halaman
                 } else if (nomor === 6) {
                     teks = "Mengaktifkan pencarian teman.";
-                    setTimeout(() => alert("Ketik nama teman..."), 1000);
+                    bicara(teks, () => {
+                        setTimeout(() => alert("Ketik nama teman..."), 500);
+                    });
+                    return; // Mencegah reload halaman
                 }
 
                 if (teks !== "") bicara(teks);
-                if (tujuan !== "")
+                if (tujuan !== "" && tujuan !== "#") {
                     setTimeout(() => {
                         window.location.href = tujuan;
                     }, 1500);
+                }
             }
 
             function mulaiMendengar() {
+                if (!rec) return;
                 try {
                     rec.start();
                     rec.onresult = (event) => {
-                        const hasil =
-                            event.results[
-                                event.results.length - 1
-                            ][0].transcript.toLowerCase();
+                        const hasil = event.results[
+                            event.results.length - 1
+                        ][0].transcript
+                            .toLowerCase()
+                            .trim();
                         const angka = hasil.match(/\d+/);
 
-                        if (angka) {
-                            navigasiKe(parseInt(angka[0]));
-                        } else if (
+                        if (angka) navigasiKe(parseInt(angka[0]));
+                        else if (
                             hasil.includes("nol") ||
                             hasil.includes("kembali")
                         )
                             navigasiKe(0);
-                        else if (hasil.includes("satu")) navigasiKe(1);
-                        else if (hasil.includes("dua")) navigasiKe(2);
-                        else if (hasil.includes("tiga")) navigasiKe(3);
-                        else if (hasil.includes("empat")) navigasiKe(4);
-                        // Deteksi Konten Halaman Ini (Lima & Enam)
-                        else if (hasil.includes("lima")) navigasiKe(5);
-                        else if (hasil.includes("enam")) navigasiKe(6);
+                        else if (
+                            hasil.includes("satu") ||
+                            hasil.includes("pembelajaran")
+                        )
+                            navigasiKe(1);
+                        else if (
+                            hasil.includes("dua") ||
+                            hasil.includes("presensi")
+                        )
+                            navigasiKe(2);
+                        else if (
+                            hasil.includes("tiga") ||
+                            hasil.includes("penugasan")
+                        )
+                            navigasiKe(3);
+                        else if (
+                            hasil.includes("empat") ||
+                            hasil.includes("anggota")
+                        )
+                            navigasiKe(4);
+                        else if (
+                            hasil.includes("lima") ||
+                            hasil.includes("dosen") ||
+                            hasil.includes("hubungi")
+                        )
+                            navigasiKe(5);
+                        else if (
+                            hasil.includes("enam") ||
+                            hasil.includes("cari") ||
+                            hasil.includes("teman")
+                        )
+                            navigasiKe(6);
                     };
-                } catch (e) {}
+                    rec.onend = () => {
+                        rec.start();
+                    };
+                } catch (e) {
+                    console.error("Error recognition:", e);
+                }
             }
 
             window.onload = () => {
                 const orientasi =
-                    "Anda berada di menu Anggota. " +
-                    "Navigasi Utama: Satu Pembelajaran, Dua Presensi, Tiga Penugasan, Empat Anggota, Nol Kembali. " +
-                    ". . . " +
-                    "Dosen Pengampu: Pak Asril. " +
-                    "Sebutkan nomor Lima untuk menghubungi dosen, atau Enam untuk cari teman.";
+                    "Anda berada di menu Anggota. Sebutkan nomor Lima untuk menghubungi dosen, atau Enam untuk mencari teman.";
+
+                document.body.addEventListener("click", () => {}, {
+                    once: true,
+                });
 
                 setTimeout(() => {
                     bicara(orientasi, () => {
                         mulaiMendengar();
                     });
-                }, 1000);
+                }, 800);
             };
         </script>
     </body>

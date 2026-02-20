@@ -7,11 +7,17 @@
             content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no"
         />
         <title>Pesan | LMS Inklusi UMMI</title>
+
+        <link
+            href="https://unpkg.com/aos@2.3.1/dist/aos.css"
+            rel="stylesheet"
+        />
         @vite(['resources/css/app.css', 'resources/js/app.js'])
         <link
             href="https://fonts.googleapis.com/css2?family=Plus+Jakarta+Sans:wght@400;500;600;700;800&display=swap"
             rel="stylesheet"
         />
+
         <style>
             .scrollbar-hide::-webkit-scrollbar {
                 display: none;
@@ -32,34 +38,60 @@
         </style>
     </head>
     <body
-        class="m-0 font-['Plus_Jakarta_Sans'] bg-[#f8fafc] min-h-full flex overflow-hidden border-box text-slate-800"
+        class="m-0 font-['Plus_Jakarta_Sans'] bg-[#f8fafc] min-h-full flex flex-col lg:flex-row overflow-hidden border-box text-slate-800"
     >
+        <div
+            id="mobileBackdrop"
+            onclick="toggleSidebar()"
+            class="fixed inset-0 bg-slate-900/50 z-40 hidden lg:hidden transition-opacity"
+        ></div>
+
         <aside
-            class="hidden lg:flex w-80 bg-white border-r border-slate-200 flex-col h-screen sticky top-0 z-20"
+            id="sidebar"
+            class="fixed inset-y-0 left-0 z-50 w-80 bg-white border-r border-slate-200 flex flex-col h-screen transform -translate-x-full lg:translate-x-0 lg:static transition-transform duration-300 ease-in-out shrink-0"
         >
             <div class="p-8 border-b border-slate-100 flex items-center gap-4">
                 <img
                     src="{{ asset('images/logo-ummi.png') }}"
-                    class="w-12 h-12 object-contain"
+                    class="w-10 h-10 object-contain"
                     alt="Logo UMMI"
+                    onerror="this.src = 'https://via.placeholder.com/40'"
                 />
                 <div>
                     <h1
-                        class="text-xl font-extrabold text-slate-900 tracking-tight leading-none"
+                        class="text-lg font-black text-slate-900 tracking-tight leading-none"
                     >
                         LMS Inklusi
                     </h1>
                     <p
-                        class="text-[10px] font-bold text-blue-600 uppercase tracking-widest mt-1"
+                        class="text-[9px] font-bold text-blue-600 uppercase tracking-widest mt-1"
                     >
-                        UMMI Sukabumi
+                        Portal Mahasiswa
                     </p>
                 </div>
+                <button
+                    onclick="toggleSidebar()"
+                    class="lg:hidden ml-auto text-slate-400 hover:text-slate-600 cursor-pointer"
+                >
+                    <svg
+                        class="w-6 h-6"
+                        fill="none"
+                        stroke="currentColor"
+                        viewBox="0 0 24 24"
+                    >
+                        <path
+                            stroke-linecap="round"
+                            stroke-linejoin="round"
+                            stroke-width="2"
+                            d="M6 18L18 6M6 6l12 12"
+                        ></path>
+                    </svg>
+                </button>
             </div>
 
-            <nav class="flex-1 p-6 space-y-3 overflow-y-auto">
+            <nav class="flex-1 p-6 space-y-3 overflow-y-auto custom-scrollbar">
                 <a
-                    href="{{ route('dashboard') }}"
+                    href="{{ route('dashboard') ?? '#' }}"
                     onclick="navigasiKe(5)"
                     class="flex items-center justify-between p-4 text-slate-500 hover:bg-slate-50 hover:text-slate-900 rounded-2xl font-bold transition-all"
                 >
@@ -80,13 +112,13 @@
                         <span>Beranda</span>
                     </div>
                     <span
-                        class="text-[10px] bg-slate-100 px-2 py-1 rounded-lg font-black"
+                        class="text-[10px] bg-slate-100 text-slate-500 px-2 py-1 rounded-lg font-black"
                         >5</span
                     >
                 </a>
 
                 <a
-                    href="{{ route('profile') }}"
+                    href="{{ route('profile') ?? '#' }}"
                     onclick="navigasiKe(6)"
                     class="flex items-center justify-between p-4 text-slate-500 hover:bg-slate-50 hover:text-slate-900 rounded-2xl font-bold transition-all"
                 >
@@ -107,13 +139,13 @@
                         <span>Profil Saya</span>
                     </div>
                     <span
-                        class="text-[10px] bg-slate-100 px-2 py-1 rounded-lg font-black"
+                        class="text-[10px] bg-slate-100 text-slate-500 px-2 py-1 rounded-lg font-black"
                         >6</span
                     >
                 </a>
 
                 <a
-                    href="{{ route('notifications') }}"
+                    href="{{ route('notifications') ?? '#' }}"
                     onclick="navigasiKe(7)"
                     class="flex items-center justify-between p-4 text-slate-500 hover:bg-slate-50 hover:text-slate-900 rounded-2xl font-bold transition-all"
                 >
@@ -134,13 +166,13 @@
                         <span>Pemberitahuan</span>
                     </div>
                     <span
-                        class="text-[10px] bg-slate-100 px-2 py-1 rounded-lg font-black"
+                        class="text-[10px] bg-slate-100 text-slate-500 px-2 py-1 rounded-lg font-black"
                         >7</span
                     >
                 </a>
 
                 <a
-                    href="{{ route('messages') }}"
+                    href="{{ route('messages') ?? '#' }}"
                     onclick="navigasiKe(8)"
                     class="flex items-center justify-between p-4 bg-blue-50 text-blue-700 rounded-2xl font-bold transition-all shadow-sm border border-blue-100"
                 >
@@ -167,7 +199,7 @@
                 </a>
 
                 <a
-                    href="{{ route('help') }}"
+                    href="{{ route('help') ?? '#' }}"
                     onclick="navigasiKe(9)"
                     class="flex items-center justify-between p-4 text-slate-500 hover:bg-slate-50 hover:text-slate-900 rounded-2xl font-bold transition-all"
                 >
@@ -188,7 +220,7 @@
                         <span>Bantuan</span>
                     </div>
                     <span
-                        class="text-[10px] bg-slate-100 px-2 py-1 rounded-lg font-black"
+                        class="text-[10px] bg-slate-100 text-slate-500 px-2 py-1 rounded-lg font-black"
                         >9</span
                     >
                 </a>
@@ -197,7 +229,7 @@
             <div class="p-6 border-t border-slate-100">
                 <button
                     onclick="navigasiKe(0)"
-                    class="w-full p-4 flex items-center justify-between text-red-600 font-bold bg-red-50 rounded-2xl hover:bg-red-100 transition-all border border-red-100"
+                    class="w-full p-4 flex items-center justify-between text-red-600 font-bold bg-red-50 rounded-2xl hover:bg-red-100 transition-all border border-red-100 cursor-pointer"
                 >
                     <div class="flex items-center gap-3">
                         <svg
@@ -224,103 +256,137 @@
         </aside>
 
         <main
-            class="flex-1 h-screen overflow-hidden flex flex-col relative bg-slate-50"
+            class="flex-1 h-screen overflow-hidden flex flex-col relative bg-slate-50 transition-all duration-300 w-full lg:ml-0"
         >
+            <div
+                class="absolute top-0 left-0 w-full h-80 bg-gradient-to-b from-blue-50 to-transparent -z-10"
+            ></div>
+
             <header
-                class="bg-white/80 backdrop-blur-xl border-b border-slate-200/60 px-8 py-4 sticky top-0 z-30 shrink-0 flex justify-between items-center"
+                class="bg-white/80 backdrop-blur-xl border-b border-slate-200/60 px-8 py-6 sticky top-0 z-30 shrink-0"
             >
-                <div>
-                    <h2
-                        class="text-xl font-extrabold text-slate-900 tracking-tight"
-                    >
-                        Pesan Masuk
-                    </h2>
-                    <span
-                        class="text-xs font-bold text-slate-400 uppercase tracking-widest"
-                        >Komunikasi</span
-                    >
-                </div>
-
-                <div class="flex items-center gap-4">
-                    <button
-                        onclick="navigasiKe(7)"
-                        class="relative p-2 text-slate-400 hover:text-blue-600 transition-all"
-                    >
-                        <svg
-                            class="w-6 h-6"
-                            fill="none"
-                            stroke="currentColor"
-                            viewBox="0 0 24 24"
+                <div
+                    class="max-w-7xl mx-auto flex items-center justify-between h-14 w-full"
+                >
+                    <div class="flex items-center gap-4">
+                        <button
+                            onclick="toggleSidebar()"
+                            class="lg:hidden p-2 text-slate-500 hover:bg-slate-100 rounded-lg cursor-pointer"
                         >
-                            <path
-                                stroke-linecap="round"
-                                stroke-linejoin="round"
-                                stroke-width="2"
-                                d="M15 17h5l-1.405-1.405A2.032 2.032 0 0118 14.158V11a6.002 6.002 0 00-4-5.659V5a2 2 0 10-4 0v.341C7.67 6.165 6 8.388 6 11v3.159c0 .538-.214 1.055-.595 1.436L4 17h5m6 0v1a3 3 0 11-6 0v-1m6 0H9"
-                            ></path>
-                        </svg>
-                        <span
-                            class="absolute top-2 right-2 w-2 h-2 bg-red-500 rounded-full border-2 border-white"
-                        ></span>
-                    </button>
-
-                    <button
-                        onclick="navigasiKe(9)"
-                        class="p-2 text-slate-400 hover:text-blue-600 transition-all"
-                    >
-                        <svg
-                            class="w-6 h-6"
-                            fill="none"
-                            stroke="currentColor"
-                            viewBox="0 0 24 24"
-                        >
-                            <path
-                                stroke-linecap="round"
-                                stroke-linejoin="round"
-                                stroke-width="2"
-                                d="M8.228 9c.549-1.165 2.03-2 3.772-2 2.21 0 4 1.343 4 3 0 1.4-1.278 2.575-3.006 2.907-.542.104-.994.54-.994 1.093m0 3h.01M21 12a9 9 0 11-18 0 9 9 0 0118 0z"
-                            ></path>
-                        </svg>
-                    </button>
-
-                    <div
-                        class="hidden md:flex items-center gap-3 pl-4 border-l border-slate-200"
-                    >
-                        <div
-                            id="wave-container"
-                            class="flex items-center gap-[2px] h-4 w-10 justify-center"
-                        >
-                            <div
-                                class="wave-bar w-[2px] bg-blue-500 rounded-full h-1"
-                            ></div>
-                            <div
-                                class="wave-bar w-[2px] bg-blue-400 rounded-full h-1"
-                            ></div>
-                            <div
-                                class="wave-bar w-[2px] bg-blue-600 rounded-full h-1"
-                            ></div>
+                            <svg
+                                class="w-6 h-6"
+                                fill="none"
+                                stroke="currentColor"
+                                viewBox="0 0 24 24"
+                            >
+                                <path
+                                    stroke-linecap="round"
+                                    stroke-linejoin="round"
+                                    stroke-width="2"
+                                    d="M4 6h16M4 12h16M4 18h16"
+                                ></path>
+                            </svg>
+                        </button>
+                        <div>
+                            <h2
+                                class="text-2xl font-extrabold text-slate-900 tracking-tight"
+                            >
+                                Pesan Masuk
+                            </h2>
+                            <p
+                                class="text-xs font-bold text-slate-400 uppercase tracking-widest mt-1"
+                            >
+                                Komunikasi Akademik
+                            </p>
                         </div>
-                        <span
-                            id="status-desc"
-                            class="text-[9px] font-black text-slate-400 uppercase tracking-widest"
-                            >Listening</span
+                    </div>
+
+                    <div class="flex items-center gap-4">
+                        <div
+                            class="flex items-center gap-3 pr-4 border-r border-slate-200"
                         >
+                            <button
+                                onclick="navigasiKe(7)"
+                                class="relative p-2 text-slate-400 hover:text-blue-600 transition-all cursor-pointer"
+                            >
+                                <svg
+                                    class="w-6 h-6"
+                                    fill="none"
+                                    stroke="currentColor"
+                                    viewBox="0 0 24 24"
+                                >
+                                    <path
+                                        stroke-linecap="round"
+                                        stroke-linejoin="round"
+                                        stroke-width="2"
+                                        d="M15 17h5l-1.405-1.405A2.032 2.032 0 0118 14.158V11a6.002 6.002 0 00-4-5.659V5a2 2 0 10-4 0v.341C7.67 6.165 6 8.388 6 11v3.159c0 .538-.214 1.055-.595 1.436L4 17h5m6 0v1a3 3 0 11-6 0v-1m6 0H9"
+                                    ></path>
+                                </svg>
+                                <span
+                                    class="absolute top-2 right-2 w-2 h-2 bg-red-500 rounded-full border-2 border-white"
+                                ></span>
+                            </button>
+                            <button
+                                onclick="navigasiKe(9)"
+                                class="p-2 text-slate-400 hover:text-blue-600 transition-all cursor-pointer"
+                            >
+                                <svg
+                                    class="w-6 h-6"
+                                    fill="none"
+                                    stroke="currentColor"
+                                    viewBox="0 0 24 24"
+                                >
+                                    <path
+                                        stroke-linecap="round"
+                                        stroke-linejoin="round"
+                                        stroke-width="2"
+                                        d="M8.228 9c.549-1.165 2.03-2 3.772-2 2.21 0 4 1.343 4 3 0 1.4-1.278 2.575-3.006 2.907-.542.104-.994.54-.994 1.093m0 3h.01M21 12a9 9 0 11-18 0 9 9 0 0118 0z"
+                                    ></path>
+                                </svg>
+                            </button>
+                        </div>
+
+                        <div class="hidden md:flex items-center gap-3 pl-4">
+                            <div
+                                id="wave-container"
+                                class="flex items-center gap-[2px] h-4 w-10 justify-center"
+                            >
+                                <div
+                                    class="wave-bar w-[2px] bg-blue-500 rounded-full h-1 transition-all"
+                                ></div>
+                                <div
+                                    class="wave-bar w-[2px] bg-blue-400 rounded-full h-1 transition-all"
+                                ></div>
+                                <div
+                                    class="wave-bar w-[2px] bg-blue-600 rounded-full h-1 transition-all"
+                                ></div>
+                            </div>
+                            <span
+                                id="status-desc"
+                                class="text-[9px] font-black text-slate-400 uppercase tracking-widest"
+                                >Siap</span
+                            >
+                        </div>
                     </div>
                 </div>
             </header>
 
-            <div class="flex-1 flex overflow-hidden">
+            <div class="flex-1 flex overflow-hidden w-full relative">
                 <div
-                    class="w-full md:w-80 bg-white border-r border-slate-200 flex flex-col z-10 hidden md:flex"
+                    data-aos="fade-right"
+                    data-aos-duration="600"
+                    class="w-full md:w-80 bg-white border-r border-slate-200 flex flex-col z-10 hidden md:flex shrink-0 h-full"
                 >
-                    <div class="p-4 border-b border-slate-100">
+                    <div class="p-4 border-b border-slate-100 shrink-0">
                         <input
                             type="text"
                             placeholder="Cari..."
                             class="w-full bg-slate-50 border border-slate-100 rounded-xl px-4 py-3 text-xs font-bold focus:ring-2 focus:ring-blue-500 outline-none transition-all placeholder:text-slate-400"
                         />
                     </div>
-                    <div class="flex-1 overflow-y-auto p-2 space-y-1">
+                    <div
+                        class="flex-1 overflow-y-auto p-2 space-y-1 custom-scrollbar"
+                    >
                         <div
                             onclick="navigasiKe(10)"
                             class="p-3 bg-blue-50 rounded-xl flex gap-3 cursor-pointer border border-blue-100 relative group transition-all"
@@ -357,11 +423,15 @@
                     </div>
                 </div>
 
-                <div class="flex-1 flex flex-col bg-[#f0f4f8] relative">
+                <div class="flex-1 flex flex-col bg-[#f0f4f8] relative h-full">
                     <div
-                        class="p-4 bg-white/80 backdrop-blur-md border-b border-slate-200 flex items-center justify-between sticky top-0 z-10"
+                        class="p-4 bg-white/80 backdrop-blur-md border-b border-slate-200 flex items-center justify-between sticky top-0 z-10 shrink-0"
                     >
-                        <div class="flex items-center gap-3">
+                        <div
+                            class="flex items-center gap-3"
+                            data-aos="fade-down"
+                            data-aos-duration="500"
+                        >
                             <div
                                 class="w-10 h-10 rounded-xl bg-blue-100 overflow-hidden shadow-sm"
                             >
@@ -377,7 +447,7 @@
                                     Dr. Aris Martono
                                 </h4>
                                 <span
-                                    class="inline-flex items-center text-[9px] font-bold text-emerald-600 uppercase tracking-widest"
+                                    class="inline-flex items-center text-[9px] font-bold text-emerald-600 uppercase tracking-widest mt-0.5"
                                 >
                                     <span
                                         class="w-1.5 h-1.5 bg-emerald-500 rounded-full mr-1.5 animate-pulse"
@@ -392,7 +462,12 @@
                         class="flex-1 p-6 overflow-y-auto space-y-6 custom-scrollbar"
                         id="chat-container"
                     >
-                        <div class="flex flex-col items-start max-w-[80%]">
+                        <div
+                            data-aos="fade-up"
+                            data-aos-duration="400"
+                            data-aos-delay="100"
+                            class="flex flex-col items-start max-w-[80%]"
+                        >
                             <div
                                 class="bg-white p-4 rounded-2xl rounded-tl-none shadow-sm border border-slate-100"
                             >
@@ -410,6 +485,9 @@
                         </div>
 
                         <div
+                            data-aos="fade-up"
+                            data-aos-duration="400"
+                            data-aos-delay="200"
                             class="flex flex-col items-end ml-auto max-w-[80%]"
                         >
                             <div
@@ -429,13 +507,17 @@
                         </div>
                     </div>
 
-                    <div class="p-4 bg-white border-t border-slate-200">
+                    <div
+                        data-aos="fade-up"
+                        data-aos-anchor="bottom"
+                        class="p-4 bg-white border-t border-slate-200 shrink-0 z-20 relative"
+                    >
                         <div
-                            class="flex items-center gap-2 bg-slate-50 p-2 rounded-2xl border border-slate-200"
+                            class="flex items-center gap-2 bg-slate-50 p-2 rounded-2xl border border-slate-200 focus-within:ring-2 focus-within:ring-blue-100 transition-all"
                         >
                             <button
                                 onclick="navigasiKe(12)"
-                                class="w-10 h-10 flex items-center justify-center text-slate-400 hover:text-blue-600 hover:bg-white rounded-xl transition-all"
+                                class="w-10 h-10 flex items-center justify-center text-slate-400 hover:text-blue-600 hover:bg-white rounded-xl transition-all cursor-pointer"
                                 title="Kirim Gambar (12)"
                             >
                                 <svg
@@ -463,7 +545,7 @@
 
                             <button
                                 onclick="navigasiKe(13)"
-                                class="w-10 h-10 flex items-center justify-center text-slate-400 hover:text-red-500 hover:bg-red-50 rounded-xl transition-all"
+                                class="w-10 h-10 flex items-center justify-center text-slate-400 hover:text-red-500 hover:bg-red-50 rounded-xl transition-all cursor-pointer"
                                 title="Voice Note (13)"
                             >
                                 <svg
@@ -483,7 +565,7 @@
 
                             <button
                                 onclick="navigasiKe(14)"
-                                class="w-12 h-10 bg-blue-600 text-white rounded-xl flex items-center justify-center shadow-md hover:bg-blue-700 transition-all"
+                                class="w-12 h-10 bg-blue-600 text-white rounded-xl flex items-center justify-center shadow-md hover:bg-blue-700 transition-all cursor-pointer"
                                 title="Kirim (14)"
                             >
                                 <svg
@@ -495,7 +577,7 @@
                                     <path
                                         stroke-linecap="round"
                                         stroke-linejoin="round"
-                                        stroke-width="2"
+                                        stroke-width="2.5"
                                         d="M12 19l9 2-9-18-9 18 9-2zm0 0v-8"
                                     ></path>
                                 </svg>
@@ -506,109 +588,223 @@
             </div>
         </main>
 
+        <script src="https://unpkg.com/aos@2.3.1/dist/aos.js"></script>
+
         <script>
+            // INIT ANIMASI AOS
+            AOS.init({ once: true, easing: "ease-out-cubic" });
+
+            // FUNGSI TOGGLE SIDEBAR MOBILE
+            function toggleSidebar() {
+                const sidebar = document.getElementById("sidebar");
+                const backdrop = document.getElementById("mobileBackdrop");
+                sidebar.classList.toggle("-translate-x-full");
+                backdrop.classList.toggle("hidden");
+            }
+
+            // ==========================================
+            // LOGIKA VOICE ASSISTANT
+            // ==========================================
             const statusDesc = document.getElementById("status-desc");
             const waveBars = document.querySelectorAll(".wave-bar");
             const synth = window.speechSynthesis;
+
             const SpeechRec =
                 window.webkitSpeechRecognition || window.SpeechRecognition;
-            const rec = new SpeechRec();
-            rec.lang = "id-ID";
-            rec.continuous = true;
+            let rec = null;
 
-            function setWave(active) {
-                waveBars.forEach((bar) => {
-                    bar.style.height = active
-                        ? `${Math.floor(Math.random() * 12) + 4}px`
-                        : "4px";
-                });
+            if (SpeechRec) {
+                rec = new SpeechRec();
+                rec.lang = "id-ID";
+                rec.continuous = true;
+            } else {
+                console.warn("Browser tidak mendukung Web Speech API");
             }
 
+            function setWave(active) {
+                if (waveBars.length > 0) {
+                    waveBars.forEach((bar) => {
+                        bar.style.height = active
+                            ? `${Math.floor(Math.random() * 12) + 4}px`
+                            : "4px";
+                    });
+                }
+            }
+
+            let interval;
+
+            // FUNGSI BICARA DENGAN PENGATURAN KECEPATAN DARI LOCAL STORAGE
             function bicara(teks, callback) {
+                synth.cancel();
+
                 const utter = new SpeechSynthesisUtterance(teks);
                 utter.lang = "id-ID";
+
+                // Ambil kecepatan suara dari pengaturan
+                const savedRate = localStorage.getItem("speechRate");
+                utter.rate = savedRate ? parseFloat(savedRate) : 1.0;
+
                 utter.onstart = () => {
-                    if (statusDesc) statusDesc.innerText = "Speaking";
+                    if (statusDesc) statusDesc.innerText = "BERBICARA...";
                     interval = setInterval(() => setWave(true), 150);
                 };
+
                 utter.onend = () => {
-                    if (statusDesc) statusDesc.innerText = "Listening";
+                    if (statusDesc) statusDesc.innerText = "MENDENGARKAN...";
+                    clearInterval(interval);
                     setWave(false);
                     if (callback) callback();
                 };
+
                 synth.speak(utter);
             }
 
+            // FUNGSI NAVIGASI VOICE
             function navigasiKe(nomor) {
                 let tujuan = "";
                 let teks = "";
 
+                // NAVIGASI SIDEBAR (5-0)
                 if (nomor === 5) {
-                    tujuan = "{{ route('dashboard') }}";
+                    tujuan = "{{ route('dashboard') ?? '#' }}";
                     teks = "Kembali ke Beranda.";
                 } else if (nomor === 6) {
-                    tujuan = "{{ route('profile') }}";
-                    teks = "Membuka Profil.";
+                    tujuan = "{{ route('profile') ?? '#' }}";
+                    teks = "Membuka Profil Saya.";
                 } else if (nomor === 7) {
-                    tujuan = "{{ route('notifications') }}";
+                    tujuan = "{{ route('notifications') ?? '#' }}";
                     teks = "Membuka Pemberitahuan.";
                 } else if (nomor === 8) {
-                    teks = "Anda sudah di Halaman Pesan.";
+                    teks = "Anda sudah berada di Halaman Pesan.";
                 } else if (nomor === 9) {
-                    tujuan = "{{ route('help') }}";
+                    tujuan = "{{ route('help') ?? '#' }}";
                     teks = "Membuka Bantuan.";
                 } else if (nomor === 0) {
-                    tujuan = "{{ route('logout') }}";
-                    teks = "Keluar akun.";
+                    tujuan = "{{ route('logout') ?? '#' }}";
+                    teks = "Keluar akun. Sampai jumpa.";
                 }
 
-                // FITUR PESAN
+                // FITUR PESAN (10-14)
                 else if (nomor === 10) {
-                    teks = "Membuka chat dengan Dr. Aris Martono.";
+                    teks = "Membuka obrolan dengan Dokter Aris Martono.";
                 } else if (nomor === 11) {
                     document.getElementById("chat-input").focus();
-                    teks = "Silahkan ketik pesan.";
+                    teks = "Silakan ketik pesan Anda.";
                 } else if (nomor === 12) {
-                    teks = "Membuka galeri untuk kirim gambar.";
+                    teks = "Membuka galeri untuk mengirim gambar.";
                 } else if (nomor === 13) {
-                    teks = "Merekam suara... Silahkan bicara.";
+                    teks = "Merekam pesan suara. Silakan bicara.";
                 } else if (nomor === 14) {
-                    if (document.getElementById("chat-input").value) {
-                        teks = "Pesan terkirim.";
+                    if (
+                        document.getElementById("chat-input").value.trim() !==
+                        ""
+                    ) {
+                        teks = "Pesan berhasil dikirim.";
                         document.getElementById("chat-input").value = "";
                     } else {
-                        teks = "Pesan kosong.";
+                        teks = "Kotak pesan masih kosong.";
                     }
                 }
 
-                if (teks !== "") bicara(teks);
-                if (tujuan !== "" && tujuan !== "#")
-                    setTimeout(() => {
-                        window.location.href = tujuan;
-                    }, 1500);
+                if (teks !== "") {
+                    bicara(teks);
+                    if (tujuan !== "" && tujuan !== "#") {
+                        setTimeout(() => {
+                            window.location.href = tujuan;
+                        }, 2000);
+                    }
+                }
             }
 
             function mulaiMendengar() {
+                if (!rec) return;
                 try {
                     rec.start();
                     rec.onresult = (event) => {
-                        const hasil =
-                            event.results[
-                                event.results.length - 1
-                            ][0].transcript.toLowerCase();
+                        const hasil = event.results[
+                            event.results.length - 1
+                        ][0].transcript
+                            .toLowerCase()
+                            .trim();
                         const angka = hasil.match(/\d+/);
+
                         if (angka) navigasiKe(parseInt(angka[0]));
-                        else if (hasil.includes("nol")) navigasiKe(0);
+                        else if (
+                            hasil.includes("lima") ||
+                            hasil.includes("beranda")
+                        )
+                            navigasiKe(5);
+                        else if (
+                            hasil.includes("enam") ||
+                            hasil.includes("profil")
+                        )
+                            navigasiKe(6);
+                        else if (
+                            hasil.includes("tujuh") ||
+                            hasil.includes("pemberitahuan")
+                        )
+                            navigasiKe(7);
+                        else if (
+                            hasil.includes("delapan") ||
+                            hasil.includes("pesan")
+                        )
+                            navigasiKe(8);
+                        else if (
+                            hasil.includes("sembilan") ||
+                            hasil.includes("bantuan")
+                        )
+                            navigasiKe(9);
+                        else if (
+                            hasil.includes("sebelas") ||
+                            hasil.includes("ketik")
+                        )
+                            navigasiKe(11);
+                        else if (
+                            hasil.includes("dua belas") ||
+                            hasil.includes("gambar")
+                        )
+                            navigasiKe(12);
+                        else if (
+                            hasil.includes("tiga belas") ||
+                            hasil.includes("suara") ||
+                            hasil.includes("voice")
+                        )
+                            navigasiKe(13);
+                        else if (
+                            hasil.includes("empat belas") ||
+                            hasil.includes("kirim")
+                        )
+                            navigasiKe(14);
+                        else if (
+                            hasil.includes("nol") ||
+                            hasil.includes("keluar")
+                        )
+                            navigasiKe(0);
                     };
-                } catch (e) {}
+
+                    rec.onend = () => {
+                        rec.start();
+                    };
+                } catch (e) {
+                    console.error("Error recognition:", e);
+                }
             }
 
+            // AUTO-START KETIKA HALAMAN DIMUAT
             window.onload = () => {
+                // Teks Penjelasan Detail digabung menjadi instruksi panjang yang natural
                 const orientasi =
-                    "Halaman Pesan. Sebutkan lima sampai sembilan untuk menu samping. Sebelas ketik, Dua belas gambar, Tiga belas suara, Empat belas kirim.";
-                bicara(orientasi, () => {
-                    mulaiMendengar();
+                    "Halo Ridwan, ini adalah halaman Pesan Anda. Silakan sebutkan angka berikut untuk memilih menu di samping: lima untuk Beranda, enam untuk Profil, tujuh untuk Pemberitahuan, sembilan untuk Bantuan, dan nol untuk Keluar. Untuk membalas pesan ke Dr. Aris Martono, sebutkan: sebelas untuk mengetik, dua belas untuk mengirim gambar, tiga belas untuk merekam suara, dan empat belas untuk mengirim pesan. Apa yang ingin Anda lakukan?";
+
+                document.body.addEventListener("click", () => {}, {
+                    once: true,
                 });
+
+                setTimeout(() => {
+                    bicara(orientasi, () => {
+                        mulaiMendengar();
+                    });
+                }, 800);
             };
         </script>
     </body>

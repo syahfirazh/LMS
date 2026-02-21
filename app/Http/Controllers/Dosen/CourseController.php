@@ -121,22 +121,25 @@ class CourseController extends Controller
     // 5. TAMBAH SESSION (PERTEMUAN)
     // =========================================================
     public function storeSession(Request $request, $id)
-    {
-        $kelas = Kelas::findOrFail($id);
-        $this->authorizeKelas($kelas);
+{
+    $kelas = Kelas::findOrFail($id);
+    $this->authorizeKelas($kelas);
 
-        $request->validate(['judul' => 'required|string|max:255']);
+    $request->validate([
+        'judul' => 'required|string|max:255'
+    ]);
 
-        $urutanTerakhir = $kelas->courseSessions()->max('urutan') ?? 0;
+    $urutanTerakhir = $kelas->courseSessions()->max('urutan') ?? 0;
 
-        CourseSession::create([
-            'kelas_id' => $kelas->id,
-            'judul'    => $request->judul,
-            'urutan'   => $urutanTerakhir + 1,
-        ]);
+    CourseSession::create([
+        'kelas_id'     => $kelas->id,
+        'judul'        => $request->judul,
+        'urutan'       => $urutanTerakhir + 1,
+        'pertemuan_ke' => $urutanTerakhir + 1, // ✅ FIX
+    ]);
 
-        return back()->with('success', 'Pertemuan berhasil ditambahkan');
-    }
+    return back()->with('success', 'Pertemuan berhasil ditambahkan');
+}
 
     // =========================================================
     // 6. KELOLA MAHASISWA DI KELAS
@@ -214,5 +217,18 @@ public function destroySession(Kelas $kelas, CourseSession $session)
     $session->delete();
 
     return back()->with('success', 'Pertemuan berhasil dihapus.');
+}
+
+public function removeStudent(Kelas $kelas, Mahasiswa $mahasiswa)
+{
+    // Pastikan mahasiswa memang ada di kelas
+    if (!$kelas->mahasiswa()->where('mahasiswa_id', $mahasiswa->id)->exists()) {
+        return back()->withErrors('Mahasiswa tidak ditemukan di kelas ini');
+    }
+
+    // Hapus dari pivot
+    $kelas->mahasiswa()->detach($mahasiswa->id);
+
+    return back()->with('success', 'Mahasiswa berhasil dikeluarkan dari kelas');
 }
 }

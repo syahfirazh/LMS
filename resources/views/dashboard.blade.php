@@ -286,7 +286,7 @@
                             <h2
                                 class="text-2xl font-extrabold text-slate-900 tracking-tight"
                             >
-                                Halo, Ridwan
+                                 Halo, {{ $mahasiswa->nama }}
                             </h2>
                             <p class="text-sm font-medium text-slate-500">
                                 Siap untuk belajar hari ini?
@@ -506,70 +506,42 @@
                         </h3>
                         <span
                             class="text-[10px] font-bold bg-slate-200 text-slate-600 px-3 py-1 rounded-full"
-                            >Semester 3</span
+                            >Semester {{ $mahasiswa->semester }}</span
                         >
                     </div>
 
                     <div class="grid grid-cols-1 md:grid-cols-2 gap-6">
-                        <div
-                            onclick="navigasiKe(11)"
-                            class="group bg-white p-6 rounded-[2rem] border border-slate-200 shadow-sm hover:border-blue-300 hover:shadow-lg transition-all cursor-pointer flex items-center gap-6"
-                        >
-                            <div
-                                class="w-20 h-20 bg-blue-50 text-blue-600 rounded-3xl flex items-center justify-center shrink-0 font-black text-2xl group-hover:bg-blue-600 group-hover:text-white transition-all shadow-inner"
-                            >
-                                11
-                            </div>
-                            <div class="flex-1">
-                                <h4
-                                    class="text-lg font-black text-slate-900 group-hover:text-blue-700 transition-colors leading-tight mb-1"
-                                >
-                                    Pemrograman Berorientasi Objek
-                                </h4>
-                                <p
-                                    class="text-xs font-bold text-slate-400 uppercase tracking-wider mb-2"
-                                >
-                                    Dr. Tech. Aris Martono
-                                </p>
-                                <div
-                                    class="w-full h-1.5 bg-slate-100 rounded-full overflow-hidden"
-                                >
-                                    <div
-                                        class="h-full bg-blue-500 w-[65%] rounded-full"
-                                    ></div>
-                                </div>
-                            </div>
-                        </div>
+@foreach ($kelas as $index => $k)
+    <div
+        onclick="navigasiKe({{ 11 + $index }})"
+        class="group bg-white p-6 rounded-[2rem] border border-slate-200 shadow-sm hover:shadow-lg transition-all cursor-pointer flex items-center gap-6"
+    >
+        <div
+            class="w-20 h-20 bg-blue-50 text-blue-600 rounded-3xl flex items-center justify-center font-black text-2xl"
+        >
+            {{ 11 + $index }}
+        </div>
 
-                        <div
-                            onclick="navigasiKe(12)"
-                            class="group bg-white p-6 rounded-[2rem] border border-slate-200 shadow-sm hover:border-orange-300 hover:shadow-lg transition-all cursor-pointer flex items-center gap-6"
-                        >
-                            <div
-                                class="w-20 h-20 bg-orange-50 text-orange-600 rounded-3xl flex items-center justify-center shrink-0 font-black text-2xl group-hover:bg-orange-600 group-hover:text-white transition-all shadow-inner"
-                            >
-                                12
-                            </div>
-                            <div class="flex-1">
-                                <h4
-                                    class="text-lg font-black text-slate-900 group-hover:text-orange-700 transition-colors leading-tight mb-1"
-                                >
-                                    Statistika Terapan
-                                </h4>
-                                <p
-                                    class="text-xs font-bold text-slate-400 uppercase tracking-wider mb-2"
-                                >
-                                    Prof. Suharyanto
-                                </p>
-                                <div
-                                    class="w-full h-1.5 bg-slate-100 rounded-full overflow-hidden"
-                                >
-                                    <div
-                                        class="h-full bg-orange-500 w-[30%] rounded-full"
-                                    ></div>
-                                </div>
-                            </div>
-                        </div>
+        <div class="flex-1">
+            <h4 class="text-lg font-black text-slate-900">
+                {{ $k->mataKuliah->nama }}
+            </h4>
+
+            <p class="text-xs font-bold text-slate-400 uppercase">
+                {{ $k->dosen->nama }}
+            </p>
+
+            <div class="w-full h-1.5 bg-slate-100 rounded-full overflow-hidden mt-2">
+                <div
+                    class="h-full bg-blue-500 rounded-full"
+                    style="width: {{ $k->progress ?? 0 }}%"
+                >
+            </div>
+            </div>
+        </div>
+    </div>
+@endforeach
+</div>
                     </div>
                 </div>
             </div>
@@ -577,210 +549,197 @@
 
         <script src="https://unpkg.com/aos@2.3.1/dist/aos.js"></script>
 
-        <script>
-            // INIT ANIMASI
-            AOS.init({ once: true, easing: "ease-out-cubic" });
+<script>
+/* ==========================================
+   DATA KELAS REAL-TIME DARI DATABASE
+========================================== */
+const kelasData = {!! json_encode(
+    $kelas->values()->map(function ($k, $i) {
+        return [
+            'nomor' => 11 + $i,
+            'nama'  => $k->mataKuliah->nama,
+            'url' => route('course.detail', ['kelas' => $k->id]),
+        ];
+    })->toArray()
+) !!};
 
-            function toggleSidebar() {
-                const sidebar = document.getElementById("sidebar");
-                const backdrop = document.getElementById("mobileBackdrop");
-                sidebar.classList.toggle("-translate-x-full");
-                backdrop.classList.toggle("hidden");
+/* ==========================================
+   INIT ANIMASI
+========================================== */
+AOS.init({ once: true, easing: "ease-out-cubic" });
+
+function toggleSidebar() {
+    document.getElementById("sidebar").classList.toggle("-translate-x-full");
+    document.getElementById("mobileBackdrop").classList.toggle("hidden");
+}
+
+/* ==========================================
+   VOICE ASSISTANT CORE
+========================================== */
+const statusDesc = document.getElementById("status-desc");
+const waveBars = document.querySelectorAll(".wave-bar");
+const synth = window.speechSynthesis;
+
+const SpeechRec =
+    window.webkitSpeechRecognition || window.SpeechRecognition;
+let rec = SpeechRec ? new SpeechRec() : null;
+
+if (rec) {
+    rec.lang = "id-ID";
+    rec.continuous = true;
+}
+
+function setWave(active) {
+    waveBars.forEach(bar => {
+        bar.style.height = active
+            ? `${Math.floor(Math.random() * 12) + 4}px`
+            : "4px";
+    });
+}
+
+let interval;
+
+/* ==========================================
+   FUNGSI BICARA
+========================================== */
+function bicara(teks, callback) {
+    synth.cancel();
+
+    const utter = new SpeechSynthesisUtterance(teks);
+    utter.lang = "id-ID";
+    utter.rate = parseFloat(localStorage.getItem("speechRate")) || 1.0;
+
+    utter.onstart = () => {
+        statusDesc.innerText = "BERBICARA...";
+        interval = setInterval(() => setWave(true), 150);
+    };
+
+    utter.onend = () => {
+        statusDesc.innerText = "MENDENGARKAN...";
+        clearInterval(interval);
+        setWave(false);
+        if (callback) callback();
+    };
+
+    synth.speak(utter);
+}
+
+/* ==========================================
+   NAVIGASI BERDASARKAN ANGKA
+========================================== */
+function navigasiKe(nomor) {
+    let tujuan = "";
+    let teks = "";
+
+    if (nomor === 1) {
+        tujuan = "{{ route('courses.index') }}";
+        teks = "Membuka Daftar Semua Mata Kuliah.";
+    } else if (nomor === 2) {
+        tujuan = "{{ route('courses.join') }}";
+        teks = "Membuka halaman Gabung Mata Kuliah.";
+    } else if (nomor === 3) {
+        tujuan = "{{ route('exams') }}";
+        teks = "Membuka Daftar Ujian.";
+    } else if (nomor === 4) {
+        tujuan = "{{ route('join.exam') }}";
+        teks = "Membuka halaman Gabung Ujian.";
+    } else if (nomor === 5) {
+        teks = "Anda sudah berada di Beranda.";
+    } else if (nomor === 6) {
+        tujuan = "{{ route('profile') }}";
+        teks = "Membuka Profil Saya.";
+    } else if (nomor === 7) {
+        tujuan = "{{ route('notifications') }}";
+        teks = "Membuka Pemberitahuan.";
+    } else if (nomor === 8) {
+        tujuan = "{{ route('messages') }}";
+        teks = "Membuka Pesan.";
+    } else if (nomor === 9) {
+        tujuan = "{{ route('help') }}";
+        teks = "Membuka Bantuan.";
+    } else if (nomor === 0) {
+        tujuan = "{{ route('logout') }}";
+        teks = "Keluar dari aplikasi. Sampai jumpa.";
+    } else {
+        const kelas = kelasData.find(k => k.nomor === nomor);
+        if (kelas) {
+            tujuan = kelas.url;
+            teks = "Membuka mata kuliah " + kelas.nama;
+        }
+    }
+
+    if (teks) {
+        bicara(teks);
+        if (tujuan) {
+            setTimeout(() => window.location.href = tujuan, 2000);
+        }
+    }
+}
+
+/* ==========================================
+   SPEECH RECOGNITION
+========================================== */
+function mulaiMendengar() {
+    if (!rec) return;
+
+    rec.start();
+
+    rec.onresult = (event) => {
+        const hasil = event.results[event.results.length - 1][0]
+            .transcript.toLowerCase().trim();
+
+        const angka = hasil.match(/\d+/);
+        if (angka) {
+            navigasiKe(parseInt(angka[0]));
+            return;
+        }
+
+        const mapKata = {
+            satu: 1, dua: 2, tiga: 3, empat: 4,
+            lima: 5, enam: 6, tujuh: 7,
+            delapan: 8, sembilan: 9, nol: 0
+        };
+
+        for (const kata in mapKata) {
+            if (hasil.includes(kata)) {
+                navigasiKe(mapKata[kata]);
+                return;
             }
+        }
 
-            // ==========================================
-            // LOGIKA VOICE ASSISTANT
-            // ==========================================
-            const statusDesc = document.getElementById("status-desc");
-            const waveBars = document.querySelectorAll(".wave-bar");
-            const synth = window.speechSynthesis;
-
-            const SpeechRec =
-                window.webkitSpeechRecognition || window.SpeechRecognition;
-            let rec = null;
-
-            if (SpeechRec) {
-                rec = new SpeechRec();
-                rec.lang = "id-ID";
-                rec.continuous = true;
-            } else {
-                console.warn("Browser tidak mendukung Web Speech API");
+        // Deteksi nama kelas langsung (DINAMIS)
+        kelasData.forEach(k => {
+            if (hasil.includes(k.nama.toLowerCase())) {
+                navigasiKe(k.nomor);
             }
+        });
+    };
 
-            function setWave(active) {
-                if (waveBars.length > 0) {
-                    waveBars.forEach((bar) => {
-                        bar.style.height = active
-                            ? `${Math.floor(Math.random() * 12) + 4}px`
-                            : "4px";
-                    });
-                }
-            }
+    rec.onend = () => rec.start();
+}
 
-            let interval;
+/* ==========================================
+   AUTO START + ORIENTASI DINAMIS
+========================================== */
+window.onload = () => {
+    const daftarKelasVoice = kelasData
+        .map(k => `${k.nomor} untuk kelas ${k.nama}`)
+        .join(", ");
 
-            // FUNGSI BICARA DENGAN PENGATURAN KECEPATAN DARI LOCAL STORAGE
-            function bicara(teks, callback) {
-                synth.cancel();
+    const orientasi =
+        "Halo {{ $mahasiswa->nama }}, selamat datang di Dashboard Mahasiswa. " +
+        "Silakan sebutkan angka berikut: " +
+        "satu untuk Daftar Mata Kuliah, dua untuk Gabung Mata Kuliah, " +
+        "tiga untuk Daftar Ujian, empat untuk Gabung Ujian, " +
+        "enam untuk Profil Saya, tujuh untuk Pemberitahuan, " +
+        "delapan untuk Pesan, sembilan untuk Bantuan, " +
+        daftarKelasVoice +
+        ", dan nol untuk Keluar. Menu apa yang ingin Anda buka?";
 
-                const utter = new SpeechSynthesisUtterance(teks);
-                utter.lang = "id-ID";
-
-                // Ambil kecepatan suara dari pengaturan
-                const savedRate = localStorage.getItem("speechRate");
-                utter.rate = savedRate ? parseFloat(savedRate) : 1.0;
-
-                utter.onstart = () => {
-                    if (statusDesc) statusDesc.innerText = "BERBICARA...";
-                    interval = setInterval(() => setWave(true), 150);
-                };
-
-                utter.onend = () => {
-                    if (statusDesc) statusDesc.innerText = "MENDENGARKAN...";
-                    clearInterval(interval);
-                    setWave(false);
-                    if (callback) callback();
-                };
-
-                synth.speak(utter);
-            }
-
-            // FUNGSI NAVIGASI VOICE
-            function navigasiKe(nomor) {
-                let tujuan = "";
-                let teks = "";
-
-                if (nomor === 1) {
-                    tujuan = "{{ route('courses') ?? '#' }}";
-                    teks = "Membuka Daftar Semua Mata Kuliah.";
-                } else if (nomor === 2) {
-                    tujuan = "{{ route('courses.join') ?? '#' }}";
-                    teks = "Membuka halaman Gabung Mata Kuliah.";
-                } else if (nomor === 3) {
-                    tujuan = "{{ route('exams') ?? '#' }}";
-                    teks = "Membuka Daftar Ujian.";
-                } else if (nomor === 4) {
-                    tujuan = "{{ route('join.exam') ?? '#' }}";
-                    teks = "Membuka halaman Gabung Ujian.";
-                } else if (nomor === 5) {
-                    teks = "Anda sudah berada di Beranda.";
-                } else if (nomor === 6) {
-                    tujuan = "{{ route('profile') ?? '#' }}";
-                    teks = "Membuka Profil Saya.";
-                } else if (nomor === 7) {
-                    tujuan = "{{ route('notifications') ?? '#' }}";
-                    teks = "Membuka Pemberitahuan.";
-                } else if (nomor === 8) {
-                    tujuan = "{{ route('messages') ?? '#' }}";
-                    teks = "Membuka Pesan.";
-                } else if (nomor === 9) {
-                    tujuan = "{{ route('help') ?? '#' }}";
-                    teks = "Membuka Bantuan.";
-                } else if (nomor === 0) {
-                    tujuan = "{{ route('logout') ?? '#' }}";
-                    teks = "Keluar dari aplikasi. Sampai jumpa.";
-                } else if (nomor === 11) {
-                    tujuan = "/courses/detail/pbo";
-                    teks =
-                        "Membuka mata kuliah Pemrograman Berorientasi Objek.";
-                } else if (nomor === 12) {
-                    tujuan = "/courses/detail/statistika";
-                    teks = "Membuka mata kuliah Statistika Terapan.";
-                }
-
-                if (teks !== "") {
-                    bicara(teks);
-                    if (tujuan !== "" && tujuan !== "#") {
-                        setTimeout(() => {
-                            window.location.href = tujuan;
-                        }, 2000);
-                    }
-                }
-            }
-
-            function mulaiMendengar() {
-                if (!rec) return;
-                try {
-                    rec.start();
-                    rec.onresult = (event) => {
-                        const hasil = event.results[
-                            event.results.length - 1
-                        ][0].transcript
-                            .toLowerCase()
-                            .trim();
-                        const angka = hasil.match(/\d+/);
-
-                        if (angka) navigasiKe(parseInt(angka[0]));
-                        else if (hasil.includes("satu")) navigasiKe(1);
-                        else if (hasil.includes("dua")) navigasiKe(2);
-                        else if (hasil.includes("tiga")) navigasiKe(3);
-                        else if (hasil.includes("empat")) navigasiKe(4);
-                        else if (
-                            hasil.includes("lima") ||
-                            hasil.includes("beranda")
-                        )
-                            navigasiKe(5);
-                        else if (
-                            hasil.includes("enam") ||
-                            hasil.includes("profil")
-                        )
-                            navigasiKe(6);
-                        else if (
-                            hasil.includes("tujuh") ||
-                            hasil.includes("pemberitahuan")
-                        )
-                            navigasiKe(7);
-                        else if (
-                            hasil.includes("delapan") ||
-                            hasil.includes("pesan")
-                        )
-                            navigasiKe(8);
-                        else if (
-                            hasil.includes("sembilan") ||
-                            hasil.includes("bantuan")
-                        )
-                            navigasiKe(9);
-                        else if (
-                            hasil.includes("sebelas") ||
-                            hasil.includes("objek")
-                        )
-                            navigasiKe(11);
-                        else if (
-                            hasil.includes("dua belas") ||
-                            hasil.includes("statistika")
-                        )
-                            navigasiKe(12);
-                        else if (
-                            hasil.includes("nol") ||
-                            hasil.includes("keluar")
-                        )
-                            navigasiKe(0);
-                    };
-
-                    rec.onend = () => {
-                        rec.start();
-                    };
-                } catch (e) {
-                    console.error("Error recognition:", e);
-                }
-            }
-
-            // AUTO-START KETIKA HALAMAN DIMUAT
-            window.onload = () => {
-                // Teks Penjelasan Detail digabung menjadi instruksi panjang yang natural
-                const orientasi =
-                    "Halo Ridwan, selamat datang di Dashboard Mahasiswa. Silakan sebutkan angka berikut untuk memilih menu: satu untuk Daftar Mata Kuliah, dua untuk Gabung Mata Kuliah, tiga untuk Daftar Ujian, empat untuk Gabung Ujian, enam untuk Profil Saya, tujuh untuk Pemberitahuan, delapan untuk Pesan, sembilan untuk Bantuan, sebelas untuk kelas Pemrograman Berorientasi Objek, dua belas untuk kelas Statistika Terapan, dan nol untuk Keluar. Menu apa yang ingin Anda buka?";
-
-                document.body.addEventListener("click", () => {}, {
-                    once: true,
-                });
-
-                setTimeout(() => {
-                    bicara(orientasi, () => {
-                        mulaiMendengar();
-                    });
-                }, 800);
-            };
-        </script>
+    setTimeout(() => {
+        bicara(orientasi, mulaiMendengar);
+    }, 800);
+};
+</script>
     </body>
 </html>

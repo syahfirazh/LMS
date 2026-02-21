@@ -16,6 +16,7 @@ class CourseSession extends Model
     'urutan',
     'instruksi',
     'tanggal',
+    'pertemuan_ke'
 ];
 
 protected $casts = [
@@ -32,15 +33,37 @@ protected $casts = [
         return $this->hasMany(Materi::class, 'session_id');
     }
 
+    public function getIsActiveAttribute()
+{
+    if ($this->is_done) {
+        return false;
+    }
+
+    $previous = self::where('kelas_id', $this->kelas_id)
+        ->where('urutan', '<', $this->urutan)
+        ->whereDoesntHave('materis')
+        ->exists();
+
+    return !$previous;
+}
+
+public function isCompleted()
+{
+    return $this->materis()->exists();
+}
+
     public function discussions()
     {
         return $this->hasMany(Diskusi::class, 'session_id');
     }
 
-    public function attendances()
-    {
-        return $this->hasMany(Attendance::class, 'course_session_id');
-    }
+   public function attendances()
+{
+    return $this->hasMany(Attendance::class);
+}
 
-        
+        public function messages()
+{
+    return $this->hasMany(SessionMessage::class, 'session_id');
+}
 }

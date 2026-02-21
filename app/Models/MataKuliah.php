@@ -19,4 +19,9 @@ class MataKuliah extends Model
     {
         return $this->hasMany(Kelas::class);
     }
+
+    public function dosen()
+    {
+        return $this->belongsTo(Dosen::class);
+    }
 }

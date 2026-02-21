@@ -172,12 +172,12 @@
                         <h1
                             class="text-lg md:text-xl font-extrabold text-slate-900 tracking-tight leading-none truncate pointer-events-auto"
                         >
-                            Struktur Data 3C
+                            {{ $kelas->mataKuliah->nama ?? 'Nama Kelas' }}
                         </h1>
                         <p
                             class="text-[10px] font-bold text-blue-600 uppercase tracking-widest mt-1 truncate pointer-events-auto"
                         >
-                            Topik: Array & Memori
+                            Topik: {{ $session->judul ?? 'Nama Topik' }}
                         </p>
                     </div>
 
@@ -249,10 +249,7 @@
                                 id="text-pengumuman"
                                 class="text-sm md:text-base font-medium text-slate-700 leading-relaxed"
                             >
-                                "Assalamualaikum. Silakan simak video
-                                visualisasi memori (Nomor 3) terlebih dahulu
-                                sebelum membaca modul PDF (Nomor 2), agar lebih
-                                mudah dipahami."
+                                {{ $session->description ?? 'Belum ada pesan dari dosen.' }}
                             </p>
                         </div>
                     </div>
@@ -287,120 +284,58 @@
                         </h3>
                     </div>
 
-                    <div class="grid grid-cols-1 md:grid-cols-3 gap-4">
-                        <div
-                            onclick="navigasiKe(2)"
-                            class="group border border-slate-100 rounded-2xl p-4 md:p-5 hover:border-blue-300 hover:bg-blue-50/30 transition-all cursor-pointer relative active:scale-[0.98]"
-                        >
-                            <div
-                                class="absolute right-4 top-4 w-6 h-6 bg-blue-500 text-white shadow-md rounded-lg flex items-center justify-center font-black text-[10px] transition-colors"
-                            >
-                                2
-                            </div>
-                            <div class="flex flex-col gap-3">
-                                <div
-                                    class="w-12 h-14 bg-red-50 rounded-lg border border-red-100 flex items-center justify-center shrink-0"
-                                >
-                                    <span
-                                        class="text-[9px] font-black text-red-500 uppercase"
-                                        >PDF</span
-                                    >
-                                </div>
-                                <div>
-                                    <h4
-                                        class="text-sm font-bold text-slate-800 group-hover:text-blue-700"
-                                    >
-                                        Modul 2: Implementasi Array C++
-                                    </h4>
-                                    <p class="text-[10px] text-slate-400 mt-1">
-                                        1.4 MB • Bacaan Wajib
-                                    </p>
-                                </div>
-                            </div>
-                            <div id="pdf-content-2" class="hidden">
-                                Ini adalah isi Modul 2. Array adalah struktur
-                                data yang menyimpan elemen-elemen dengan tipe
-                                data yang sama dalam urutan memori yang
-                                berdekatan.
-                            </div>
-                        </div>
+                    <div id="materi-container" class="grid grid-cols-1 md:grid-cols-3 gap-4">
+    @foreach($session->materis as $index => $materi)
+        
+        {{-- Logika Penentuan Warna & Icon Berdasarkan Tipe --}}
+        @php
+            $config = [
+                'file'  => ['color' => 'blue',   'label' => 'PDF',   'bg' => 'bg-red-50',    'border' => 'border-red-100',    'text' => 'text-red-500'],
+                'video' => ['color' => 'red',    'label' => 'VIDEO', 'bg' => 'bg-red-100',   'border' => 'border-red-200',   'text' => 'text-red-600'],
+                'voice' => ['color' => 'purple', 'label' => 'AUDIO', 'bg' => 'bg-purple-100', 'border' => 'border-purple-200', 'text' => 'text-purple-600'],
+            ];
+            $type = $materi->type ?? 'file';
+            $ui = $config[$type] ?? $config['file'];
+        @endphp
 
-                        <div
-                            onclick="navigasiKe(3)"
-                            class="group border border-slate-100 rounded-2xl p-4 md:p-5 hover:border-red-300 hover:bg-red-50/30 transition-all cursor-pointer relative active:scale-[0.98]"
-                        >
-                            <div
-                                class="absolute right-4 top-4 w-6 h-6 bg-red-500 text-white shadow-md rounded-lg flex items-center justify-center font-black text-[10px] transition-colors"
-                            >
-                                3
-                            </div>
-                            <div class="flex flex-col gap-3">
-                                <div
-                                    class="w-12 h-14 bg-red-100 rounded-lg border border-red-200 flex items-center justify-center shrink-0 text-red-600"
-                                >
-                                    <svg
-                                        class="w-6 h-6"
-                                        fill="currentColor"
-                                        viewBox="0 0 24 24"
-                                    >
-                                        <path
-                                            d="M19.615 3.184c-3.604-.246-11.631-.245-15.23 0-3.897.266-4.356 2.62-4.385 8.816.029 6.185.484 8.549 4.385 8.816 3.6.245 11.626.246 15.23 0 3.897-.266 4.356-2.62 4.385-8.816-.029-6.185-.484-8.549-4.385-8.816zm-10.615 12.816v-8l8 3.993-8 4.007z"
-                                        />
-                                    </svg>
-                                </div>
-                                <div>
-                                    <h4
-                                        class="text-sm font-bold text-slate-800 group-hover:text-red-700"
-                                    >
-                                        Video: Visualisasi Memori
-                                    </h4>
-                                    <p class="text-[10px] text-slate-400 mt-1">
-                                        Youtube • 15 Menit
-                                    </p>
-                                </div>
-                            </div>
-                        </div>
+        <div
+            onclick="window.open('{{ asset('storage/'.$materi->file) }}', '_blank')"
+            class="group border border-slate-100 rounded-2xl p-4 md:p-5 hover:border-{{ $ui['color'] }}-300 hover:bg-{{ $ui['color'] }}-50/30 transition-all cursor-pointer relative active:scale-[0.98]"
+        >
+            {{-- Badge Nomor Urut --}}
+            <div class="absolute right-4 top-4 w-6 h-6 bg-{{ $ui['color'] }}-500 text-white shadow-md rounded-lg flex items-center justify-center font-black text-[10px] transition-colors">
+                {{ $index + 1 }}
+            </div>
 
-                        <div
-                            onclick="navigasiKe(4)"
-                            class="group border border-slate-100 rounded-2xl p-4 md:p-5 hover:border-purple-300 hover:bg-purple-50/30 transition-all cursor-pointer relative active:scale-[0.98]"
-                        >
-                            <div
-                                class="absolute right-4 top-4 w-6 h-6 bg-purple-500 text-white shadow-md rounded-lg flex items-center justify-center font-black text-[10px] transition-colors"
-                            >
-                                4
-                            </div>
-                            <div class="flex flex-col gap-3">
-                                <div
-                                    class="w-12 h-14 bg-purple-100 rounded-lg border border-purple-200 flex items-center justify-center shrink-0 text-purple-600"
-                                >
-                                    <svg
-                                        class="w-6 h-6"
-                                        fill="none"
-                                        stroke="currentColor"
-                                        viewBox="0 0 24 24"
-                                    >
-                                        <path
-                                            stroke-linecap="round"
-                                            stroke-linejoin="round"
-                                            stroke-width="2"
-                                            d="M19 11a7 7 0 01-7 7m0 0a7 7 0 01-7-7m7 7v4m0 0H8m4 0h4m-4-8a3 3 0 01-3-3V5a3 3 0 116 0v6a3 3 0 01-3 3z"
-                                        ></path>
-                                    </svg>
-                                </div>
-                                <div>
-                                    <h4
-                                        class="text-sm font-bold text-slate-800 group-hover:text-purple-700"
-                                    >
-                                        Audio: Penjelasan Tambahan
-                                    </h4>
-                                    <p class="text-[10px] text-slate-400 mt-1">
-                                        MP3 • 5 Menit
-                                    </p>
-                                </div>
-                            </div>
-                        </div>
-                    </div>
+            <div class="flex flex-col gap-3">
+                {{-- Thumbnail / Icon --}}
+                <div class="w-12 h-14 {{ $ui['bg'] }} rounded-lg border {{ $ui['border'] }} flex items-center justify-center shrink-0 {{ $ui['text'] }}">
+                    @if($type === 'file')
+                        <span class="text-[9px] font-black uppercase">PDF</span>
+                    @elseif($type === 'video')
+                        <svg class="w-6 h-6" fill="currentColor" viewBox="0 0 24 24">
+                            <path d="M19.615 3.184c-3.604-.246-11.631-.245-15.23 0-3.897.266-4.356 2.62-4.385 8.816.029 6.185.484 8.549 4.385 8.816 3.6.245 11.626.246 15.23 0 3.897-.266 4.356-2.62 4.385-8.816-.029-6.185-.484-8.549-4.385-8.816zm-10.615 12.816v-8l8 3.993-8 4.007z" />
+                        </svg>
+                    @elseif($type === 'voice')
+                        <svg class="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 11a7 7 0 01-7 7m0 0a7 7 0 01-7-7m7 7v4m0 0H8m4 0h4m-4-8a3 3 0 01-3-3V5a3 3 0 116 0v6a3 3 0 01-3 3z"></path>
+                        </svg>
+                    @endif
+                </div>
+
+                {{-- Judul & Info --}}
+                <div>
+                    <h4 class="text-sm font-bold text-slate-800 group-hover:text-{{ $ui['color'] }}-700 line-clamp-1">
+                        {{ $materi->judul }}
+                    </h4>
+                    <p class="text-[10px] text-slate-400 mt-1 uppercase tracking-wider">
+                        {{ $ui['label'] }} • Klik untuk Lihat
+                    </p>
+                </div>
+            </div>
+        </div>
+    @endforeach
+</div>
 
                     <div
                         id="module-reader"
@@ -460,8 +395,8 @@
                             <span
                                 class="w-2 h-2 bg-green-500 rounded-full animate-pulse"
                             ></span>
-                            <span class="hidden sm:inline">12 Online</span>
-                            <span class="sm:hidden">12</span>
+                            <span class="hidden sm:inline">{{ $onlineUsers->count() }} Online</span>
+                            <span class="sm:hidden">{{ $onlineUsers->count() }}</span>
                         </span>
                     </div>
 
@@ -469,19 +404,29 @@
                         id="chatContainer"
                         class="flex-1 p-4 md:p-6 flex flex-col gap-6 overflow-y-auto custom-scrollbar bg-white"
                     >
+                     @foreach($messages as $msg)
+
+    @php
+        $isDosen = $msg->sender_type === 'dosen';
+        $senderName = $isDosen
+            ? ($kelas->dosen->nama ?? 'Dosen')
+            : ($msg->sender->nama ?? 'Mahasiswa');
+
+        $avatarName = urlencode($senderName);
+    @endphp
                         <div class="flex justify-start">
                             <div
                                 class="flex gap-2 md:gap-3 items-end max-w-[90%] md:max-w-[70%]"
                             >
                                 <img
-                                    src="https://ui-avatars.com/api/?name=Asril&background=random&color=fff"
+                                    src="https://ui-avatars.com/api/?name={{ $avatarName }}&background=random&color=fff"
                                     class="w-8 h-8 md:w-9 md:h-9 rounded-full shrink-0 shadow-sm object-cover border border-slate-100"
                                 />
                                 <div class="flex flex-col items-start">
                                     <p
                                         class="text-[9px] md:text-[10px] font-bold mb-1 px-1 text-slate-400"
                                     >
-                                        Asril Adi Sunarto (Dosen)
+                                        {{ $senderName }} {{ $isDosen ? '(Dosen)' : '' }}
                                     </p>
                                     <div
                                         class="p-3 md:p-4 rounded-2xl shadow-sm border bg-slate-50 text-slate-800 rounded-tl-none border-slate-200"
@@ -489,8 +434,7 @@
                                         <p
                                             class="text-xs md:text-[13px] leading-relaxed font-medium whitespace-pre-wrap break-words"
                                         >
-                                            Ada pertanyaan terkait materi Array
-                                            hari ini?
+                                            {{ $msg->body }}
                                         </p>
                                     </div>
                                     <p
@@ -534,6 +478,7 @@
                                 </div>
                             </div>
                         </div>
+                        @endforeach
                     </div>
 
                     <div
@@ -750,7 +695,7 @@
                 let teks = "";
 
                 if (nomor === 0) {
-                    tujuan = "{{ route('course.detail') ?? '#' }}";
+                    tujuan = "{{ route('course.detail', $kelas->id) }}";
                     teks = "Kembali ke Menu Utama.";
                 } else if (nomor === 1) {
                     teks =
@@ -911,6 +856,115 @@
                     });
                 }, 800);
             };
+
+            const sessionId = {{ $session->id }};
+    let lastMessageCount = 0;
+    let lastMateriCount = 0;
+
+    async function fetchRealtime() {
+        try {
+            const res = await fetch(`/session/${sessionId}/realtime`);
+            const data = await res.json();
+
+            // =====================
+            // UPDATE PESAN DOSEN
+            // =====================
+            const pengumuman = document.getElementById("text-pengumuman");
+            if (pengumuman && data.description) {
+                pengumuman.innerText = data.description;
+            }
+
+            // =====================
+            // UPDATE MATERI
+            // =====================
+            const materiContainer = document.getElementById("materi-container");
+
+            if (materiContainer && data.materis.length !== lastMateriCount) {
+
+                materiContainer.innerHTML = "";
+
+                data.materis.forEach(materi => {
+
+                    let html = "";
+
+                    if (materi.type === "file") {
+                        html = `
+                            <div class="border p-4 rounded-2xl">
+                                <a href="/storage/${materi.file}" target="_blank"
+                                   class="font-bold text-blue-600">
+                                   📄 ${materi.judul}
+                                </a>
+                            </div>
+                        `;
+                    }
+
+                    if (materi.type === "video") {
+                        html = `
+                            <div class="border p-4 rounded-2xl">
+                                <video controls class="w-full rounded-xl">
+                                    <source src="/storage/${materi.file}">
+                                </video>
+                                <p class="mt-2 font-semibold">${materi.judul}</p>
+                            </div>
+                        `;
+                    }
+
+                    if (materi.type === "voice") {
+                        html = `
+                            <div class="border p-4 rounded-2xl">
+                                <audio controls class="w-full">
+                                    <source src="/storage/${materi.file}">
+                                </audio>
+                                <p class="mt-2 font-semibold">${materi.judul}</p>
+                            </div>
+                        `;
+                    }
+
+                    materiContainer.insertAdjacentHTML("beforeend", html);
+                });
+
+                lastMateriCount = data.materis.length;
+            }
+
+            // =====================
+            // UPDATE CHAT
+            // =====================
+            const chatContainer = document.getElementById("chatContainer");
+
+            if (chatContainer && data.messages.length !== lastMessageCount) {
+
+                chatContainer.innerHTML = "";
+
+                data.messages.reverse().forEach(msg => {
+
+                    const chatHtml = `
+                        <div class="flex justify-start">
+                            <div class="bg-slate-100 p-3 rounded-xl max-w-[70%]">
+                                <p class="text-sm">${msg.body}</p>
+                            </div>
+                        </div>
+                    `;
+
+                    chatContainer.insertAdjacentHTML("beforeend", chatHtml);
+                });
+
+                chatContainer.scrollTop = chatContainer.scrollHeight;
+
+                lastMessageCount = data.messages.length;
+            }
+
+        } catch (err) {
+            console.error("Realtime error:", err);
+        }
+    }
+
+    // Polling tiap 3 detik
+    setInterval(fetchRealtime, 3000);
+
+    const pengumuman = document.getElementById("text-pengumuman");
+            if (pengumuman && data.description) {
+                pengumuman.innerText = data.description;
+            }
         </script>
     </body>
 </html>

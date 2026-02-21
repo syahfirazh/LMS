@@ -5,6 +5,10 @@ use App\Http\Controllers\AuthController;
 use App\Http\Controllers\MahasiswaAuthController;
 use App\Http\Controllers\DosenAuthController;
 use App\Http\Controllers\MahasiswaController;
+use App\Http\Controllers\MahasiswaDashboardController;
+use App\Http\Controllers\MahasiswaProfileController;
+use App\Http\Controllers\MahasiswaJoinKelasController;
+use App\Http\Controllers\Mahasiswa\AttendanceController as MahasiswaAttendanceController;
 
 // Controllers Dosen
 use App\Http\Controllers\Dosen\DashboardController;
@@ -63,25 +67,42 @@ Route::get('/logout', function () {
 
 Route::middleware('auth:mahasiswa')->group(function () {
     
-    Route::get('/dashboard', function () { return view('dashboard'); })->name('dashboard');
-    Route::get('/profil', function () { return view('profile'); })->name('profile');
+    Route::get('/dashboard', [MahasiswaDashboardController::class, 'index'])
+        ->name('dashboard');
+    Route::get('/mahasiswa/profile', [MahasiswaProfileController::class, 'index'])
+    ->middleware('auth:mahasiswa')->name('profile');
     Route::get('/pemberitahuan', function () { return view('notifications'); })->name('notifications');
     Route::get('/pesan', function () { return view('messages'); })->name('messages');
     Route::get('/bantuan', function () { return view('help'); })->name('help');
-    Route::get('/mata-kuliah', function () { return view('courses'); })->name('courses');
+    Route::get('/mata-kuliah', [MahasiswaController::class, 'index'])
+        ->name('courses.index');
+    Route::get('/mata-kuliah/{kelas}', [MahasiswaController::class, 'show'])
+    ->name('course.detail');
+
+        Route::get('/presensi/{session}',
+    [MahasiswaAttendanceController::class, 'index'])
+    ->name('mahasiswa.presensi');
+
+Route::post('/presensi/{session}/{status}', 
+    [MahasiswaAttendanceController::class, 'store']
+)->name('mahasiswa.presensi.store');
     
     // Join Kelas
     Route::get('/gabung-kelas', function () { return view('join_course'); })->name('courses.join');
-    Route::post('/mahasiswa/join-kelas', [MahasiswaController::class, 'joinKelas'])->name('mahasiswa.join.kelas');
+    Route::post('/mahasiswa/join-kelas',[MahasiswaJoinKelasController::class, 'join'])->name('mahasiswa.join.kelas');
     Route::post('/mahasiswa/join', [MahasiswaController::class, 'joinByCode'])->name('mahasiswa.join.bycode');
 
     // Group: Detail Mata Kuliah (Prototype)
     Route::prefix('mata-kuliah/struktur-data')->group(function () {
-        Route::get('/', function () { return view('course_detail'); })->name('course.detail');
-        Route::get('/topik/array', function () { return view('topic_detail'); })->name('topic.detail');
+        Route::get('/', function () { return view('course_detail'); })->name('course.prototype.detail');
+        Route::get('/mata-kuliah', [MahasiswaController::class, 'index'])
+    ->name('courses');
+        Route::get('mata-kuliah/struktur-data/mata-kuliah/{kelas}/topik/array',[MahasiswaController::class, 'topic'])->name('topic.detail');
         Route::get('/penugasan', function () { return view('course_assignments'); })->name('course.assignments');
         Route::get('/penugasan/detail', function () { return view('assignment_detail'); })->name('assignment.detail');
-        Route::get('/presensi', function () { return view('course_attendance'); })->name('course.attendance');
+        Route::get('/presensi/{session}',
+    [\App\Http\Controllers\Mahasiswa\AttendanceController::class, 'attendance']
+)->name('course.attendance');
         Route::get('/anggota', function () { return view('course_members'); })->name('course.members');
     });
 
@@ -116,6 +137,7 @@ Route::prefix('dosen')->middleware('auth:dosen')->group(function () {
     // Manajemen Mahasiswa dalam Kelas
     Route::get('mata-kuliah/{kelas}/students', [CourseController::class, 'students'])->name('dosen.course.students');
     Route::post('/kelas/{kelas}/add-student', [CourseController::class, 'addStudent'])->name('dosen.course.addStudent');
+    Route::delete('kelas/{kelas}/remove-student/{mahasiswa}',[CourseController::class, 'removeStudent'])->name('dosen.course.removeStudent');
 
     // --- MANAJEMEN KELAS (CRUD) ---
     Route::get('/kelas', [KelasController::class, 'index'])->name('dosen.kelas.index');
@@ -135,6 +157,27 @@ Route::prefix('dosen')->middleware('auth:dosen')->group(function () {
     Route::delete('/materi/{id}', [MateriController::class, 'destroy'])->name('dosen.materi.destroy');
     Route::put('/session/{id}/update-instruksi', [MateriController::class, 'updateInstruksi'])->name('dosen.session.updateInstruksi');
     Route::delete('/course/{kelas}/session/{session}', [App\Http\Controllers\Dosen\CourseController::class, 'destroySession'])->name('dosen.course.session.destroy');
+    Route::get('/topic/{mahasiswa}', 
+    [DosenMessageController::class, 'index'])
+    ->name('dosen.topic');
+
+Route::post('/send-message', 
+    [DosenMessageController::class, 'send'])
+    ->name('dosen.send');
+
+Route::get('/fetch/{mahasiswa}', 
+    [DosenMessageController::class, 'fetch'])
+    ->name('dosen.fetch');
+    Route::get('/session/{session}/realtime', function ($sessionId) {
+
+    $session = \App\Models\CourseSession::findOrFail($sessionId);
+
+    return response()->json([
+        'description' => $session->description,
+        'materis' => $session->materis()->latest()->get(),
+        'messages' => $session->messages()->latest()->take(20)->get(),
+    ]);
+});
 
     // --- ABSENSI (ATTENDANCE) ---
     Route::get('kelas/{kelas}/absensi', [AttendanceController::class, 'index'])->name('dosen.attendance.index');

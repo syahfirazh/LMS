@@ -110,12 +110,12 @@
                             <h1
                                 class="text-lg md:text-xl font-extrabold text-slate-900 tracking-tight leading-none truncate max-w-[250px] md:max-w-none"
                             >
-                                Struktur Data 3C
+                                {{ $session->kelas->mataKuliah->nama }}
                             </h1>
                             <p
                                 class="text-[10px] font-bold text-blue-600 uppercase tracking-widest mt-1 truncate"
                             >
-                                Dosen: Asril Adi Sunarto
+                                {{ $session->kelas->dosen->nama }}
                             </p>
                         </div>
                     </div>
@@ -187,7 +187,12 @@
                     >
                         <div class="relative z-10">
                             <h3 class="text-4xl font-black tracking-tighter">
-                                100%
+                                @php
+$total = $stats['hadir'] + $stats['izin'] + $stats['sakit'] + $stats['alpha'];
+$persen = $total > 0 ? round(($stats['hadir'] / $total) * 100) : 0;
+@endphp
+
+{{ $persen }}%
                             </h3>
                             <p
                                 class="text-[9px] font-bold text-blue-200 uppercase tracking-widest mt-1"
@@ -238,7 +243,7 @@
                             </svg>
                         </div>
                         <span class="text-2xl font-black text-slate-900"
-                            >2</span
+                            >{{ $stats['hadir'] }}</span
                         >
                         <span
                             class="text-[9px] font-bold text-slate-400 uppercase tracking-widest"
@@ -270,7 +275,7 @@
                             </svg>
                         </div>
                         <span class="text-2xl font-black text-slate-900"
-                            >0</span
+                            >{{ $stats['izin'] + $stats['sakit'] }}</span
                         >
                         <span
                             class="text-[9px] font-bold text-slate-400 uppercase tracking-widest"
@@ -302,7 +307,7 @@
                             </svg>
                         </div>
                         <span class="text-2xl font-black text-slate-900"
-                            >0</span
+                            >{{ $stats['alpha'] }}</span
                         >
                         <span
                             class="text-[9px] font-bold text-slate-400 uppercase tracking-widest"
@@ -339,15 +344,15 @@
                                 >
                                     <span
                                         class="text-[10px] font-black uppercase tracking-widest text-blue-400"
-                                        >OKT</span
+                                        >{{ \Carbon\Carbon::parse($session->tanggal)->translatedFormat('M') }}</span
                                     >
-                                    <span class="text-3xl font-black">24</span>
+                                    <span class="text-3xl font-black">{{ \Carbon\Carbon::parse($session->tanggal)->translatedFormat('d') }}</span>
                                 </div>
                                 <div class="flex-1 text-center md:text-left">
                                     <h4
                                         class="text-lg font-black text-slate-900"
                                     >
-                                        Pertemuan 3: Linked List
+                                        Pertemuan {{ $session->urutan }}: {{ $session->judul }}
                                     </h4>
                                     <p
                                         class="text-xs font-medium text-slate-500 mt-1"
@@ -456,190 +461,177 @@
 
         <script src="https://unpkg.com/aos@2.3.1/dist/aos.js"></script>
         <script>
-            AOS.init({ once: true, easing: "ease-out-cubic" });
+AOS.init({ once: true, easing: "ease-out-cubic" });
 
-            const statusDesc = document.getElementById("status-desc");
-            const waveBars = document.querySelectorAll(".wave-bar");
-            const synth = window.speechSynthesis;
-            const SpeechRec =
-                window.webkitSpeechRecognition || window.SpeechRecognition;
-            let rec = null;
-            let interval;
+const statusDesc = document.getElementById("status-desc");
+const waveBars = document.querySelectorAll(".wave-bar");
+const synth = window.speechSynthesis;
 
-            if (SpeechRec) {
-                rec = new SpeechRec();
-                rec.lang = "id-ID";
-                rec.continuous = true;
+let rec = null;
+let interval;
+
+// SAFE SpeechRecognition
+if ('webkitSpeechRecognition' in window || 'SpeechRecognition' in window) {
+    const SpeechRec = window.webkitSpeechRecognition || window.SpeechRecognition;
+    rec = new SpeechRec();
+    rec.lang = "id-ID";
+    rec.continuous = true;
+}
+
+function setWave(active) {
+    if (!waveBars.length) return;
+    waveBars.forEach((bar) => {
+        bar.style.height = active
+            ? `${Math.floor(Math.random() * 12) + 4}px`
+            : "4px";
+    });
+}
+
+function bicara(teks, callback) {
+    synth.cancel();
+    const utter = new SpeechSynthesisUtterance(teks);
+    utter.lang = "id-ID";
+    utter.rate = parseFloat(localStorage.getItem("speechRate")) || 1.0;
+
+    utter.onstart = () => {
+        if (statusDesc) statusDesc.innerText = "BERBICARA...";
+        interval = setInterval(() => setWave(true), 150);
+    };
+
+    utter.onend = () => {
+        if (statusDesc) statusDesc.innerText = "MENDENGARKAN...";
+        clearInterval(interval);
+        setWave(false);
+        if (callback) callback();
+    };
+
+    synth.speak(utter);
+}
+
+// ==============================
+// PRESENSI FUNCTION (FIX 404 SAFE)
+// ==============================
+function kirimPresensi(status) {
+
+    fetch("{{ url('presensi/'.$session->id) }}/" + status, {
+        method: "POST",
+        headers: {
+            "X-CSRF-TOKEN": "{{ csrf_token() }}",
+            "Accept": "application/json"
+        }
+    })
+    .then(response => {
+        if (!response.ok) {
+            throw new Error("Route tidak ditemukan (404) atau akses ditolak");
+        }
+        return response.json();
+    })
+    .then(data => {
+        alert(data.message ?? "Presensi berhasil");
+        location.reload();
+    })
+    .catch(error => {
+        console.error(error);
+        alert("Terjadi kesalahan: " + error.message);
+    });
+}
+
+function navigasiKe(nomor) {
+
+    let tujuan = "";
+    let teks = "";
+
+    if (nomor === 0) {
+        tujuan = "{{ route('dashboard') ?? '#' }}";
+        teks = "Kembali ke Beranda.";
+    }
+    else if (nomor === 1) {
+        tujuan = "{{ route('course.detail', $session->kelas->id) }}";
+        teks = "Membuka Menu Pembelajaran.";
+    }
+    else if (nomor === 2) {
+        teks = "Anda sudah berada di Halaman Presensi.";
+    }
+    else if (nomor === 3) {
+        tujuan = "{{ route('course.assignments') ?? '#' }}";
+        teks = "Membuka Menu Penugasan.";
+    }
+    else if (nomor === 4) {
+        tujuan = "{{ route('course.members') ?? '#' }}";
+        teks = "Membuka Menu Anggota Kelas.";
+    }
+
+    // ===== PRESENSI =====
+    else if (nomor === 5) {
+        kirimPresensi("hadir");
+        return;
+    }
+    else if (nomor === 6) {
+        kirimPresensi("sakit");
+        return;
+    }
+    else if (nomor === 7) {
+        kirimPresensi("izin");
+        return;
+    }
+
+    if (teks !== "") bicara(teks);
+
+    if (tujuan && tujuan !== "#") {
+        setTimeout(() => {
+            window.location.href = tujuan;
+        }, 1500);
+    }
+}
+
+// ==============================
+// VOICE RECOGNITION
+// ==============================
+function mulaiMendengar() {
+    if (!rec) return;
+
+    try {
+        rec.start();
+
+        rec.onresult = (event) => {
+            const hasil = event.results[event.results.length - 1][0].transcript
+                .toLowerCase()
+                .trim();
+
+            const angka = hasil.match(/\d+/);
+
+            if (angka) {
+                navigasiKe(parseInt(angka[0]));
             }
+            else if (hasil.includes("nol") || hasil.includes("kembali")) navigasiKe(0);
+            else if (hasil.includes("satu") || hasil.includes("pembelajaran")) navigasiKe(1);
+            else if (hasil.includes("dua") || hasil.includes("presensi")) navigasiKe(2);
+            else if (hasil.includes("tiga") || hasil.includes("penugasan")) navigasiKe(3);
+            else if (hasil.includes("empat") || hasil.includes("anggota")) navigasiKe(4);
+            else if (hasil.includes("lima") || hasil.includes("hadir")) navigasiKe(5);
+            else if (hasil.includes("enam") || hasil.includes("sakit")) navigasiKe(6);
+            else if (hasil.includes("tujuh") || hasil.includes("izin")) navigasiKe(7);
+        };
 
-            function setWave(active) {
-                if (waveBars.length > 0) {
-                    waveBars.forEach((bar) => {
-                        bar.style.height = active
-                            ? `${Math.floor(Math.random() * 12) + 4}px`
-                            : "4px";
-                    });
-                }
-            }
+        rec.onend = () => {
+            rec.start();
+        };
 
-            function bicara(teks, callback) {
-                synth.cancel();
-                const utter = new SpeechSynthesisUtterance(teks);
-                utter.lang = "id-ID";
-                const savedRate = localStorage.getItem("speechRate");
-                utter.rate = savedRate ? parseFloat(savedRate) : 1.0;
+    } catch (e) {
+        console.error("Speech recognition error:", e);
+    }
+}
 
-                utter.onstart = () => {
-                    if (statusDesc) statusDesc.innerText = "BERBICARA...";
-                    interval = setInterval(() => setWave(true), 150);
-                };
-                utter.onend = () => {
-                    if (statusDesc) statusDesc.innerText = "MENDENGARKAN...";
-                    clearInterval(interval);
-                    setWave(false);
-                    if (callback) callback();
-                };
-                synth.speak(utter);
-            }
+window.onload = () => {
+    const orientasi =
+        "Menu Presensi. Sebutkan Lima untuk Hadir, Enam untuk Sakit, Tujuh untuk Izin. Atau sebutkan tab navigasi di atas.";
 
-            function navigasiKe(nomor) {
-                let tujuan = "";
-                let teks = "";
-
-                if (nomor === 0) {
-                    tujuan = "{{ route('dashboard') ?? '#' }}";
-                    teks = "Kembali ke Beranda.";
-                } else if (nomor === 1) {
-                    tujuan = "{{ route('course.detail') ?? '#' }}";
-                    teks = "Membuka Menu Pembelajaran.";
-                } else if (nomor === 2) {
-                    teks = "Anda sudah berada di Halaman Presensi.";
-                } else if (nomor === 3) {
-                    tujuan = "{{ route('course.assignments') ?? '#' }}";
-                    teks = "Membuka Menu Penugasan.";
-                } else if (nomor === 4) {
-                    tujuan = "{{ route('course.members') ?? '#' }}";
-                    teks = "Membuka Menu Anggota Kelas.";
-                }
-
-                // PRESENSI LOGIC
-                else if (nomor === 5) {
-                    teks = "Mencatat kehadiran: Hadir.";
-                    bicara(teks, () => {
-                        setTimeout(() => {
-                            alert(
-                                "Berhasil: Presensi Anda tercatat sebagai Hadir!",
-                            );
-                        }, 500);
-                    });
-                    return;
-                } else if (nomor === 6) {
-                    teks =
-                        "Mencatat kehadiran: Sakit. Silahkan upload surat dokter nanti.";
-                    bicara(teks, () => {
-                        setTimeout(() => {
-                            alert(
-                                "Berhasil: Presensi Anda tercatat sebagai Sakit!",
-                            );
-                        }, 500);
-                    });
-                    return;
-                } else if (nomor === 7) {
-                    teks = "Mencatat kehadiran: Izin.";
-                    bicara(teks, () => {
-                        setTimeout(() => {
-                            alert(
-                                "Berhasil: Presensi Anda tercatat sebagai Izin!",
-                            );
-                        }, 500);
-                    });
-                    return;
-                }
-
-                if (teks !== "") bicara(teks);
-                if (tujuan !== "" && tujuan !== "#") {
-                    setTimeout(() => {
-                        window.location.href = tujuan;
-                    }, 1500);
-                }
-            }
-
-            function mulaiMendengar() {
-                if (!rec) return;
-                try {
-                    rec.start();
-                    rec.onresult = (event) => {
-                        const hasil = event.results[
-                            event.results.length - 1
-                        ][0].transcript
-                            .toLowerCase()
-                            .trim();
-                        const angka = hasil.match(/\d+/);
-
-                        if (angka) {
-                            navigasiKe(parseInt(angka[0]));
-                        } else if (
-                            hasil.includes("nol") ||
-                            hasil.includes("kembali")
-                        ) {
-                            navigasiKe(0);
-                        } else if (
-                            hasil.includes("satu") ||
-                            hasil.includes("pembelajaran")
-                        ) {
-                            navigasiKe(1);
-                        } else if (
-                            hasil.includes("dua") ||
-                            hasil.includes("presensi")
-                        ) {
-                            navigasiKe(2);
-                        } else if (
-                            hasil.includes("tiga") ||
-                            hasil.includes("penugasan")
-                        ) {
-                            navigasiKe(3);
-                        } else if (
-                            hasil.includes("empat") ||
-                            hasil.includes("anggota")
-                        ) {
-                            navigasiKe(4);
-                        } else if (
-                            hasil.includes("lima") ||
-                            hasil.includes("hadir")
-                        ) {
-                            navigasiKe(5);
-                        } else if (
-                            hasil.includes("enam") ||
-                            hasil.includes("sakit")
-                        ) {
-                            navigasiKe(6);
-                        } else if (
-                            hasil.includes("tujuh") ||
-                            hasil.includes("izin")
-                        ) {
-                            navigasiKe(7);
-                        }
-                    };
-                    rec.onend = () => {
-                        rec.start();
-                    };
-                } catch (e) {
-                    console.error("Error recognition:", e);
-                }
-            }
-
-            window.onload = () => {
-                const orientasi =
-                    "Menu Presensi. Sebutkan Lima untuk Hadir, Enam untuk Sakit, Tujuh untuk Izin. Atau sebutkan tab navigasi di atas.";
-                document.body.addEventListener("click", () => {}, {
-                    once: true,
-                });
-                setTimeout(() => {
-                    bicara(orientasi, () => {
-                        mulaiMendengar();
-                    });
-                }, 800);
-            };
-        </script>
+    setTimeout(() => {
+        bicara(orientasi, () => {
+            mulaiMendengar();
+        });
+    }, 800);
+};
+</script>
     </body>
 </html>

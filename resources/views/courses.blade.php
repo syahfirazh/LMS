@@ -147,225 +147,103 @@
             <div
                 class="max-w-4xl mx-auto w-full p-4 md:p-8 space-y-5 pt-6 md:pt-8 pb-20"
             >
+                
+@foreach ($kelas as $i => $item)
+@php
+    $nomor = $item['nomor'];
+
+    // mapping warna berdasarkan urutan
+    $themes = [
+        0 => ['blue', 'blue'],
+        1 => ['orange', 'orange'],
+        2 => ['indigo', 'indigo'],
+    ];
+
+    $theme = $themes[$i % 3];
+@endphp
+
+<div
+    data-aos="fade-up"
+    data-aos-duration="600"
+    data-aos-delay="{{ $i * 100 }}"
+    onclick="navigasiKe({{ $nomor }})"
+    class="group relative bg-white rounded-[2rem] p-6 border border-slate-100 shadow-sm hover:shadow-xl hover:-translate-y-1 transition-all duration-300 cursor-pointer overflow-hidden flex flex-col sm:flex-row items-start sm:items-center gap-5"
+>
+    {{-- STRIP KIRI --}}
+    <div class="absolute left-0 top-0 bottom-0 w-1.5 bg-{{ $theme[0] }}-500 group-hover:w-2 transition-all"></div>
+
+    {{-- NOMOR --}}
+    <div class="flex w-full sm:w-auto items-center justify-between sm:justify-start">
+        <div class="w-14 h-14 sm:w-16 sm:h-16 rounded-2xl bg-{{ $theme[0] }}-50 text-{{ $theme[0] }}-600 flex items-center justify-center shrink-0 border border-{{ $theme[0] }}-100 group-hover:bg-{{ $theme[0] }}-600 group-hover:text-white transition-all shadow-inner">
+            <span class="text-xl sm:text-2xl font-black tracking-tighter">
+                {{ $nomor }}
+            </span>
+        </div>
+        <span class="sm:hidden px-4 py-2 bg-slate-900 text-white rounded-xl text-[10px] font-black uppercase tracking-widest">
+            Masuk
+        </span>
+    </div>
+
+    {{-- INFO --}}
+    <div class="flex-1 min-w-0 w-full sm:pl-2">
+        <div class="flex items-center gap-3 mb-1">
+            <h2 class="text-lg sm:text-xl font-black text-slate-900 group-hover:text-{{ $theme[0] }}-700 transition-colors tracking-tight truncate">
+                {{ $item['nama'] }}
+            </h2>
+            <span class="px-2 py-1 rounded-md bg-emerald-50 text-emerald-600 text-[9px] sm:text-[10px] font-bold uppercase border border-emerald-100 shrink-0">
+                {{ $item['sks'] }} SKS
+            </span>
+        </div>
+
+        <div class="flex items-center gap-2 text-xs sm:text-sm font-medium text-slate-500 mb-3 sm:mb-4">
+            <span>{{ $item['kode'] }}</span>
+            <span class="w-1.5 h-1.5 rounded-full bg-slate-300"></span>
+            <span class="truncate">{{ $item['deskripsi'] }}</span>
+        </div>
+
+        {{-- PROGRESS --}}
+        <div class="flex items-center gap-3 w-full max-w-sm">
+            <div class="flex-1 h-2 bg-slate-100 rounded-full overflow-hidden">
                 <div
-                    data-aos="fade-up"
-                    data-aos-duration="600"
-                    onclick="navigasiKe(11)"
-                    class="group relative bg-white rounded-[2rem] p-6 border border-slate-100 shadow-sm hover:shadow-xl hover:-translate-y-1 transition-all duration-300 cursor-pointer overflow-hidden flex flex-col sm:flex-row items-start sm:items-center gap-5"
-                >
-                    <div
-                        class="absolute left-0 top-0 bottom-0 w-1.5 bg-blue-500 group-hover:w-2 transition-all"
-                    ></div>
+                    class="h-full bg-{{ $theme[0] }}-500 rounded-full"
+                    style="width: {{ $item['progress'] }}%"
+                ></div>
+            </div>
+            <span class="text-[10px] font-bold text-{{ $theme[0] }}-600 shrink-0">
+                {{ $item['progress'] }}% Selesai
+            </span>
+        </div>
+    </div>
 
-                    <div
-                        class="flex w-full sm:w-auto items-center justify-between sm:justify-start"
-                    >
-                        <div
-                            class="w-14 h-14 sm:w-16 sm:h-16 rounded-2xl bg-blue-50 text-blue-600 flex items-center justify-center shrink-0 border border-blue-100 group-hover:bg-blue-600 group-hover:text-white transition-all shadow-inner"
-                        >
-                            <span
-                                class="text-xl sm:text-2xl font-black tracking-tighter"
-                                >11</span
-                            >
-                        </div>
-                        <span
-                            class="sm:hidden px-4 py-2 bg-slate-900 text-white rounded-xl text-[10px] font-black uppercase tracking-widest"
-                            >Masuk</span
-                        >
-                    </div>
+    {{-- BUTTON --}}
+    <button
+    onclick="event.stopPropagation(); window.location.href='{{ route('course.detail', ['kelas' => $item['id']]) }}'"
+    class="hidden sm:flex bg-slate-900 text-white px-8 py-4 rounded-xl font-black text-xs uppercase tracking-wider shadow-md hover:bg-orange-600 transition-all"
+>
+    Masuk Kelas
+</button>
+</div>
+@endforeach
 
-                    <div class="flex-1 min-w-0 w-full sm:pl-2">
-                        <div class="flex items-center gap-3 mb-1">
-                            <h2
-                                class="text-lg sm:text-xl font-black text-slate-900 group-hover:text-blue-700 transition-colors tracking-tight truncate"
-                            >
-                                Struktur Data 3C
-                            </h2>
-                            <span
-                                class="px-2 py-1 rounded-md bg-emerald-50 text-emerald-600 text-[9px] sm:text-[10px] font-bold uppercase border border-emerald-100 shrink-0"
-                                >3 SKS</span
-                            >
-                        </div>
-                        <div
-                            class="flex items-center gap-2 text-xs sm:text-sm font-medium text-slate-500 mb-3 sm:mb-4"
-                        >
-                            <span>GD48453IP</span>
-                            <span
-                                class="w-1.5 h-1.5 rounded-full bg-slate-300"
-                            ></span>
-                            <span class="truncate"
-                                >Linier & Non-Linier Data</span
-                            >
-                        </div>
-                        <div class="flex items-center gap-3 w-full max-w-sm">
-                            <div
-                                class="flex-1 h-2 bg-slate-100 rounded-full overflow-hidden"
-                            >
-                                <div
-                                    class="h-full bg-blue-500 rounded-full w-[47%]"
-                                ></div>
-                            </div>
-                            <span
-                                class="text-[10px] font-bold text-blue-600 shrink-0"
-                                >47% Selesai</span
-                            >
-                        </div>
-                    </div>
-                    <button
-                        class="hidden sm:flex bg-slate-900 text-white px-8 py-4 rounded-xl font-black text-[10px] sm:text-xs uppercase tracking-wider shadow-md hover:bg-blue-600 transition-all shrink-0 items-center justify-center"
-                    >
-                        Masuk Kelas
-                    </button>
-                </div>
-
-                <div
-                    data-aos="fade-up"
-                    data-aos-duration="600"
-                    data-aos-delay="100"
-                    onclick="navigasiKe(12)"
-                    class="group relative bg-white rounded-[2rem] p-6 border border-slate-100 shadow-sm hover:shadow-xl hover:-translate-y-1 transition-all duration-300 cursor-pointer overflow-hidden flex flex-col sm:flex-row items-start sm:items-center gap-5"
-                >
-                    <div
-                        class="absolute left-0 top-0 bottom-0 w-1.5 bg-orange-500 group-hover:w-2 transition-all"
-                    ></div>
-
-                    <div
-                        class="flex w-full sm:w-auto items-center justify-between sm:justify-start"
-                    >
-                        <div
-                            class="w-14 h-14 sm:w-16 sm:h-16 rounded-2xl bg-orange-50 text-orange-600 flex items-center justify-center shrink-0 border border-orange-100 group-hover:bg-orange-600 group-hover:text-white transition-all shadow-inner"
-                        >
-                            <span
-                                class="text-xl sm:text-2xl font-black tracking-tighter"
-                                >12</span
-                            >
-                        </div>
-                        <span
-                            class="sm:hidden px-4 py-2 bg-slate-900 text-white rounded-xl text-[10px] font-black uppercase tracking-widest"
-                            >Masuk</span
-                        >
-                    </div>
-
-                    <div class="flex-1 min-w-0 w-full sm:pl-2">
-                        <div class="flex items-center gap-3 mb-1">
-                            <h2
-                                class="text-lg sm:text-xl font-black text-slate-900 group-hover:text-orange-700 transition-colors tracking-tight truncate"
-                            >
-                                Pemrograman Berorientasi Objek
-                            </h2>
-                            <span
-                                class="px-2 py-1 rounded-md bg-emerald-50 text-emerald-600 text-[9px] sm:text-[10px] font-bold uppercase border border-emerald-100 shrink-0"
-                                >3 SKS</span
-                            >
-                        </div>
-                        <div
-                            class="flex items-center gap-2 text-xs sm:text-sm font-medium text-slate-500 mb-3 sm:mb-4"
-                        >
-                            <span>IJ48145HI</span>
-                            <span
-                                class="w-1.5 h-1.5 rounded-full bg-slate-300"
-                            ></span>
-                            <span class="truncate">OOP Concepts & Design</span>
-                        </div>
-                        <div class="flex items-center gap-3 w-full max-w-sm">
-                            <div
-                                class="flex-1 h-2 bg-slate-100 rounded-full overflow-hidden"
-                            >
-                                <div
-                                    class="h-full bg-orange-500 rounded-full w-[25%]"
-                                ></div>
-                            </div>
-                            <span
-                                class="text-[10px] font-bold text-orange-600 shrink-0"
-                                >25% Selesai</span
-                            >
-                        </div>
-                    </div>
-                    <button
-                        class="hidden sm:flex bg-slate-900 text-white px-8 py-4 rounded-xl font-black text-[10px] sm:text-xs uppercase tracking-wider shadow-md hover:bg-orange-600 transition-all shrink-0 items-center justify-center"
-                    >
-                        Masuk Kelas
-                    </button>
-                </div>
-
-                <div
-                    data-aos="fade-up"
-                    data-aos-duration="600"
-                    data-aos-delay="200"
-                    onclick="navigasiKe(13)"
-                    class="group relative bg-white rounded-[2rem] p-6 border border-slate-100 shadow-sm hover:shadow-xl hover:-translate-y-1 transition-all duration-300 cursor-pointer overflow-hidden flex flex-col sm:flex-row items-start sm:items-center gap-5"
-                >
-                    <div
-                        class="absolute left-0 top-0 bottom-0 w-1.5 bg-indigo-500 group-hover:w-2 transition-all"
-                    ></div>
-
-                    <div
-                        class="flex w-full sm:w-auto items-center justify-between sm:justify-start"
-                    >
-                        <div
-                            class="w-14 h-14 sm:w-16 sm:h-16 rounded-2xl bg-indigo-50 text-indigo-600 flex items-center justify-center shrink-0 border border-indigo-100 group-hover:bg-indigo-600 group-hover:text-white transition-all shadow-inner"
-                        >
-                            <span
-                                class="text-xl sm:text-2xl font-black tracking-tighter"
-                                >13</span
-                            >
-                        </div>
-                        <span
-                            class="sm:hidden px-4 py-2 bg-slate-900 text-white rounded-xl text-[10px] font-black uppercase tracking-widest"
-                            >Masuk</span
-                        >
-                    </div>
-
-                    <div class="flex-1 min-w-0 w-full sm:pl-2">
-                        <div class="flex items-center gap-3 mb-1">
-                            <h2
-                                class="text-lg sm:text-xl font-black text-slate-900 group-hover:text-indigo-700 transition-colors tracking-tight truncate"
-                            >
-                                Basis Data Terapan
-                            </h2>
-                            <span
-                                class="px-2 py-1 rounded-md bg-emerald-50 text-emerald-600 text-[9px] sm:text-[10px] font-bold uppercase border border-emerald-100 shrink-0"
-                                >2 SKS</span
-                            >
-                        </div>
-                        <div
-                            class="flex items-center gap-2 text-xs sm:text-sm font-medium text-slate-500 mb-3 sm:mb-4"
-                        >
-                            <span>VF48139AV</span>
-                            <span
-                                class="w-1.5 h-1.5 rounded-full bg-slate-300"
-                            ></span>
-                            <span class="truncate">Relational DB & SQL</span>
-                        </div>
-                        <div class="flex items-center gap-3 w-full max-w-sm">
-                            <div
-                                class="flex-1 h-2 bg-slate-100 rounded-full overflow-hidden"
-                            >
-                                <div
-                                    class="h-full bg-indigo-500 rounded-full w-[10%]"
-                                ></div>
-                            </div>
-                            <span
-                                class="text-[10px] font-bold text-indigo-600 shrink-0"
-                                >10% Selesai</span
-                            >
-                        </div>
-                    </div>
-                    <button
-                        class="hidden sm:flex bg-slate-900 text-white px-8 py-4 rounded-xl font-black text-[10px] sm:text-xs uppercase tracking-wider shadow-md hover:bg-indigo-600 transition-all shrink-0 items-center justify-center"
-                    >
-                        Masuk Kelas
-                    </button>
-                </div>
+                
             </div>
         </main>
 
         <script src="https://unpkg.com/aos@2.3.1/dist/aos.js"></script>
 
         <script>
+            function masukKelas(index) {
+    if (!kelasData[index]) {
+        console.error('Kelas tidak ditemukan', index);
+        return;
+    }
+
+    window.location.href = kelasData[index].url;
+}
             // INIT ANIMASI
             AOS.init({ once: true, easing: "ease-out-cubic" });
 
+            const kelasData = {!! json_encode($kelas) !!};
             // ==========================================
             // LOGIKA VOICE ASSISTANT
             // ==========================================
@@ -429,14 +307,14 @@
                     tujuan = "{{ route('dashboard') ?? '#' }}";
                     teks = "Kembali ke Beranda.";
                 } else if (nomor === 11) {
-                    tujuan = "{{ route('course.detail') ?? '#' }}";
-                    teks = "Membuka Detail Mata Kuliah Struktur Data.";
+                    tujuan = "{{ route('course.detail', ['kelas' => $item['id']]) }}";
+                    teks = "Membuka Detail {{ $item['nama'] }}.";
                 } else if (nomor === 12) {
-                    tujuan = "{{ route('course.detail') ?? '#' }}";
+                    tujuan = "{{ route('course.detail', ['kelas' => $item['id']]) }}";
                     teks =
                         "Membuka Detail Mata Kuliah Pemrograman Berorientasi Objek.";
                 } else if (nomor === 13) {
-                    tujuan = "{{ route('course.detail') ?? '#' }}";
+                    tujuan = "{{ route('course.detail', ['kelas' => $item['id']]) }}";
                     teks = "Membuka Detail Mata Kuliah Basis Data.";
                 }
 
@@ -509,6 +387,8 @@
                     });
                 }, 800);
             };
+
+            
         </script>
     </body>
 </html>

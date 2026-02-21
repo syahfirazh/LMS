@@ -124,9 +124,10 @@
                         </div>
 
                         <form
-                            action="#"
+                            action="{{ route('mahasiswa.join.kelas') }}"
                             method="POST"
                             class="max-w-md mx-auto space-y-6"
+                            id="join-form"
                         >
                             @csrf
                             <div
@@ -148,7 +149,7 @@
                             </div>
 
                             <button
-                                type="button"
+                                type="submit"
                                 onclick="navigasiKe(2)"
                                 class="w-full bg-slate-900 text-white py-4 rounded-2xl font-bold text-sm uppercase tracking-widest hover:bg-emerald-600 hover:shadow-lg hover:shadow-emerald-200 transition-all transform hover:-translate-y-1 flex items-center justify-center gap-3"
                             >
@@ -238,20 +239,18 @@
                     // Fokus ke Input
                     document.getElementById("class-code").focus();
                     teks = "Silahkan ketik kode kelas.";
-                } else if (nomor === 2) {
-                    // Submit Form (Simulasi)
-                    const code = document.getElementById("class-code").value;
-                    if (code.length < 3) {
-                        teks = "Kode kelas terlalu pendek.";
-                    } else {
-                        teks = "Memproses kode kelas " + code;
-                        // Disini nanti form.submit() yang asli
-                        setTimeout(
-                            () => alert("Berhasil bergabung ke kelas!"),
-                            2000,
-                        );
-                    }
-                }
+               } else if (nomor === 2) {
+    const code = document.getElementById("class-code").value;
+    if (code.length < 3) {
+        teks = "Kode kelas terlalu pendek.";
+    } else {
+        teks = "Memproses kode kelas " + code;
+        bicara(teks, () => {
+            document.getElementById("join-form").submit();
+        });
+        return;
+    }
+}
 
                 if (teks !== "") {
                     bicara(teks);

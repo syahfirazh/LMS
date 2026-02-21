@@ -10,15 +10,23 @@ return new class extends Migration
      * Run the migrations.
      */
     public function up(): void
-    {
-        Schema::create('messages', function (Blueprint $table) {
-    $table->id();
-    $table->foreignId('submission_id')->constrained()->onDelete('cascade');
-    $table->string('from');
-    $table->text('body');
-    $table->timestamps();
-});
-    }
+{
+    Schema::create('messages', function (Blueprint $table) {
+        $table->id();
+
+        $table->string('sender_type');   // dosen / mahasiswa
+        $table->unsignedBigInteger('sender_id');
+
+        $table->string('receiver_type'); // dosen / mahasiswa
+        $table->unsignedBigInteger('receiver_id');
+
+        $table->text('body')->nullable();
+        $table->string('image_path')->nullable();
+        $table->boolean('is_read')->default(false);
+
+        $table->timestamps();
+    });
+}
 
     /**
      * Reverse the migrations.

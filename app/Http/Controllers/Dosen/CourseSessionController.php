@@ -7,7 +7,7 @@ use Illuminate\Http\Request;
 use App\Models\Kelas;
 use App\Models\CourseSession;
 use App\Models\User;
-use App\Models\Diskusi; // <-- Wajib dipanggil untuk insert data chat
+use App\Models\Diskusi;
 
 class CourseSessionController extends Controller
 {
@@ -23,13 +23,16 @@ class CourseSessionController extends Controller
 
     /**
      * =====================================================
-     * DETAIL SESSION (AMAN, BERDASARKAN SESSION ID)
+     * DETAIL SESSION (BERDASARKAN SESSION ID - AMAN)
      * =====================================================
      */
     public function show($sessionId)
     {
-        // PERBAIKAN: discussions.sender agar relasi pengirim terbaca
-        $session = CourseSession::with(['materis', 'discussions.sender', 'kelas.mataKuliah'])
+        $session = CourseSession::with([
+                'materis',
+                'discussions.sender',
+                'kelas.mataKuliah'
+            ])
             ->whereHas('kelas', function ($q) {
                 $q->where('dosen_id', auth('dosen')->id());
             })
@@ -56,12 +59,14 @@ class CourseSessionController extends Controller
             ->where('dosen_id', auth('dosen')->id())
             ->firstOrFail();
 
-        // PERBAIKAN: discussions.sender agar profil/foto tampil
         $session = $kelas->courseSessions()
-            ->with(['materis', 'discussions.sender', 'kelas.mataKuliah'])
+            ->with([
+                'materis',
+                'discussions.sender',
+                'kelas.mataKuliah'
+            ])
             ->findOrFail($sessionId);
 
-        // Hitung user online
         $onlineUsers = User::where('last_seen', '>=', now()->subMinutes(5))->count();
 
         return view('dosen_manage_session_detail', compact('session', 'kelas', 'onlineUsers'));
@@ -69,57 +74,71 @@ class CourseSessionController extends Controller
 
     /**
      * =====================================================
-     * SIMPAN PESAN DISKUSI (TEKS, GAMBAR, VOICE NOTE)
+     * SIMPAN PESAN DISKUSI (AMAN + VALID + TERPROTEKSI)
      * =====================================================
      */
-    public function storeDiskusi(\Illuminate\Http\Request $request, $sessionId)
+    public function storeDiskusi(Request $request, $sessionId)
     {
-        // 1. Validasi
+        // 1️⃣ Validasi
         $request->validate([
             'message' => 'nullable|string',
             'image'   => 'nullable|image|mimes:jpeg,png,jpg,gif|max:5120',
-            'voice'   => 'nullable|file|max:10240', 
+            'voice'   => 'nullable|file|max:10240',
         ]);
 
-        // 2. Cek kosong
-        if (empty($request->message) && !$request->hasFile('image') && !$request->hasFile('voice')) {
-            if ($request->wantsJson()) {
-                return response()->json(['error' => 'Pesan tidak boleh kosong!'], 422);
-            }
-            return back()->with('error', 'Pesan tidak boleh kosong!');
+        // 2️⃣ Cek kosong
+        if (
+            empty($request->message) &&
+            !$request->hasFile('image') &&
+            !$request->hasFile('voice')
+        ) {
+            return $request->wantsJson()
+                ? response()->json(['error' => 'Pesan tidak boleh kosong!'], 422)
+                : back()->with('error', 'Pesan tidak boleh kosong!');
         }
 
-        $session = \App\Models\CourseSession::findOrFail($sessionId);
+        // 3️⃣ SECURITY FIX:
+        // Pastikan session milik dosen login
+        $session = CourseSession::whereHas('kelas', function ($q) {
+                $q->where('dosen_id', auth('dosen')->id());
+            })
+            ->findOrFail($sessionId);
 
-        // 3. Proses File
-        $imagePath = $request->hasFile('image') ? $request->file('image')->store('diskusi/images', 'public') : null;
-        $voicePath = $request->hasFile('voice') ? $request->file('voice')->store('diskusi/voices', 'public') : null;
+        // 4️⃣ Upload file jika ada
+        $imagePath = $request->hasFile('image')
+            ? $request->file('image')->store('diskusi/images', 'public')
+            : null;
 
-        // 4. Simpan ke Database
-        $diskusi = \App\Models\Diskusi::create([
-            'session_id'  => $session->id, 
-            'sender_type' => get_class(auth('dosen')->user()), 
+        $voicePath = $request->hasFile('voice')
+            ? $request->file('voice')->store('diskusi/voices', 'public')
+            : null;
+
+        // 5️⃣ Simpan ke database
+        $diskusi = Diskusi::create([
+            'session_id'  => $session->id,
+            'sender_type' => get_class(auth('dosen')->user()),
             'sender_id'   => auth('dosen')->id(),
             'message'     => $request->message,
             'image'       => $imagePath,
             'voice'       => $voicePath,
         ]);
 
-        // 5. JIKA REQUEST DARI JAVASCRIPT (AJAX), KEMBALIKAN DATA JSON
+        // 6️⃣ Response untuk AJAX
         if ($request->wantsJson() || $request->ajax()) {
             return response()->json([
                 'success' => true,
                 'diskusi' => [
+                    'id'      => $diskusi->id,
                     'message' => $diskusi->message,
                     'image'   => $diskusi->image ? asset('storage/' . $diskusi->image) : null,
                     'voice'   => $diskusi->voice ? asset('storage/' . $diskusi->voice) : null,
                     'time'    => $diskusi->created_at->format('H:i'),
-                    'sender'  => auth('dosen')->user()->nama // Ambil nama dosen
+                    'sender'  => auth('dosen')->user()->nama,
                 ]
             ]);
         }
 
-        // Kalau bukan dari JS, fallback ke cara lama
+        // 7️⃣ Fallback non-AJAX
         return back()->with('success', 'Pesan berhasil dikirim!');
     }
 }

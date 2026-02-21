@@ -22,9 +22,9 @@ class Kelas extends Model
     ];
 
     public function mataKuliah()
-    {
-        return $this->belongsTo(MataKuliah::class);
-    }
+{
+    return $this->belongsTo(MataKuliah::class);
+}
 
     public function dosen()
     {

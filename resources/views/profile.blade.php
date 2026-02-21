@@ -35,6 +35,11 @@
     <body
         class="m-0 font-['Plus_Jakarta_Sans'] bg-[#f8fafc] min-h-full flex flex-col lg:flex-row overflow-hidden border-box text-slate-800"
     >
+    @php
+    if (!isset($mahasiswa)) {
+        abort(403, 'Profil harus diakses melalui controller MahasiswaProfileController');
+    }
+@endphp
         <div
             id="mobileBackdrop"
             onclick="toggleSidebar()"
@@ -373,34 +378,34 @@
                         <div
                             class="w-40 h-40 rounded-[2rem] border-4 border-blue-50 p-1 mb-6"
                         >
-                            <img
-                                src="{{ asset('images/avatar.jpg') }}"
-                                class="w-full h-full object-cover rounded-[1.8rem]"
-                                alt="Foto Profil"
-                                onerror="
-                                    this.src =
-                                        'https://ui-avatars.com/api/?name=Ridwan&background=0D8ABC&color=fff'
-                                "
-                            />
+                            @php
+    $avatarUrl = 'https://ui-avatars.com/api/?name=' . urlencode($mahasiswa->nama) . '&background=0D8ABC&color=fff';
+@endphp
+
+<img
+    src="{{ asset('images/avatar.jpg') }}"
+    onerror="this.onerror=null; this.src='{{ $avatarUrl }}';"
+    class="w-full h-full object-cover rounded-[1.8rem]"
+/>
                         </div>
                         <h2
                             class="text-xl font-black text-slate-900 tracking-tight"
                         >
-                            M. Ridwan Firdaus
+                            {{ $mahasiswa->nama }}
                         </h2>
                         <p class="text-sm font-bold text-slate-400 mt-1">
-                            2430511083
+                            {{ $mahasiswa->nim }}
                         </p>
                         <div class="mt-6 flex flex-wrap justify-center gap-2">
                             <span
                                 class="px-4 py-2 bg-emerald-50 text-emerald-600 rounded-xl text-[10px] font-black uppercase tracking-widest border border-emerald-100"
                             >
-                                Mahasiswa Aktif
+                                {{ $mahasiswa->status ?? '-' }}
                             </span>
                             <span
                                 class="px-4 py-2 bg-blue-50 text-blue-600 rounded-xl text-[10px] font-black uppercase tracking-widest border border-blue-100"
                             >
-                                Semester 3
+                                {{ $mahasiswa->semester ?? '-' }}
                             </span>
                         </div>
                     </div>
@@ -445,7 +450,7 @@
                                             >Program Studi</label
                                         >
                                         <p class="font-bold text-slate-800">
-                                            Teknik Informatika
+                                            {{ $mahasiswa->prodi ?? '-' }}
                                         </p>
                                     </div>
                                     <div
@@ -456,7 +461,7 @@
                                             >Fakultas</label
                                         >
                                         <p class="font-bold text-slate-800">
-                                            Sains & Teknologi
+                                            {{ $mahasiswa->fakultas ?? '-' }}
                                         </p>
                                     </div>
                                     <div
@@ -475,12 +480,12 @@
                                     >
                                         <label
                                             class="text-[9px] font-bold text-slate-400 uppercase tracking-widest block mb-1"
-                                            >Email Institusi</label
+                                            >Email </label
                                         >
                                         <p
                                             class="font-bold text-blue-600 text-sm truncate"
                                         >
-                                            muhammadridwan@ummi.ac.id
+                                            ummi@ac.id
                                         </p>
                                     </div>
                                 </div>
@@ -518,7 +523,7 @@
                                             >Nomor Handphone</label
                                         >
                                         <p class="font-bold text-slate-800">
-                                            0852-1182-2737
+                                            {{ $mahasiswa->no_hp ?? '-' }}
                                         </p>
                                     </div>
                                     <div
@@ -531,7 +536,7 @@
                                         <p
                                             class="font-bold text-slate-800 text-sm truncate"
                                         >
-                                            muhammadridwanfirdaus1997@gmail.com
+                                            {{ $mahasiswa->email_kampus ?? '-' }}
                                         </p>
                                     </div>
                                 </div>
@@ -743,7 +748,7 @@
             window.onload = () => {
                 // Teks Penjelasan Detail digabung menjadi instruksi panjang yang natural
                 const orientasi =
-                    "Halo Ridwan, ini adalah halaman Profil Anda. Di sini terdapat informasi data akademik dan kontak pribadi Anda. Silakan sebutkan angka berikut untuk memilih menu: lima untuk Beranda, enam untuk Profil Saya, tujuh untuk Pemberitahuan, delapan untuk Pesan, sembilan untuk Bantuan, dan nol untuk Keluar. Menu apa yang ingin Anda buka?";
+                    "Halo {{ $mahasiswa->nama }}, ini adalah halaman Profil Anda. Di sini terdapat informasi data akademik dan kontak pribadi Anda. Silakan sebutkan angka berikut untuk memilih menu: lima untuk Beranda, enam untuk Profil Saya, tujuh untuk Pemberitahuan, delapan untuk Pesan, sembilan untuk Bantuan, dan nol untuk Keluar. Menu apa yang ingin Anda buka?";
 
                 document.body.addEventListener("click", () => {}, {
                     once: true,

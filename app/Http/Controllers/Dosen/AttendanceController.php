@@ -13,12 +13,12 @@ class AttendanceController extends Controller
     /**
      * 🔒 Pastikan kelas milik dosen login
      */
-    protected function authorizeKelas($kelas)
+    protected function authorizeKelas(Kelas $kelas)
     {
-        $loggedInId = auth()->guard('dosen')->id() ?? auth()->id();
-        
-        if ($kelas->dosen_id != $loggedInId) {
-            abort(403, "Anda tidak berhak mengakses kelas ini.");
+        $loggedInId = auth('dosen')->id();
+
+        if (!$loggedInId || $kelas->dosen_id !== $loggedInId) {
+            abort(403, 'Anda tidak berhak mengakses kelas ini.');
         }
     }
 

@@ -20,6 +20,7 @@ return new class extends Migration
                 ->cascadeOnDelete();
 
             $table->string('judul');
+            $table->integer('pertemuan_ke');
             $table->text('deskripsi')->nullable();
             $table->integer('urutan')->default(1);
 

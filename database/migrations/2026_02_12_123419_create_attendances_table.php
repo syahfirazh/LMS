@@ -25,6 +25,7 @@ return new class extends Migration
     $table->enum('status', ['hadir', 'izin', 'sakit', 'alpha']);
     $table->timestamp('waktu_absen')->nullable();
 
+    $table->unique(['course_session_id', 'mahasiswa_id']);
     $table->timestamps();
 });
     }

@@ -102,7 +102,7 @@
                     </button>
 
                     @if ($todaySession)
-                        <a href="{{ route('dosen.attendance.manual', [$kelas->id, $todaySession->id]) }}" class="bg-slate-900 text-white px-6 py-3.5 rounded-xl font-black text-[11px] uppercase tracking-widest hover:bg-slate-800 transition-transform transform hover:-translate-y-0.5 shadow-lg w-full md:w-auto flex items-center justify-center">
+                        <a href="{{ route('dosen.attendance.manual', $todaySession->id) }}" class="bg-slate-900 text-white px-6 py-3.5 rounded-xl font-black text-[11px] uppercase tracking-widest hover:bg-slate-800 transition-transform transform hover:-translate-y-0.5 shadow-lg w-full md:w-auto flex items-center justify-center">
                             Input Manual
                         </a>
                     @else

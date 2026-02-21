@@ -7,6 +7,7 @@ use Illuminate\Http\Request;
 use App\Models\Materi;
 use App\Models\CourseSession;
 use Illuminate\Support\Facades\Storage;
+use App\Events\MateriCreated;
 
 class MateriController extends Controller
 {
@@ -39,13 +40,15 @@ class MateriController extends Controller
         // JIKA ADA FILE
         // ======================
         if ($request->hasFile('file')) {
+
             $folder = match ($request->type) {
                 'voice' => 'materi/voice',
                 'video' => 'materi/video',
                 default => 'materi/file',
             };
 
-            $data['file'] = $request->file('file')->store($folder, 'public');
+            $data['file'] = $request->file('file')
+                ->store($folder, 'public');
         }
 
         // ======================
@@ -55,7 +58,15 @@ class MateriController extends Controller
             $data['link'] = $request->link;
         }
 
-        Materi::create($data);
+        // ======================
+        // SIMPAN KE DATABASE
+        // ======================
+        $materi = Materi::create($data);
+
+        // ======================
+        // 🔥 TRIGGER REALTIME EVENT
+        // ======================
+        event(new MateriCreated($materi));
 
         return back()->with('success', 'Materi berhasil ditambahkan');
     }
@@ -65,14 +76,12 @@ class MateriController extends Controller
     // =========================
     public function destroy($materiId)
     {
-        // 🔒 Materi HARUS milik kelas dosen
         $materi = Materi::where('id', $materiId)
             ->whereHas('session.kelas', function ($q) {
                 $q->where('dosen_id', auth('dosen')->id());
             })
             ->firstOrFail();
 
-        // Hapus file jika ada
         if (in_array($materi->type, ['file', 'voice', 'video']) && $materi->file) {
             if (Storage::disk('public')->exists($materi->file)) {
                 Storage::disk('public')->delete($materi->file);
@@ -93,7 +102,6 @@ class MateriController extends Controller
             'instruksi' => 'nullable|string'
         ]);
 
-        // 🔒 Pastikan session milik kelas dosen
         $session = CourseSession::where('id', $sessionId)
             ->whereHas('kelas', function ($q) {
                 $q->where('dosen_id', auth('dosen')->id());

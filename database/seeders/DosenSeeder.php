@@ -13,7 +13,10 @@ class DosenSeeder extends Seeder
         Dosen::create([
             'nidn' => '12345678',
             'nama' => 'Elgar Ahmadal',
+            'email' => 'elgar@ummi.ac.id', // TAMBAHKAN EMAIL INI
             'password' => Hash::make('12345678'),
+            'no_hp' => '081234567890', // Opsional, boleh ditambah
+            'homebase' => 'Teknik Informatika', // Opsional
         ]);
     }
 }

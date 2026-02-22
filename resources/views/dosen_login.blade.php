@@ -43,6 +43,13 @@
                             class="text-slate-400 text-[10px] font-bold mt-2 uppercase tracking-widest leading-loose">
                             Pusat Pembelajaran Disabilitas
                         </p>
+                        
+                        {{-- Notifikasi Error dari Controller (seperti gagal login google) --}}
+                        @if(session('error'))
+                            <div class="mt-4 p-3 bg-red-50 border border-red-200 text-red-600 rounded-xl text-xs font-bold text-center">
+                                {{ session('error') }}
+                            </div>
+                        @endif
                     </div>
 
                     <form id="loginForm" class="space-y-4">
@@ -50,16 +57,17 @@
 
                         <div data-aos="fade-up" data-aos-delay="300"
                             class="p-4 rounded-2xl bg-slate-50 border-2 border-slate-100 focus-within:border-blue-600 transition-colors duration-300">
+                            {{-- UBAH LABEL --}}
                             <label class="block text-[8px] font-black text-slate-400 uppercase tracking-widest mb-1">
-                                NIDN Dosen
+                                NIDN / Email Dosen
                             </label>
+                            {{-- UBAH NAME JADI login_id AGAR COCOK DENGAN CONTROLLER --}}
                             <input
                                 type="text"
-                                name="nidn"
+                                name="login_id"
                                 required
-                                value=""
                                 class="w-full bg-transparent text-sm font-semibold text-slate-700 outline-none placeholder:text-slate-300"
-                                placeholder="Masukkan NIDN"
+                                placeholder="Masukkan NIDN atau Email"
                             />
                         </div>
 
@@ -74,7 +82,6 @@
                                     id="passwordInput"
                                     name="password"
                                     required
-                                    value=""
                                     class="w-full bg-transparent text-sm font-semibold text-slate-700 outline-none placeholder:text-slate-300"
                                     placeholder="Masukkan kata sandi"
                                 />
@@ -96,8 +103,10 @@
                                 Login Sekarang
                             </button>
 
+                            {{-- PERBAIKAN TOMBOL GOOGLE: Tambahkan onclick untuk pindah halaman --}}
                             <button
                                 type="button"
+                                onclick="window.location.href='{{ route('login.dosen.google') }}'"
                                 data-aos="fade-up" data-aos-delay="600"
                                 class="w-full py-4 bg-white border border-slate-200 rounded-xl flex items-center justify-center gap-3 hover:bg-slate-50 transition-all cursor-pointer"
                             >
@@ -123,13 +132,11 @@
                 
                 if (passwordInput.type === 'password') {
                     passwordInput.type = 'text';
-                    // Ubah ikon ke mata tertutup (slash)
                     eyeIcon.innerHTML = `
                         <path stroke-linecap="round" stroke-linejoin="round" d="M3.98 8.223A10.477 10.477 0 0 0 1.934 12C3.226 16.338 7.244 19.5 12 19.5c.993 0 1.953-.138 2.863-.395M6.228 6.228A10.451 10.451 0 0 1 12 4.5c4.756 0 8.773 3.162 10.065 7.498a10.522 10.522 0 0 1-4.293 5.774M6.228 6.228 3 3m3.228 3.228 3.65 3.65m7.894 7.894L21 21m-3.228-3.228-3.65-3.65m0 0a3 3 0 1 0-4.243-4.243m4.242 4.242L9.88 9.88" />
                     `;
                 } else {
                     passwordInput.type = 'password';
-                    // Kembalikan ke ikon mata terbuka
                     eyeIcon.innerHTML = `
                         <path stroke-linecap="round" stroke-linejoin="round" d="M2.036 12.322a1.012 1.012 0 0 1 0-.644C3.67 8.5 7.652 6 12 6c4.348 0 8.332 2.5 9.964 5.678a1.012 1.012 0 0 1 0 .644C20.33 15.5 16.348 18 12 18c-4.348 0-8.332-2.5-9.964-5.678Z" />
                         <path stroke-linecap="round" stroke-linejoin="round" d="M15 12a3 3 0 1 1-6 0 3 3 0 0 1 6 0Z" />
@@ -145,8 +152,9 @@
                 submitBtn.innerText = "MEMPROSES...";
                 submitBtn.disabled = true;
 
+                // PERBAIKAN: Ubah 'nidn' menjadi 'login_id'
                 const data = {
-                    nidn: form.nidn.value,
+                    login_id: form.login_id.value, 
                     password: form.password.value
                 };
 

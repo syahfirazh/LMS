@@ -184,4 +184,22 @@ class AssignmentController extends Controller
             ->route('dosen.course.assignments', $kelas->id)
             ->with('success', 'Tugas berhasil dihapus');
     }
+    /**
+     * =========================================================
+     * REKAP NILAI TUGAS (MATRIKS)
+     * =========================================================
+     */
+    public function recap($kelas_id)
+    {
+        // Ambil data kelas beserta relasinya
+        $kelas = \App\Models\Kelas::with(['mataKuliah', 'dosen', 'mahasiswa'])->findOrFail($kelas_id);
+        
+        // Ambil semua tugas di kelas ini, urutkan dari yang pertama dibuat, beserta data pengumpulannya
+        $assignments = \App\Models\Assignment::with('submissions')
+            ->where('kelas_id', $kelas_id)
+            ->orderBy('created_at', 'asc')
+            ->get();
+
+        return view('dosen_assignment_recap', compact('kelas', 'assignments'));
+    }
 }

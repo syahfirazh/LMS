@@ -57,7 +57,7 @@
 
     <main class="flex-1 max-w-7xl mx-auto p-4 md:p-8 w-full space-y-6 md:space-y-8 mb-20 relative">
         
-        <form action="{{ route('dosen.attendance.save', $session->id) }}" method="POST">
+        <form action="{{ route('dosen.attendance.storeManual', $session->id) }}" method="POST">
             @csrf
             
             <div data-aos="fade-down" data-aos-duration="600" class="flex flex-col lg:flex-row justify-between items-start lg:items-center gap-6 bg-white p-6 sm:p-8 md:p-10 rounded-[2rem] sm:rounded-[2.5rem] border border-slate-200 shadow-sm mb-6">
@@ -102,8 +102,8 @@
 
                     @foreach($mahasiswa as $index => $mhs)
                         @php
-                            // Ambil status dari database jika sudah pernah diisi, defaultnya 'H'
-                            $selected = isset($attendances[$mhs->id]) ? $attendances[$mhs->id]->status : 'H';
+                            // REVISI: Default 'hadir' (kata lengkap)
+                            $selected = isset($attendances[$mhs->id]) ? $attendances[$mhs->id]->status : 'hadir';
                         @endphp
 
                         <div class="p-4 md:p-5 flex flex-col md:flex-row md:items-center justify-between gap-4 sm:gap-5 hover:bg-slate-50 rounded-2xl transition-colors group">
@@ -126,7 +126,7 @@
 
                                 {{-- HADIR --}}
                                 <label class="cursor-pointer relative group/radio flex-1 md:flex-none">
-                                    <input type="radio" name="attendance[{{ $mhs->id }}]" value="H" class="radio-input hidden" {{ $selected == 'H' ? 'checked' : '' }} />
+                                    <input type="radio" name="attendance[{{ $mhs->id }}]" value="hadir" class="radio-input hidden" {{ $selected == 'hadir' ? 'checked' : '' }} />
                                     <div class="radio-label w-full md:w-14 h-10 md:h-12 rounded-xl flex items-center justify-center font-black text-xs md:text-sm text-slate-400 bg-white sm:bg-slate-50 hover:bg-emerald-50 hover:text-emerald-500 transition-all border border-slate-100 shadow-sm sm:shadow-none" 
                                          style="--bg-color: #10b981; --border-color: #059669; --shadow-color: rgba(16, 185, 129, 0.4);">
                                         H
@@ -135,7 +135,7 @@
 
                                 {{-- IZIN --}}
                                 <label class="cursor-pointer relative group/radio flex-1 md:flex-none">
-                                    <input type="radio" name="attendance[{{ $mhs->id }}]" value="I" class="radio-input hidden" {{ $selected == 'I' ? 'checked' : '' }} />
+                                    <input type="radio" name="attendance[{{ $mhs->id }}]" value="izin" class="radio-input hidden" {{ $selected == 'izin' ? 'checked' : '' }} />
                                     <div class="radio-label w-full md:w-14 h-10 md:h-12 rounded-xl flex items-center justify-center font-black text-xs md:text-sm text-slate-400 bg-white sm:bg-slate-50 hover:bg-blue-50 hover:text-blue-500 transition-all border border-slate-100 shadow-sm sm:shadow-none" 
                                          style="--bg-color: #3b82f6; --border-color: #2563eb; --shadow-color: rgba(59, 130, 246, 0.4);">
                                         I
@@ -144,7 +144,7 @@
 
                                 {{-- SAKIT --}}
                                 <label class="cursor-pointer relative group/radio flex-1 md:flex-none">
-                                    <input type="radio" name="attendance[{{ $mhs->id }}]" value="S" class="radio-input hidden" {{ $selected == 'S' ? 'checked' : '' }} />
+                                    <input type="radio" name="attendance[{{ $mhs->id }}]" value="sakit" class="radio-input hidden" {{ $selected == 'sakit' ? 'checked' : '' }} />
                                     <div class="radio-label w-full md:w-14 h-10 md:h-12 rounded-xl flex items-center justify-center font-black text-xs md:text-sm text-slate-400 bg-white sm:bg-slate-50 hover:bg-amber-50 hover:text-amber-500 transition-all border border-slate-100 shadow-sm sm:shadow-none" 
                                          style="--bg-color: #f59e0b; --border-color: #d97706; --shadow-color: rgba(245, 158, 11, 0.4);">
                                         S
@@ -153,7 +153,7 @@
 
                                 {{-- ALPHA --}}
                                 <label class="cursor-pointer relative group/radio flex-1 md:flex-none">
-                                    <input type="radio" name="attendance[{{ $mhs->id }}]" value="A" class="radio-input hidden" {{ $selected == 'A' ? 'checked' : '' }} />
+                                    <input type="radio" name="attendance[{{ $mhs->id }}]" value="alpha" class="radio-input hidden" {{ $selected == 'alpha' ? 'checked' : '' }} />
                                     <div class="radio-label w-full md:w-14 h-10 md:h-12 rounded-xl flex items-center justify-center font-black text-xs md:text-sm text-slate-400 bg-white sm:bg-slate-50 hover:bg-red-50 hover:text-red-500 transition-all border border-slate-100 shadow-sm sm:shadow-none" 
                                          style="--bg-color: #ef4444; --border-color: #dc2626; --shadow-color: rgba(239, 68, 68, 0.4);">
                                         A
@@ -180,10 +180,10 @@
     <script>
         AOS.init({ once: true, easing: 'ease-out-cubic', duration: 800 });
 
-        // Fungsi agar tombol Reset mengembalikan semua pilihan ke "Hadir" (H)
+        // REVISI: Fungsi Reset mengembalikan ke "hadir"
         document.querySelector('button[type="reset"]').addEventListener('click', function(e) {
-            e.preventDefault(); // Mencegah form reset default bawaan HTML
-            document.querySelectorAll('input[value="H"]').forEach(function(el) {
+            e.preventDefault(); 
+            document.querySelectorAll('input[value="hadir"]').forEach(function(el) {
                 el.checked = true;
             });
         });

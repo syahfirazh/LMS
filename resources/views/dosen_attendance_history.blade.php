@@ -125,16 +125,17 @@
                         </div>
 
                         @php
+                            // REVISI: Penyesuaian ke kata lengkap sesuai dengan data dari Controller/Database
                             $statusLabel = 'Alpha';
                             $statusClass = 'bg-red-50 border-red-100 text-red-600';
                             
-                            if ($mhs->status == 'H') {
+                            if ($mhs->status == 'hadir') {
                                 $statusLabel = 'Hadir';
                                 $statusClass = 'bg-emerald-50 border-emerald-100 text-emerald-600';
-                            } elseif ($mhs->status == 'I') {
+                            } elseif ($mhs->status == 'izin') {
                                 $statusLabel = 'Izin';
                                 $statusClass = 'bg-blue-50 border-blue-100 text-blue-600';
-                            } elseif ($mhs->status == 'S') {
+                            } elseif ($mhs->status == 'sakit') {
                                 $statusLabel = 'Sakit';
                                 $statusClass = 'bg-amber-50 border-amber-100 text-amber-600';
                             }

@@ -11,14 +11,28 @@ return new class extends Migration
      */
     public function up(): void
     {
-        Schema::create('submission_messages', function (Blueprint $table) {
-    $table->id();
-    $table->foreignId('submission_id')->constrained()->cascadeOnDelete();
-    $table->enum('sender', ['dosen', 'mahasiswa']);
-    $table->text('message');
-    $table->timestamps();
-});
-
+        if (!Schema::hasTable('submission_messages')) {
+            Schema::create('submission_messages', function (Blueprint $table) {
+                $table->id();
+                // Relasi ke tabel submissions (cascade: jika submission dihapus, chat ikut hapus)
+                $table->foreignId('submission_id')->constrained()->onDelete('cascade');
+                
+                // Identitas pengirim
+                $table->enum('from', ['dosen', 'mahasiswa']);
+                
+                // Konten Pesan
+                $table->text('body')->nullable();
+                
+                // Kolom Media (Disesuaikan penamaannya agar rapi)
+                $table->string('image_path')->nullable(); 
+                $table->string('voice_path')->nullable(); 
+                
+                // Status Baca (Penting untuk notifikasi angka merah di Sidebar)
+                $table->boolean('is_read')->default(false); 
+                
+                $table->timestamps();
+            });
+        }
     }
 
     /**

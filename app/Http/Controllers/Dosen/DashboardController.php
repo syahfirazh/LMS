@@ -5,10 +5,17 @@ namespace App\Http\Controllers\Dosen;
 use App\Http\Controllers\Controller;
 use Illuminate\Support\Facades\Auth;
 use App\Models\Kelas;
+use App\Models\Notification; // Import Model Notifikasi
+use App\Models\Message;      // Import Model Message untuk hitung pesan belum dibaca
 use Carbon\Carbon;
 
 class DashboardController extends Controller
 {
+    /**
+     * =========================================================
+     * HALAMAN UTAMA (DASHBOARD)
+     * =========================================================
+     */
     public function index()
     {
         $dosen = Auth::guard('dosen')->user();
@@ -70,12 +77,52 @@ class DashboardController extends Controller
         ));
     }
 
+    /**
+     * =========================================================
+     * HALAMAN PEMBERITAHUAN (NOTIFIKASI)
+     * =========================================================
+     */
     public function notifications()
     {
-        // Langsung ke view notifikasi (Sesuai dengan kode asli Anda)
-        return view('dosen_notifications');
+        $dosenId = Auth::guard('dosen')->id();
+
+        // 1. Ambil Notifikasi dari Database (Urutkan dari yang terbaru)
+        $notifications = Notification::where('user_type', 'dosen')
+            ->where('user_id', $dosenId)
+            ->orderBy('created_at', 'desc')
+            ->get();
+
+        // 2. Hitung Pesan Masuk (Untuk indikator angka di sidebar)
+        $unreadMessageCount = Message::where('receiver_type', 'dosen')
+            ->where('receiver_id', $dosenId)
+            ->where('is_read', 0)
+            ->count();
+
+        return view('dosen_notifications', compact('notifications', 'unreadMessageCount'));
     }
 
+    /**
+     * =========================================================
+     * FUNGSI TANDAI SEMUA NOTIFIKASI DIBACA
+     * =========================================================
+     */
+    public function markAllNotificationsRead()
+    {
+        $dosenId = Auth::guard('dosen')->id();
+        
+        // Update semua notifikasi milik dosen ini menjadi sudah dibaca (true / 1)
+        Notification::where('user_type', 'dosen')
+            ->where('user_id', $dosenId)
+            ->update(['is_read' => true]);
+
+        return back()->with('success', 'Semua pemberitahuan telah ditandai dibaca.');
+    }
+
+    /**
+     * =========================================================
+     * HALAMAN JADWAL MENGAJAR
+     * =========================================================
+     */
     public function schedule()
     {
         $dosen = Auth::guard('dosen')->user();

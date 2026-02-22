@@ -69,10 +69,24 @@
                 <h2 class="text-2xl md:text-3xl font-black text-slate-900 tracking-tight">Daftar Penugasan</h2>
                 <p class="text-sm text-slate-500 font-medium mt-1">Kelola tugas, kuis, dan pantau pengumpulan mahasiswa.</p>
             </div>
-            <a href="{{ route('dosen.assignment.create', $kelas->id) }}" class="bg-blue-600 text-white px-6 py-3.5 rounded-xl font-black text-[11px] uppercase tracking-widest hover:bg-blue-700 hover:-translate-y-0.5 transition-all flex items-center gap-2 shadow-lg shadow-blue-200 w-full md:w-auto justify-center">
-                <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2.5" d="M12 4v16m8-8H4"></path></svg>
-                Buat Tugas Baru
-            </a>
+            
+            <div class="flex flex-col sm:flex-row items-center gap-3 w-full md:w-auto">
+                
+               <a href="{{ route('dosen.assignment.recap', $kelas->id) }}" class="w-full sm:w-auto px-6 py-3.5 bg-white border-2 border-slate-200 text-slate-600 rounded-xl font-black text-[11px] uppercase tracking-widest hover:bg-slate-50 hover:border-blue-300 hover:text-blue-600 transition-all flex items-center justify-center gap-2 shadow-sm">
+                    <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2.5" d="M9 17v1a3 3 0 106 0v-1m-6 0a3 3 0 006 0v-1m-6 0h6m-6-5h6m-6-4h6M4 21h16a2 2 0 002-2V5a2 2 0 00-2-2H4a2 2 0 00-2 2v14a2 2 0 002 2z"></path>
+                    </svg>
+                    Rekap Nilai Tugas
+                </a>
+
+                <a href="{{ route('dosen.assignment.create', $kelas->id) }}" class="w-full sm:w-auto px-6 py-3.5 bg-blue-600 text-white rounded-xl font-black text-[11px] uppercase tracking-widest hover:bg-blue-700 hover:-translate-y-0.5 transition-all flex items-center justify-center gap-2 shadow-lg shadow-blue-200">
+                    <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2.5" d="M12 4v16m8-8H4"></path>
+                    </svg>
+                    Buat Tugas
+                </a>
+                
+            </div>
         </div>
 
         <div class="grid grid-cols-1 lg:grid-cols-2 gap-6">
@@ -80,7 +94,14 @@
             @forelse($assignments as $assignment)
             @php
                 $isPublished = $assignment->status === 'published';
-                $hadirCount = $assignment->submissions_count ?? 0;
+                
+                // PERBAIKAN LOGIKA COUNT (Hanya hitung yang benar-benar kumpul tugas file/tanggal)
+                $hadirCount = \App\Models\Submission::where('assignment_id', $assignment->id)
+                                ->where(function($query) {
+                                    $query->whereNotNull('file_path')
+                                          ->orWhereNotNull('submitted_at');
+                                })->count();
+                                
                 $totalCount = $kelas->mahasiswa_count ?? 0;
             @endphp
             

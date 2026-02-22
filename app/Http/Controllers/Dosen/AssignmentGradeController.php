@@ -6,7 +6,7 @@ use App\Http\Controllers\Controller;
 use Illuminate\Http\Request;
 use App\Models\Kelas;
 use App\Models\Submission;
-use App\Models\Message;
+use App\Models\SubmissionMessage; // Pastikan ini mengarah ke model SubmissionMessage
 
 class AssignmentGradeController extends Controller
 {
@@ -90,42 +90,57 @@ class AssignmentGradeController extends Controller
         return back()->with('success', 'Nilai berhasil disimpan');
     }
 
-    public function sendMessage(Request $request, $submissionId)
+    /**
+     * =========================================================
+     * SIMPAN PESAN DISKUSI TUGAS (Mendukung Voice & Image)
+     * =========================================================
+     */
+    public function storeMessage(Request $request, $assignmentId, $mahasiswaId)
     {
-        // 🔒 Pastikan submission milik kelas dosen
-        $submission = Submission::where('id', $submissionId)
-            ->whereHas('assignment.kelas', function ($q) {
-                $q->where('dosen_id', auth('dosen')->id());
-            })
-            ->firstOrFail();
+        try {
+            $request->validate([
+                'body'  => 'nullable|string',
+                'image' => 'nullable|image|max:5120',
+                'voice' => 'nullable|file|max:5120'
+            ]);
 
-        $pathImage = null;
-        $pathVoice = null;
+            if (empty($request->body) && !$request->hasFile('image') && !$request->hasFile('voice')) {
+                return response()->json(['success' => false, 'message' => 'Pesan tidak boleh kosong.'], 400);
+            }
 
-        // Simpan gambar jika ada
-        if ($request->hasFile('image')) {
-            $pathImage = $request->file('image')->store('diskusi_tugas', 'public');
-        }
+            // 1. Validasi Keamanan: Pastikan tugas dan kelas ini milik dosen yang sedang login
+            $dosenId = auth('dosen')->id();
+            $assignment = \App\Models\Assignment::where('id', $assignmentId)
+                ->whereHas('kelas', function($q) use ($dosenId) {
+                    $q->where('dosen_id', $dosenId);
+                })->firstOrFail();
 
-        // Simpan voice/rekaman suara jika ada
-        if ($request->hasFile('voice')) {
-            $pathVoice = $request->file('voice')->store('diskusi_tugas', 'public');
-        }
+            // 2. Cari atau Buat Submission. 
+            // Jika mahasiswa belum mengumpulkan, ini akan membuatkan submission kosong agar bisa dichat.
+            $submission = Submission::firstOrCreate(
+                [
+                    'assignment_id' => $assignment->id,
+                    'mahasiswa_id'  => $mahasiswaId
+                ]
+            );
 
-        // Simpan pesan ke database
-        $message = Message::create([
-            'submission_id' => $submission->id,
-            'from'          => 'dosen',
-            'body'          => $request->body,
-            'image'         => $pathImage,
-            'voice'         => $pathVoice,
-        ]);
+            // 3. Simpan file jika ada
+            $imagePath = $request->hasFile('image') ? $request->file('image')->store('diskusi_tugas', 'public') : null;
+            $voicePath = $request->hasFile('voice') ? $request->file('voice')->store('diskusi_tugas', 'public') : null;
 
-        // Jika request berasal dari AJAX (fetch API di frontend)
-        if ($request->ajax() || $request->wantsJson()) {
+            // 4. Buat Pesan di tabel submission_messages
+            $message = SubmissionMessage::create([
+                'submission_id' => $submission->id,
+                'from'          => 'dosen',
+                'body'          => $request->body,
+                'image'         => $imagePath,
+                'voice'         => $voicePath,
+            ]);
+
+            // 5. Kembalikan Response ke JS Frontend
             return response()->json([
                 'success' => true,
-                'message' => [
+                'diskusi' => [
                     'id'    => $message->id,
                     'body'  => $message->body,
                     'image' => $message->image ? asset('storage/' . $message->image) : null,
@@ -133,9 +148,9 @@ class AssignmentGradeController extends Controller
                     'time'  => $message->created_at->format('H:i')
                 ]
             ]);
-        }
 
-        // Fallback jika tidak pakai javascript
-        return back()->with('success', 'Pesan berhasil dikirim');
+        } catch (\Exception $e) {
+            return response()->json(['success' => false, 'message' => $e->getMessage()], 500);
+        }
     }
 }

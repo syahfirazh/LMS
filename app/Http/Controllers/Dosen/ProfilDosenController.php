@@ -5,64 +5,64 @@ namespace App\Http\Controllers\Dosen;
 use App\Http\Controllers\Controller;
 use App\Models\Dosen;
 use Illuminate\Http\Request;
+use Illuminate\Support\Facades\Auth;
 use Illuminate\Support\Facades\Hash;
+use Illuminate\Support\Facades\Storage;
 
 class ProfilDosenController extends Controller
 {
     public function index()
-{
-    /** @var \App\Models\Dosen $dosen */
-    $dosen = auth()->guard('dosen')->user();
-
-    return view('dosen_profile', compact('dosen'));
-}
-
-public function edit()
-{
-    /** @var \App\Models\Dosen $dosen */
-    $dosen = auth()->guard('dosen')->user();
-
-    return view('dosen_profile_edit', compact('dosen'));
-}
-
+    {
+        $dosen = Auth::guard('dosen')->user();
+        return view('dosen_profile', compact('dosen'));
+    }
 
     public function update(Request $request)
     {
         /** @var Dosen $dosen */
-        $dosen = auth()->guard('dosen')->user();
+        $dosen = Auth::guard('dosen')->user();
 
-        $data = $request->validate([
-            'nama' => 'required|string|max:255',
-            'nidn' => 'required|string|max:50',
-            'homebase' => 'required|string|max:255',
-            'jabatan' => 'required|string|max:255',
-            'bidang_keahlian' => 'nullable|array',
-            'foto' => 'nullable|image|max:2048',
+        $request->validate([
+            'nama'  => 'required|string|max:255',
+            'email' => 'required|email|max:255|unique:dosens,email,' . $dosen->id,
+            'no_hp' => 'nullable|string|max:20',
+            'foto'  => 'nullable|image|mimes:jpeg,png,jpg|max:2048',
         ]);
 
+        $data = $request->only(['nama', 'email', 'no_hp']);
+
         if ($request->hasFile('foto')) {
-            $data['foto'] = $request->file('foto')->store('dosen', 'public');
+            // Hapus foto lama jika ada
+            if ($dosen->foto) {
+                Storage::disk('public')->delete($dosen->foto);
+            }
+            $data['foto'] = $request->file('foto')->store('dosen/foto', 'public');
         }
 
         $dosen->update($data);
 
-        return redirect()
-            ->route('dosen.profile')
-            ->with('success', 'Profil berhasil diperbarui');
+        return back()->with('success', 'Profil dan Email berhasil diperbarui!');
     }
 
     public function updatePassword(Request $request)
     {
         $request->validate([
-            'password' => 'required|confirmed|min:8',
+            'current_password' => 'required',
+            'password' => 'required|min:8|confirmed',
         ]);
 
         /** @var Dosen $dosen */
-        $dosen = auth()->guard('dosen')->user();
+        $dosen = Auth::guard('dosen')->user();
 
-        $dosen->password = Hash::make($request->password);
-        $dosen->save();
+        // Cek apakah password lama benar
+        if (!Hash::check($request->current_password, $dosen->password)) {
+            return back()->withErrors(['current_password' => 'Password lama tidak sesuai.']);
+        }
 
-        return back()->with('success', 'Password berhasil diubah');
+        $dosen->update([
+            'password' => Hash::make($request->password)
+        ]);
+
+        return back()->with('success', 'Password berhasil diubah!');
     }
 }

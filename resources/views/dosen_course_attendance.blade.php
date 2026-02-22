@@ -128,14 +128,14 @@
             <div class="space-y-4">
                 @forelse($riwayat as $session)
                     @php
-                        // Menghitung status persentase kehadiran
-                        $hadir = $session->attendances()->where('status', 'H')->count() ?? 0;
+                        // REVISI: Ubah 'H' menjadi 'hadir' untuk menyesuaikan database
+                        $hadir = $session->attendances()->where('status', 'hadir')->count() ?? 0;
                         $total = $totalMahasiswa ?? 0;
                         // Jika hadir semua (Perfect attendance)
                         $isPerfect = ($total > 0 && $hadir == $total);
                     @endphp
 
-                    <a href="{{ route('dosen.attendance.history', [$kelas->id, $session->id]) }}" 
+                    <a href="{{ route('dosen.attendance.history', $session->id) }}" 
                        data-aos="fade-up" data-aos-delay="{{ $loop->index * 100 }}"
                        class="block bg-white border border-slate-200 rounded-[2rem] p-6 hover:shadow-xl hover:border-blue-300 hover:-translate-y-1 transition-all duration-300 group relative overflow-hidden">
                         

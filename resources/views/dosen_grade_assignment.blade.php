@@ -44,14 +44,12 @@
         
         <div id="chat-overlay" onclick="toggleChat()"></div>
 
-        {{-- MAIN WRAPPER --}}
         <main class="flex-1 flex flex-col h-screen overflow-y-auto relative">
             
-            {{-- NAVBAR (Sama persis seperti Detail Sesi) --}}
+            {{-- NAVBAR --}}
             <div class="bg-white/90 backdrop-blur-2xl border-b border-slate-200/60 sticky top-0 z-40 px-4 md:px-8 py-4 shadow-sm transition-all w-full">
                 <div class="max-w-7xl mx-auto flex items-center justify-between relative">
                     
-                    {{-- KIRI: TOMBOL BACK --}}
                     <div class="flex items-center gap-4 relative z-10 md:w-auto w-full justify-start">
                         <a href="{{ route('dosen.course.assignments', $kelas->id) }}" class="w-11 h-11 md:w-12 md:h-12 rounded-full bg-slate-100 hover:bg-blue-600 text-slate-500 hover:text-white flex items-center justify-center transition-all duration-300 shadow-sm shrink-0 group border border-slate-200 hover:border-blue-600">
                             <svg class="w-5 h-5 md:w-6 md:h-6 transform group-hover:-translate-x-1 transition-transform" fill="none" stroke="currentColor" viewBox="0 0 24 24">
@@ -60,7 +58,6 @@
                         </a>
                     </div>
                     
-                    {{-- TENGAH: INFO TUGAS --}}
                     <div class="text-center absolute left-1/2 transform -translate-x-1/2 w-full max-w-[60%] md:max-w-md mt-2 md:mt-0">
                         <h1 class="text-lg md:text-2xl font-black text-slate-900 tracking-tight leading-tight truncate">
                             {{ $assignment->judul ?? 'Tugas' }}
@@ -75,7 +72,6 @@
                         </div>
                     </div>
                     
-                    {{-- KANAN: NAVIGASI MAHASISWA --}}
                     <div class="flex items-center gap-2 relative z-10">
                         @php
                             $index = $mahasiswas->search(fn($m) => $m->id == $activeMahasiswaId);
@@ -101,64 +97,123 @@
                 </div>
             </div>
 
-            {{-- KONTEN BAWAH --}}
-            <div class="max-w-7xl mx-auto w-full p-4 md:p-8 space-y-6 md:space-y-8 pb-24 relative grid grid-cols-1 lg:grid-cols-12 gap-6">
+            <div class="max-w-7xl mx-auto w-full p-4 md:p-8 grid grid-cols-1 lg:grid-cols-12 gap-6">
                 
-                {{-- KOLOM 1: LIST MAHASISWA (Animasi) --}}
-                <div class="hidden lg:flex lg:col-span-3 bg-white rounded-[2rem] border border-slate-200 shadow-sm flex-col overflow-hidden lg:sticky lg:top-[100px] lg:h-[calc(100vh-130px)]" data-aos="fade-right" data-aos-duration="600">
+                {{-- KOLOM 1: LIST MAHASISWA --}}
+                <div class="hidden lg:flex lg:col-span-3 bg-white rounded-[2rem] border border-slate-200 shadow-sm flex-col overflow-hidden lg:sticky lg:top-[100px] lg:h-[calc(100vh-130px)]">
                     <div class="p-4 border-b border-slate-100 bg-slate-50/50">
-                        <div class="relative">
-                            <input type="text" onkeyup="filterMahasiswa(this.value)" placeholder="Cari Mahasiswa..." class="w-full bg-white border border-slate-200 rounded-xl pl-10 pr-4 py-2.5 text-xs font-bold focus:border-blue-500 focus:ring-2 focus:ring-blue-100 outline-none" />
-                            <svg class="w-4 h-4 absolute left-3.5 top-3 text-slate-400" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M21 21l-6-6m2-5a7 7 0 11-14 0 7 7 0 0114 0z"></path></svg>
-                        </div>
+                        <input type="text" onkeyup="filterMahasiswa(this.value)" placeholder="Cari..." class="w-full bg-white border border-slate-200 rounded-xl px-4 py-2.5 text-xs font-bold focus:ring-2 focus:ring-blue-100 outline-none" />
                     </div>
                     <div class="flex-1 overflow-y-auto custom-scrollbar p-2 space-y-1">
                         @foreach ($mahasiswas as $mhs)
                         <a href="{{ route('dosen.assignment.grade', [$kelas->id, $assignment->id, $mhs->id]) }}" class="mahasiswa-item block" data-name="{{ strtolower($mhs->nama) }}">
-                            <div class="p-3 {{ $activeMahasiswaId == $mhs->id ? 'bg-blue-50 border-blue-200 shadow-sm' : 'hover:bg-slate-50 border-transparent hover:border-slate-200' }} border rounded-xl flex items-center justify-between transition-all">
-                                <div class="flex items-center gap-3">
-                                    <img src="https://ui-avatars.com/api/?name={{ urlencode($mhs->nama) }}&background=0ea5e9&color=fff" class="w-9 h-9 rounded-full shadow-sm" />
-                                    <div>
-                                        <h4 class="text-xs font-bold {{ $activeMahasiswaId == $mhs->id ? 'text-slate-900' : 'text-slate-600' }}">{{ $mhs->nama }}</h4>
-                                        <p class="text-[9px] font-bold {{ $mhs->status_pengumpulan === 'tepat_waktu' ? 'text-blue-600' : 'text-red-500' }} uppercase mt-0.5">{{ $mhs->status_label ?? 'Belum Mengumpulkan' }}</p>
-                                    </div>
+                            <div class="p-3 {{ $activeMahasiswaId == $mhs->id ? 'bg-blue-50 border-blue-200 shadow-sm' : 'border-transparent' }} border rounded-xl flex items-center gap-3 transition-all">
+                                <img src="https://ui-avatars.com/api/?name={{ urlencode($mhs->nama) }}&background=0ea5e9&color=fff" class="w-8 h-8 rounded-full" />
+                                <div class="flex-1 min-w-0">
+                                    <h4 class="text-xs font-bold truncate">{{ $mhs->nama }}</h4>
+                                    <p class="text-[9px] font-bold {{ $mhs->status_pengumpulan === 'tepat_waktu' ? 'text-blue-600' : 'text-red-500' }} uppercase">{{ $mhs->status_label ?? 'Belum' }}</p>
                                 </div>
-                                @if ($activeMahasiswaId == $mhs->id) <div class="w-2.5 h-2.5 bg-blue-600 rounded-full ring-4 ring-blue-100"></div> @endif
                             </div>
                         </a>
                         @endforeach
                     </div>
                 </div>
 
-                {{-- KOLOM 2: PREVIEW FILE (Animasi) --}}
-                <div class="lg:col-span-6 bg-slate-900 rounded-[2rem] shadow-xl flex flex-col overflow-hidden relative border border-slate-800 h-[700px]" data-aos="fade-up" data-aos-duration="600" data-aos-delay="100">
-                    <div class="flex-1 flex items-center justify-center bg-slate-900/50">
-                        @if ($submission && $submission->file_url)
-                            <iframe src="{{ $submission->file_url }}" class="w-full h-full bg-white"></iframe>
-                        @else
-                            <div class="text-center p-8">
-                                <div class="w-16 h-16 bg-slate-800 rounded-full flex items-center justify-center mx-auto mb-4 border border-slate-700">
-                                    <svg class="w-8 h-8 text-slate-500" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 12h6m-6 4h6m2 5H7a2 2 0 01-2-2V5a2 2 0 012-2h5.586a1 1 0 01.707.293l5.414 5.414a1 1 0 01.293.707V19a2 2 0 01-2 2z"></path></svg>
+                {{-- KOLOM 2: PREVIEW TUGAS DINAMIS (ANTI ERROR) --}}
+                <div class="lg:col-span-6 bg-slate-900 rounded-[2rem] shadow-xl flex flex-col overflow-hidden relative border border-slate-800 h-[700px]">
+                    <div class="flex-1 flex flex-col items-center justify-center p-4 overflow-y-auto custom-scrollbar">
+                        
+                        @if ($submission)
+                            @php
+                                // Ambil ekstensi file jika ada
+                                $ext = $submission->file_url ? strtolower(pathinfo($submission->file_url, PATHINFO_EXTENSION)) : '';
+                            @endphp
+
+                            {{-- 1. JIKA FILE ADALAH PDF --}}
+                            @if ($ext === 'pdf')
+                                <iframe src="{{ asset('storage/' . $submission->file_url) }}" class="w-full h-full bg-white rounded-xl"></iframe>
+                            
+                            {{-- 2. JIKA FILE ADALAH GAMBAR --}}
+                            @elseif (in_array($ext, ['jpg', 'jpeg', 'png', 'gif', 'webp']))
+                                <div class="w-full h-full flex items-center justify-center bg-slate-800 rounded-xl p-4">
+                                    <img src="{{ asset('storage/' . $submission->file_url) }}" class="max-w-full max-h-full object-contain rounded-lg shadow-lg">
                                 </div>
-                                <h3 class="text-white text-sm font-bold">Belum Ada File</h3>
-                                <p class="text-slate-400 text-xs mt-1">Mahasiswa belum mengirim file jawaban.</p>
+
+                            {{-- 3. JIKA FILE ADALAH VOICE NOTE / AUDIO --}}
+                            @elseif ($submission->voice_url || in_array($ext, ['webm', 'mp3', 'wav', 'ogg']))
+                                @php 
+                                    $audioSrc = $submission->voice_url ? asset('storage/'.$submission->voice_url) : asset('storage/'.$submission->file_url); 
+                                @endphp
+                                <div class="bg-slate-800 p-8 rounded-3xl border border-slate-700 text-center w-full max-w-sm">
+                                    <div class="w-20 h-20 bg-purple-500/20 text-purple-400 rounded-full flex items-center justify-center mx-auto mb-4">
+                                        <svg class="w-10 h-10" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 11a7 7 0 01-7 7m0 0a7 7 0 01-7-7m7 7v4m0 0H8m4 0h4m-4-8a3 3 0 01-3-3V5a3 3 0 116 0v6a3 3 0 01-3 3z"></path></svg>
+                                    </div>
+                                    <h3 class="text-white font-bold mb-4">Tugas Voice Note Mahasiswa</h3>
+                                    <div class="flex items-center gap-3 bg-slate-900 p-3 rounded-2xl border border-slate-700">
+                                        <button type="button" onclick="togglePlay('main-voice')" id="btn-main-voice" class="w-10 h-10 shrink-0 rounded-full bg-purple-600 text-white flex items-center justify-center shadow hover:scale-105 transition-transform">▶</button>
+                                        <div id="main-voice" class="flex-1" data-audio="{{ $audioSrc }}"></div>
+                                    </div>
+                                </div>
+
+                            {{-- 4. JIKA JAWABAN TEKS ONLINE --}}
+                            @elseif ($submission->text_online)
+                                <div class="w-full h-full bg-white rounded-xl p-8 overflow-y-auto text-slate-800 shadow-inner">
+                                    <h3 class="text-lg font-black border-b pb-4 mb-4 text-slate-900">Jawaban Teks:</h3>
+                                    <div class="whitespace-pre-wrap leading-relaxed text-sm font-medium">{{ $submission->text_online }}</div>
+                                </div>
+
+                            {{-- 5. JIKA JAWABAN LINK --}}
+                            @elseif ($submission->link_url)
+                                <div class="text-center p-8 bg-slate-800 rounded-2xl border border-slate-700 w-full max-w-md">
+                                    <div class="w-16 h-16 bg-blue-500/20 text-blue-400 rounded-full flex items-center justify-center mx-auto mb-4">
+                                        <svg class="w-8 h-8" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M13.828 10.172a4 4 0 00-5.656 0l-4 4a4 4 0 105.656 5.656l1.102-1.101m-.758-4.828a4 4 0 005.656 0l4-4a4 4 0 00-5.656-5.656l-1.1 1.1"></path></svg>
+                                    </div>
+                                    <h3 class="text-white text-lg font-bold mb-2">Tautan Tugas Eksternal</h3>
+                                    <a href="{{ $submission->link_url }}" target="_blank" class="block w-full py-3 bg-blue-600 hover:bg-blue-500 text-white rounded-xl font-bold transition-colors">
+                                        Buka Tautan di Tab Baru
+                                    </a>
+                                </div>
+
+                            {{-- 6. JIKA FILE FORMAT LAIN (Word, Excel, Zip dll) --}}
+                            @elseif ($submission->file_url)
+                                <div class="text-center p-8 bg-slate-800 rounded-2xl border border-slate-700 w-full max-w-md">
+                                    <div class="w-16 h-16 bg-slate-700 rounded-full flex items-center justify-center mx-auto mb-4 border border-slate-600">
+                                        <svg class="w-8 h-8 text-slate-400" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M4 16v1a3 3 0 003 3h10a3 3 0 003-3v-1m-4-4l-4 4m0 0l-4-4m4 4V4"></path></svg>
+                                    </div>
+                                    <h3 class="text-white text-lg font-bold mb-1">File Terlampir</h3>
+                                    <p class="text-slate-400 text-xs mb-4">Format file ini tidak dapat dipreview langsung.</p>
+                                    <a href="{{ asset('storage/' . $submission->file_url) }}" download class="block w-full py-3 bg-emerald-600 hover:bg-emerald-500 text-white rounded-xl font-bold transition-colors">
+                                        Download File
+                                    </a>
+                                </div>
+                            @endif
+                        
+                        @else
+                            {{-- MAHASISWA BELUM MENGUMPULKAN TUGAS --}}
+                            <div class="text-center p-8">
+                                <div class="w-20 h-20 bg-slate-800 rounded-full flex items-center justify-center mx-auto mb-4 border border-slate-700 shadow-inner">
+                                    <svg class="w-10 h-10 text-slate-500" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 8v4m0 4h.01M21 12a9 9 0 11-18 0 9 9 0 0118 0z"></path></svg>
+                                </div>
+                                <h3 class="text-white text-lg font-black tracking-wide">Belum Mengumpulkan</h3>
+                                <p class="text-slate-400 text-sm mt-1 max-w-xs mx-auto">Mahasiswa belum mengirimkan file tugas. Anda bisa mengirim pesan via Diskusi.</p>
                             </div>
                         @endif
                     </div>
                 </div>
 
-                {{-- KOLOM 3: FORM NILAI & DISKUSI (Animasi) --}}
-                <div class="lg:col-span-3 flex flex-col gap-6 lg:sticky lg:top-[100px] lg:h-[calc(100vh-130px)] min-w-0" data-aos="fade-left" data-aos-duration="600" data-aos-delay="200">
+                {{-- KOLOM 3: FORM NILAI & DISKUSI --}}
+                <div class="lg:col-span-3 flex flex-col gap-6 lg:sticky lg:top-[100px] lg:h-[calc(100vh-130px)] min-w-0">
                     
                     {{-- FORM NILAI --}}
-                    <form method="POST" action="{{ route('dosen.assignment.grade.store', ['kelas' => $kelas->id, 'assignment' => $assignment->id, 'mahasiswa' => $activeMahasiswaId]) }}" class="bg-white rounded-[2rem] border border-slate-200 shadow-sm p-5 shrink-0">
+                    <form method="POST" action="{{ route('dosen.assignment.grade.store', ['kelas' => $kelas->id, 'assignment' => $assignment->id, 'mahasiswa' => $activeMahasiswaId]) }}" class="bg-white rounded-[2rem] border border-slate-200 p-5 shadow-sm shrink-0 {{ !$submission ? 'opacity-50 pointer-events-none' : '' }}">
                         @csrf
-                        <div class="mb-3 border-b border-slate-100 pb-3">
-                            <h3 class="text-xs font-black text-slate-900 uppercase tracking-widest flex items-center gap-2">Penilaian</h3>
+                        <div class="mb-3 border-b border-slate-100 pb-3 flex justify-between items-center">
+                            <h3 class="text-xs font-black text-slate-900 uppercase tracking-widest">Penilaian</h3>
+                            @if(!$submission) <span class="text-[9px] font-bold text-red-500 uppercase bg-red-50 px-2 py-0.5 rounded-md">Terkunci</span> @endif
                         </div>
                         <div class="space-y-3">
-                            <input type="number" name="nilai" value="{{ $submission->nilai ?? '' }}" placeholder="0 - 100" class="w-full bg-slate-50 border border-slate-200 rounded-xl px-4 py-2.5 text-xl font-black text-center focus:outline-none focus:border-blue-500" />
-                            <button type="submit" class="w-full py-3 bg-emerald-500 text-white rounded-xl text-[10px] font-black uppercase hover:bg-emerald-600 transition-all shadow-md">Simpan Nilai</button>
+                            <input type="number" name="nilai" value="{{ $submission->nilai ?? '' }}" placeholder="{{ $submission ? '0 - 100' : '-' }}" class="w-full bg-slate-50 border border-slate-200 rounded-xl px-4 py-2.5 text-xl font-black text-center focus:outline-none focus:border-blue-500 disabled:bg-slate-100" {{ !$submission ? 'disabled' : '' }} />
+                            <button type="submit" class="w-full py-3 bg-emerald-500 text-white rounded-xl text-[10px] font-black uppercase hover:bg-emerald-600 transition-all shadow-md disabled:bg-slate-300" {{ !$submission ? 'disabled' : '' }}>Simpan Nilai</button>
                         </div>
                     </form>
 
@@ -167,31 +222,27 @@
                     {{-- DISKUSI CONTAINER --}}
                     <div id="chat-wrapper" class="bg-white rounded-[2rem] border border-slate-200 shadow-sm flex flex-col flex-1 overflow-hidden min-h-0 bg-white/90 backdrop-blur-xl">
                         
-                        {{-- Header Chat --}}
                         <div class="p-4 border-b border-slate-100 flex justify-between items-center bg-slate-50/50 shrink-0">
                             <h3 class="text-xs font-black text-slate-900 uppercase tracking-widest">Diskusi Privat</h3>
-                            <button type="button" onclick="toggleChat()" class="text-slate-400 hover:text-blue-600 p-1 rounded-lg">
+                            <button onclick="toggleChat()" class="text-slate-400 hover:text-blue-600">
                                 <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M4 8V4m0 0h4M4 4l5 5m11-1V4m0 0h-4m4 0l-5 5M4 16v4m0 0h4m-4 0l5-5m11 5l-5-5m5 5v-4m0 4h-4"></path></svg>
                             </button>
                         </div>
 
-                        {{-- Body Chat --}}
-                        <div id="chatContainer" class="flex-1 p-4 flex flex-col gap-5 overflow-y-auto custom-scrollbar bg-white">
+                        <div id="chatContainer" class="flex-1 p-4 flex flex-col gap-4 overflow-y-auto custom-scrollbar bg-white">
                             @php
-                                $pesanDiskusi = ($submission && $submission->messages) ? $submission->messages->sortBy('created_at') : collect();
+                                $pesanDiskusi = isset($diskusiList) ? $diskusiList : (($submission && $submission->messages) ? $submission->messages->sortBy('created_at') : collect());
                             @endphp
 
                             @forelse ($pesanDiskusi as $diskusi)
                                 @php
                                     $from = $diskusi->from ?? '';
-                                    $isMe = $from != 'mahasiswa';
+                                    $isMe = ($from === 'dosen'); 
                                     $nama = $isMe ? 'Anda' : ($activeMahasiswa->nama ?? 'Mahasiswa');
                                     $foto = 'https://ui-avatars.com/api/?name=' . urlencode($nama) . '&background=' . ($isMe ? '2563eb' : 'f8fafc') . '&color=' . ($isMe ? 'fff' : '475569');
-                                    
                                     $body = $diskusi->body ?? '';
-                                    $image = $diskusi->image ?? null;
-                                    $voice = $diskusi->voice ?? null;
-                                    
+                                    $image = $diskusi->image ?? null; 
+                                    $voice = $diskusi->voice ?? null; 
                                     $time = !empty($diskusi->created_at) ? \Carbon\Carbon::parse($diskusi->created_at)->format('H:i') : '';
                                     $diskusiId = $diskusi->id ?? rand(100, 9999);
                                 @endphp
@@ -200,15 +251,8 @@
                                         <img src="{{ $foto }}" class="w-7 h-7 rounded-full shrink-0 shadow-sm border border-slate-100" />
                                         <div class="flex flex-col {{ $isMe ? 'items-end' : 'items-start' }}">
                                             <div class="p-3 rounded-2xl shadow-sm text-xs {{ $isMe ? 'bg-blue-600 text-white rounded-tr-none' : 'bg-slate-50 text-slate-800 rounded-tl-none border border-slate-200' }}">
-                                                
-                                                @if(!empty($body)) 
-                                                    <p class="whitespace-pre-wrap break-words leading-relaxed">{{ $body }}</p> 
-                                                @endif
-
-                                                @if(!empty($image)) 
-                                                    <img src="{{ asset('storage/' . $image) }}" class="mt-2 rounded-xl max-w-full border {{ $isMe ? 'border-white/20' : 'border-slate-200' }}"> 
-                                                @endif
-
+                                                @if(!empty($body)) <p class="whitespace-pre-wrap break-words leading-relaxed">{{ $body }}</p> @endif
+                                                @if(!empty($image)) <img src="{{ asset('storage/' . $image) }}" class="mt-2 rounded-xl max-w-full border {{ $isMe ? 'border-white/20' : 'border-slate-200' }}"> @endif
                                                 @if(!empty($voice))
                                                     <div class="mt-2 flex items-center gap-2 {{ $isMe ? 'bg-white/20 border-white/30' : 'bg-white border-slate-200' }} p-1.5 rounded-xl border w-[160px]">
                                                         <button type="button" onclick="togglePlay('wave-{{ $diskusiId }}')" id="btn-wave-{{ $diskusiId }}" class="w-6 h-6 shrink-0 flex items-center justify-center rounded-full {{ $isMe ? 'bg-white text-blue-600' : 'bg-blue-600 text-white' }} shadow text-[9px]">▶</button>
@@ -216,42 +260,41 @@
                                                     </div>
                                                 @endif
                                             </div>
-
-                                            @if($time)
-                                                <p class="text-[8px] mt-1 px-1 font-bold text-slate-400">
-                                                    {{ $time }}
-                                                </p>
-                                            @endif
+                                            @if($time)<p class="text-[8px] mt-1 px-1 font-bold text-slate-400">{{ $time }}</p>@endif
                                         </div>
                                     </div>
                                 </div>
                             @empty
                                 <div id="emptyChat" class="h-full flex flex-col items-center justify-center text-center opacity-70">
-                                    <p class="text-xs text-slate-500 font-bold">Belum ada diskusi</p>
+                                    <div class="w-10 h-10 bg-blue-50 text-blue-400 rounded-full flex items-center justify-center mb-2">
+                                        <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M8 12h.01M12 12h.01M16 12h.01M21 12c0 4.418-4.03 8-9 8a9.863 9.863 0 01-4.255-.949L3 20l1.395-3.72C3.512 15.042 3 13.574 3 12c0-4.418 4.03-8 9-8s9 3.582 9 8z"></path></svg>
+                                    </div>
+                                    <p class="text-[10px] text-slate-500 font-bold uppercase tracking-widest">{{ !$submission ? 'Kirim Peringatan' : 'Belum Ada Diskusi' }}</p>
                                 </div>
                             @endforelse
                         </div>
 
-                        {{-- Form Input --}}
+                        {{-- Form Input Diskusi dengan Tombol Batal Voice --}}
                         <div class="p-3 border-t border-slate-100 bg-white shrink-0">
                             <div id="imagePreviewContainer" class="hidden mb-2 relative w-fit">
                                 <img id="imagePreviewElement" class="h-16 w-auto object-cover rounded-lg border border-slate-200">
                                 <button type="button" onclick="cancelImage()" class="absolute -top-2 -right-2 bg-red-500 text-white rounded-full w-5 h-5 flex items-center justify-center text-xs shadow">✕</button>
                             </div>
 
-                            <form id="chatForm" method="POST" action="{{ $submission ? route('dosen.assignment.message', $submission->id) : '#' }}" enctype="multipart/form-data">
+                            <form id="chatForm" method="POST" action="{{ route('dosen.assignment.message.store', ['assignment' => $assignment->id, 'mahasiswa' => $activeMahasiswaId]) }}" enctype="multipart/form-data">
                                 @csrf
                                 <input type="file" name="image" id="imageInput" accept="image/*" class="hidden" onchange="previewImage(this)">
                                 <input type="file" name="voice" id="voiceInput" accept="audio/webm" class="hidden">
-
-                                <div class="flex items-center bg-white border border-slate-200 rounded-[1.25rem] p-1 shadow-sm focus-within:border-blue-400 focus-within:ring-2 focus-within:ring-blue-100 transition-all w-full">
-                                    
-                                    <button type="button" onclick="document.getElementById('imageInput').click()" class="w-9 h-9 shrink-0 flex items-center justify-center rounded-[0.8rem] text-slate-400 hover:bg-slate-50 hover:text-blue-600 transition-colors">
+                                
+                                <div class="relative flex items-center bg-slate-50 border border-slate-200 rounded-[1.25rem] p-1 focus-within:ring-2 focus-within:ring-blue-100 transition-all w-full">
+                                    <button type="button" id="btnUploadImage" onclick="document.getElementById('imageInput').click()" class="w-9 h-9 shrink-0 flex items-center justify-center rounded-[0.8rem] text-slate-400 hover:bg-slate-100 hover:text-blue-600 transition-colors">
                                         <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="1.8" d="M4 16l4.586-4.586a2 2 0 012.828 0L16 16m-2-2l1.586-1.586a2 2 0 012.828 0L20 14m-6-6h.01M6 20h12a2 2 0 002-2V6a2 2 0 00-2-2H6a2 2 0 00-2 2v12a2 2 0 002 2z"></path></svg>
                                     </button>
-
-                                    <div id="normalInputWrapper" class="flex-1 min-w-0 px-2">
-                                        <input type="text" id="messageInput" name="body" placeholder="Tulis balasan Anda..." class="w-full bg-transparent text-xs text-slate-700 outline-none placeholder-slate-400" autocomplete="off" />
+                                    
+                                    <div id="normalInputWrapper" class="flex-1 relative flex items-center min-w-0 px-2">
+                                        <input type="text" id="messageInput" name="body" placeholder="Pesan..." class="w-full bg-transparent border-none focus:ring-0 text-xs text-slate-700 py-2" autocomplete="off" />
+                                        
+                                        <button type="button" id="cancelVoiceBtn" class="hidden absolute right-1 text-[9px] font-black uppercase text-white bg-red-500 hover:bg-red-600 px-2 py-1 rounded-lg shadow-sm transition-all cursor-pointer">Batal ✕</button>
                                     </div>
 
                                     <div id="recordingWrapper" class="hidden flex-1 items-center justify-between px-3 bg-red-50/80 rounded-xl h-8 mx-1">
@@ -262,76 +305,67 @@
                                                 <div class="bar"></div><div class="bar"></div><div class="bar"></div><div class="bar"></div><div class="bar"></div>
                                             </div>
                                         </div>
-                                        <button type="button" id="cancelRecordBtn" class="text-[9px] font-black uppercase text-red-500/70 hover:text-red-600">Batal</button>
+                                        <button type="button" id="cancelRecordBtn" class="text-[9px] font-black uppercase text-red-500/70 hover:text-red-600 cursor-pointer">Batal</button>
                                     </div>
 
-                                    <div class="flex items-center gap-1 shrink-0">
-                                        <button type="button" id="recordBtn" class="w-9 h-9 flex items-center justify-center rounded-[0.8rem] text-slate-400 hover:bg-slate-50 transition-colors" title="Rekam Suara">
-                                            <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="1.8" d="M12 18.75a6 6 0 006-6v-1.5m-6 7.5a6 6 0 01-6-6v-1.5m6 7.5v3.75m-3.75 0h7.5M12 15.75a3 3 0 01-3-3V4.5a3 3 0 116 0v8.25a3 3 0 01-3 3z"></path></svg>
-                                        </button>
-
-                                        <button type="submit" id="sendChatBtn" class="w-9 h-9 flex items-center justify-center rounded-[0.8rem] bg-blue-600 text-white hover:bg-blue-700 transition-colors shadow-sm">
-                                            <span id="sendIcon"><svg class="w-4 h-4 transform rotate-90 ml-0.5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 19l9 2-9-18-9 18 9-2zm0 0v-8"></path></svg></span>
-                                            <span id="sendLoading" class="hidden"><svg class="w-4 h-4 animate-spin" fill="none" viewBox="0 0 24 24"><circle class="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" stroke-width="4"></circle><path class="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8v8H4z"></path></svg></span>
-                                        </button>
-                                    </div>
+                                    <button type="button" id="recordBtn" class="w-9 h-9 flex items-center justify-center rounded-[0.8rem] text-slate-400 hover:bg-slate-100 transition-colors shrink-0">
+                                        <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="1.8" d="M12 18.75a6 6 0 006-6v-1.5m-6 7.5a6 6 0 01-6-6v-1.5m6 7.5v3.75m-3.75 0h7.5M12 15.75a3 3 0 01-3-3V4.5a3 3 0 116 0v8.25a3 3 0 01-3 3z"></path></svg>
+                                    </button>
+                                    
+                                    <button type="submit" id="sendChatBtn" class="w-8 h-8 shrink-0 bg-blue-600 text-white rounded-xl flex items-center justify-center shadow-md hover:bg-blue-700 transition-all cursor-pointer ml-1">
+                                        <span id="sendIcon"><svg class="w-4 h-4 transform rotate-90" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 19l9 2-9-18-9 18 9-2zm0 0v-8"></path></svg></span>
+                                        <span id="sendLoading" class="hidden"><svg class="w-4 h-4 animate-spin text-white" fill="none" viewBox="0 0 24 24"><circle class="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" stroke-width="4"></circle><path class="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8v8H4z"></path></svg></span>
+                                    </button>
                                 </div>
                             </form>
                         </div>
-
                     </div>
-
                 </div>
             </div>
         </main>
 
         <script src="https://unpkg.com/aos@2.3.1/dist/aos.js"></script>
         <script>
-            // Init Animasi AOS
             AOS.init({ once: true, easing: "ease-out-cubic" });
 
             function filterMahasiswa(keyword) {
                 keyword = keyword.toLowerCase();
                 document.querySelectorAll('.mahasiswa-item').forEach(item => {
-                    const name = item.dataset.name;
-                    item.style.display = name.includes(keyword) ? 'block' : 'none';
+                    item.style.display = item.dataset.name.includes(keyword) ? 'block' : 'none';
                 });
             }
 
             function toggleChat() {
-                const chatWrapper = document.getElementById('chat-wrapper');
-                const overlay = document.getElementById('chat-overlay');
-                const placeholder = document.getElementById('chat-placeholder');
-                const isExpanded = chatWrapper.classList.contains('chat-expanded');
+                const w = document.getElementById('chat-wrapper');
+                const o = document.getElementById('chat-overlay');
+                const p = document.getElementById('chat-placeholder');
+                const isExpanded = w.classList.contains('chat-expanded');
 
                 if (!isExpanded) {
-                    placeholder.style.height = chatWrapper.offsetHeight + 'px';
-                    placeholder.classList.remove('hidden');
-                    document.body.appendChild(chatWrapper);
-                    
-                    chatWrapper.classList.add('chat-expanded');
-                    overlay.classList.add('active');
+                    p.style.height = w.offsetHeight + 'px';
+                    p.classList.remove('hidden');
+                    document.body.appendChild(w);
+                    w.classList.add('chat-expanded');
+                    o.classList.add('active');
                     document.body.style.overflow = 'hidden'; 
                 } else {
-                    chatWrapper.classList.remove('chat-expanded');
-                    overlay.classList.remove('active');
+                    w.classList.remove('chat-expanded');
+                    o.classList.remove('active');
                     document.body.style.overflow = 'auto'; 
-                    
-                    placeholder.parentNode.insertBefore(chatWrapper, placeholder);
-                    placeholder.classList.add('hidden');
+                    p.parentNode.insertBefore(w, p);
+                    p.classList.add('hidden');
                 }
             }
 
             const wavesurfers = {};
-            function initWaveSurfer(containerId, audioUrl, isMe) {
-                wavesurfers[containerId] = WaveSurfer.create({
-                    container: '#' + containerId,
+            function initWaveSurfer(id, url, isMe) {
+                wavesurfers[id] = WaveSurfer.create({
+                    container: '#' + id,
                     waveColor: isMe ? 'rgba(255,255,255,0.4)' : '#cbd5e1',
                     progressColor: isMe ? '#fff' : '#2563eb',
-                    height: 16, barWidth: 2, barGap: 2, barRadius: 2, cursorWidth: 0,
-                    url: audioUrl
+                    height: 16, barWidth: 2, barGap: 2, cursorWidth: 0, url: url
                 });
-                wavesurfers[containerId].on('finish', () => document.getElementById('btn-'+containerId).innerHTML = '▶');
+                wavesurfers[id].on('finish', () => document.getElementById('btn-'+id).innerHTML = '▶');
             }
 
             function togglePlay(id) {
@@ -342,9 +376,15 @@
             document.addEventListener('DOMContentLoaded', () => {
                 const chatContainer = document.getElementById('chatContainer');
                 if(chatContainer) chatContainer.scrollTop = chatContainer.scrollHeight;
+                
                 document.querySelectorAll('[id^="wave-"]').forEach(el => {
                     initWaveSurfer(el.id, el.getAttribute('data-audio'), el.parentElement.classList.contains('bg-white/20'));
                 });
+                
+                const mainVoice = document.getElementById('main-voice');
+                if(mainVoice) {
+                    initWaveSurfer('main-voice', mainVoice.getAttribute('data-audio'), false);
+                }
             });
 
             function previewImage(input) {
@@ -363,8 +403,16 @@
                 document.getElementById('imagePreviewContainer').classList.add('hidden');
             }
 
+            // ==========================================
+            // LOGIKA REKAMAN & TOMBOL BATAL VOICE NOTE
+            // ==========================================
             let mediaRecorder, audioChunks = [], recordInterval, recordSeconds = 0;
             const recordBtn = document.getElementById('recordBtn');
+            const cancelRecordBtn = document.getElementById('cancelRecordBtn');
+            const cancelVoiceBtn = document.getElementById('cancelVoiceBtn');
+            const voiceInput = document.getElementById('voiceInput');
+            const messageInput = document.getElementById('messageInput');
+            const btnUploadImage = document.getElementById('btnUploadImage');
 
             recordBtn.addEventListener('click', async () => {
                 if (!mediaRecorder || mediaRecorder.state === "inactive") {
@@ -377,9 +425,11 @@
                         document.getElementById('recordingWrapper').classList.remove('hidden');
                         document.getElementById('recordingWrapper').classList.add('flex');
                         
+                        recordBtn.classList.remove('text-slate-400');
                         recordBtn.classList.add('text-red-500', 'bg-red-50');
                         recordSeconds = 0; 
                         document.getElementById('recordTimer').innerText = "00:00";
+                        
                         recordInterval = setInterval(() => {
                             recordSeconds++;
                             const m = String(Math.floor(recordSeconds/60)).padStart(2,'0');
@@ -391,44 +441,62 @@
                         mediaRecorder.ondataavailable = e => audioChunks.push(e.data);
                     } catch(err) { alert("Mic error!"); }
                 } else {
+                    // Selesai merekam
                     mediaRecorder.onstop = () => {
                         const file = new File([new Blob(audioChunks, { type: 'audio/webm' })], "voice.webm", { type: "audio/webm" });
                         const dt = new DataTransfer(); dt.items.add(file);
-                        document.getElementById('voiceInput').files = dt.files;
+                        voiceInput.files = dt.files;
                         
                         document.getElementById('recordingWrapper').classList.add('hidden');
                         document.getElementById('recordingWrapper').classList.remove('flex');
                         document.getElementById('normalInputWrapper').classList.remove('hidden');
-                        recordBtn.classList.remove('text-red-500', 'bg-red-50');
                         
-                        document.getElementById('messageInput').placeholder = "▶ Rekaman siap dikirim...";
-                        document.getElementById('messageInput').disabled = true;
+                        recordBtn.classList.add('hidden');
+                        btnUploadImage.classList.add('hidden');
+                        
+                        messageInput.placeholder = "▶ ılıılı Voice Note siap...";
+                        messageInput.disabled = true;
+                        messageInput.classList.add('font-bold', 'text-blue-600', 'bg-blue-50', 'rounded-xl', 'px-3');
+                        cancelVoiceBtn.classList.remove('hidden');
                     };
                     mediaRecorder.stop();
                     clearInterval(recordInterval);
                 }
             });
 
-            document.getElementById('cancelRecordBtn').addEventListener('click', () => {
-                if(mediaRecorder && mediaRecorder.state !== "inactive") mediaRecorder.stop();
+            // Batal saat SEDANG merekam
+            cancelRecordBtn.addEventListener('click', () => {
+                if(mediaRecorder) mediaRecorder.stop();
                 clearInterval(recordInterval);
-                document.getElementById('voiceInput').value = '';
+                audioChunks = [];
+                voiceInput.value = '';
                 document.getElementById('recordingWrapper').classList.add('hidden');
                 document.getElementById('recordingWrapper').classList.remove('flex');
                 document.getElementById('normalInputWrapper').classList.remove('hidden');
+                
                 recordBtn.classList.remove('text-red-500', 'bg-red-50');
-                document.getElementById('messageInput').placeholder = "Tulis balasan Anda...";
-                document.getElementById('messageInput').disabled = false;
+                recordBtn.classList.add('text-slate-400');
             });
+
+            // Batal setelah rekaman SIAP DIKIRIM (Tombol X merah)
+            cancelVoiceBtn.addEventListener('click', () => {
+                voiceInput.value = '';
+                messageInput.disabled = false;
+                messageInput.placeholder = "Pesan...";
+                messageInput.classList.remove('font-bold', 'text-blue-600', 'bg-blue-50', 'rounded-xl', 'px-3');
+                
+                cancelVoiceBtn.classList.add('hidden');
+                btnUploadImage.classList.remove('hidden');
+                recordBtn.classList.remove('hidden', 'text-red-500', 'bg-red-50');
+                recordBtn.classList.add('text-slate-400');
+            });
+
+            const myName = "{{ auth('dosen')->user()->nama ?? 'Dosen' }}";
+            const myAvatar = `https://ui-avatars.com/api/?name=${encodeURIComponent(myName)}&background=2563eb&color=fff`;
 
             document.getElementById('chatForm').addEventListener('submit', async function(e) {
                 e.preventDefault();
                 
-                if (this.action.endsWith('#')) {
-                    alert('Mahasiswa belum mengumpulkan tugas. Anda belum bisa memulai diskusi di tugas ini.');
-                    return;
-                }
-
                 const msgVal = document.getElementById('messageInput').value.trim();
                 const imgFile = document.getElementById('imageInput').files.length;
                 const voiceFile = document.getElementById('voiceInput').files.length;
@@ -451,9 +519,16 @@
                     if(res.ok && data.success) {
                         this.reset();
                         cancelImage();
-                        document.getElementById('voiceInput').value = '';
-                        document.getElementById('messageInput').disabled = false;
-                        document.getElementById('messageInput').placeholder = "Tulis balasan Anda...";
+                        
+                        // Kembalikan form voice ke semula
+                        voiceInput.value = '';
+                        messageInput.disabled = false;
+                        messageInput.placeholder = "Pesan...";
+                        messageInput.classList.remove('font-bold', 'text-blue-600', 'bg-blue-50', 'rounded-xl', 'px-3');
+                        cancelVoiceBtn.classList.add('hidden');
+                        btnUploadImage.classList.remove('hidden');
+                        recordBtn.classList.remove('hidden', 'text-red-500', 'bg-red-50');
+                        recordBtn.classList.add('text-slate-400');
 
                         const d = data.message || data.diskusi; 
                         if(d) {
@@ -462,7 +537,7 @@
                             if(d.image) media += `<img src="${d.image}" class="mt-2 rounded-xl max-w-full border border-white/20">`;
                             if(d.voice) media += `<div class="mt-2 flex items-center gap-2 bg-white/20 border-white/30 p-1.5 rounded-xl border w-[160px]"><button type="button" onclick="togglePlay('${uid}')" id="btn-${uid}" class="w-6 h-6 shrink-0 flex items-center justify-center rounded-full bg-white text-blue-600 shadow text-[9px]">▶</button><div id="${uid}" class="flex-1 h-4" data-audio="${d.voice}"></div></div>`;
                             
-                            const html = `<div class="flex justify-end chat-bubble-new"><div class="flex gap-2 items-end max-w-[90%] flex-row-reverse"><img src="https://ui-avatars.com/api/?name=Anda&background=2563eb&color=fff" class="w-7 h-7 rounded-full shrink-0 shadow-sm border border-slate-100"><div class="flex flex-col items-end"><div class="p-3 rounded-2xl shadow-sm text-xs bg-blue-600 text-white rounded-tr-none">${d.body ? `<p class="whitespace-pre-wrap break-words leading-relaxed">${d.body}</p>` : ''}${media}</div><p class="text-[8px] mt-1 px-1 font-bold text-slate-400">${d.time || 'Baru Saja'}</p></div></div></div>`;
+                            const html = `<div class="flex justify-end chat-bubble-new"><div class="flex gap-2 items-end max-w-[90%] flex-row-reverse"><img src="${myAvatar}" class="w-7 h-7 rounded-full shrink-0 shadow-sm border border-slate-100"><div class="flex flex-col items-end"><div class="p-3 rounded-2xl shadow-sm text-xs bg-blue-600 text-white rounded-tr-none">${d.body ? `<p class="whitespace-pre-wrap break-words leading-relaxed">${d.body}</p>` : ''}${media}</div><p class="text-[8px] mt-1 px-1 font-bold text-slate-400">${d.time || 'Baru Saja'}</p></div></div></div>`;
                             
                             const box = document.getElementById('chatContainer');
                             const empty = document.getElementById('emptyChat');
@@ -475,7 +550,7 @@
                             window.location.reload();
                         }
                     } else {
-                        alert("Gagal mengirim pesan: " + (data.message || "Server Error"));
+                        alert("Gagal mengirim pesan: " + (data.message || "Pastikan route benar"));
                     }
                 } catch(err) {
                     this.submit(); 

@@ -15,15 +15,12 @@ class Dosen extends Authenticatable
         'nama',
         'nidn',
         'email',
+        'no_hp',
         'homebase',
         'jabatan',
-        'bidang_keahlian',
         'foto',
         'password',
-    ];
-
-    protected $casts = [
-        'bidang_keahlian' => 'array',
+        'google_id',
     ];
 
     protected $hidden = [

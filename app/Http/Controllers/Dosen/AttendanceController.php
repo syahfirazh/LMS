@@ -51,9 +51,9 @@ class AttendanceController extends Controller
 
         $session1 = $riwayat->first();
 
-        // 🔧 STATUS DISERAGAMKAN (H, I, S, A)
+        // 🔧 STATUS DISESUAIKAN (hadir, izin, sakit, alpha)
         $hadir1 = $session1
-            ? $session1->attendances()->where('status', 'H')->count()
+            ? $session1->attendances()->where('status', 'hadir')->count() // Diubah ke 'hadir'
             : 0;
 
         return view('dosen_course_attendance', compact(
@@ -83,11 +83,12 @@ class AttendanceController extends Controller
 
         $kelas = $session->kelas;
 
+        // 🔧 PENYEBUTAN STATUS DISESUAIKAN DENGAN DATABASE
         $rekap = [
-            'hadir' => $session->attendances->where('status', 'H')->count(),
-            'izin'  => $session->attendances->where('status', 'I')->count(),
-            'sakit' => $session->attendances->where('status', 'S')->count(),
-            'alpha' => $session->attendances->where('status', 'A')->count(),
+            'hadir' => $session->attendances->where('status', 'hadir')->count(),
+            'izin'  => $session->attendances->where('status', 'izin')->count(),
+            'sakit' => $session->attendances->where('status', 'sakit')->count(),
+            'alpha' => $session->attendances->where('status', 'alpha')->count(), // 'alpha' sesuai migration
         ];
 
         $detail = $kelas->mahasiswa->map(function ($mhs) use ($session) {
@@ -97,7 +98,7 @@ class AttendanceController extends Controller
             return (object) [
                 'nim'    => $mhs->nim,
                 'nama'   => $mhs->nama,
-                'status' => $absen->status ?? 'A',
+                'status' => $absen->status ?? 'alpha', // Defaultnya 'alpha' jika belum diabsen
             ];
         });
 
@@ -145,9 +146,10 @@ class AttendanceController extends Controller
         $session = CourseSession::with('kelas')->findOrFail($session_id);
         $this->authorizeKelas($session->kelas);
 
+        // 🔧 VALIDASI DISESUAIKAN DENGAN DATABASE
         $validated = $request->validate([
             'attendance'   => 'required|array',
-            'attendance.*' => 'required|in:H,I,S,A'
+            'attendance.*' => 'required|in:hadir,izin,sakit,alpha' 
         ]);
 
         foreach ($validated['attendance'] as $mahasiswaId => $status) {
@@ -157,7 +159,8 @@ class AttendanceController extends Controller
                     'mahasiswa_id'      => $mahasiswaId,
                 ],
                 [
-                    'status' => $status
+                    'status' => $status,
+                    'waktu_absen' => now() // Tambahkan waktu absen
                 ]
             );
         }
@@ -165,5 +168,54 @@ class AttendanceController extends Controller
         return redirect()
             ->route('dosen.attendance.history', $session->id)
             ->with('success', 'Presensi berhasil disimpan');
+    }
+
+    /**
+     * =========================================================
+     * SAVE QUICK ATTENDANCE (Hadir Semua / Default)
+     * =========================================================
+     */
+    public function save(Request $request, $session_id)
+    {
+        $session = CourseSession::with('kelas.mahasiswa')->findOrFail($session_id);
+        $this->authorizeKelas($session->kelas);
+
+        $mahasiswaIds = $session->kelas->mahasiswa->pluck('id');
+
+        // Menggunakan updateOrCreate agar menimpa data lama jika sudah ada
+        foreach ($mahasiswaIds as $id) {
+            Attendance::updateOrCreate(
+                [
+                    'course_session_id' => $session->id,
+                    'mahasiswa_id'      => $id,
+                ],
+                [
+                    'status' => 'hadir', // Disesuaikan dengan enum database
+                    'waktu_absen' => now()
+                ]
+            );
+        }
+
+        return redirect()
+            ->route('dosen.attendance.history', $session->id)
+            ->with('success', 'Semua mahasiswa ditandai Hadir.');
+    }
+
+    /**
+     * =========================================================
+     * RESET ATTENDANCE (Hapus Semua Absen di Sesi Ini)
+     * =========================================================
+     */
+    public function reset(Request $request, $session_id)
+    {
+        $session = CourseSession::findOrFail($session_id);
+        $this->authorizeKelas($session->kelas);
+
+        // Hapus semua data absensi pada sesi ini
+        Attendance::where('course_session_id', $session->id)->delete();
+
+        return redirect()
+            ->route('dosen.attendance.history', $session->id)
+            ->with('success', 'Data presensi untuk sesi ini berhasil di-reset.');
     }
 }

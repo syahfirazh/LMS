@@ -6,7 +6,7 @@ use Illuminate\Database\Eloquent\Model;
 
 class Submission extends Model
 {
-     protected $fillable = [
+    protected $fillable = [
         'assignment_id',
         'mahasiswa_id',
         'file_path',
@@ -23,10 +23,9 @@ class Submission extends Model
         return $this->belongsTo(Mahasiswa::class);
     }
 
+    // ✅ INI YANG SUDAH DIPERBAIKI
     public function messages()
-{
-    return $this->hasMany(Message::class);
-}
-
-
+    {
+        return $this->hasMany(SubmissionMessage::class); 
+    }
 }

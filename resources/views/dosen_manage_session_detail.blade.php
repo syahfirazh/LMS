@@ -286,12 +286,14 @@
 
                         <div class="relative flex items-center gap-2 sm:gap-3 bg-slate-50 p-2 sm:p-3 rounded-[1.25rem] sm:rounded-2xl border border-slate-200 focus-within:border-blue-400 focus-within:ring-2 focus-within:ring-blue-100 transition-all">
                             
-                            <button type="button" onclick="document.getElementById('imageInput').click()" class="w-9 h-9 sm:w-10 sm:h-10 rounded-xl flex items-center justify-center text-slate-400 hover:text-blue-600 hover:bg-white transition-all cursor-pointer shadow-sm border border-transparent hover:border-blue-100 shrink-0">
+                            <button type="button" id="btnUploadImage" onclick="document.getElementById('imageInput').click()" class="w-9 h-9 sm:w-10 sm:h-10 rounded-xl flex items-center justify-center text-slate-400 hover:text-blue-600 hover:bg-white transition-all cursor-pointer shadow-sm border border-transparent hover:border-blue-100 shrink-0">
                                 <svg class="w-5 h-5 sm:w-6 sm:h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M4 16l4.586-4.586a2 2 0 012.828 0L16 16m-2-2l1.586-1.586a2 2 0 012.828 0L20 14m-6-6h.01M6 20h12a2 2 0 002-2V6a2 2 0 00-2-2H6a2 2 0 00-2 2v12a2 2 0 002 2z"></path></svg>
                             </button>
 
-                            <div id="normalInputWrapper" class="flex-1 min-w-0">
-                                <input type="text" id="messageInput" name="message" placeholder="Tulis balasan Anda..." class="w-full bg-transparent text-xs sm:text-sm font-medium text-slate-700 placeholder-slate-400 focus:outline-none" autocomplete="off" />
+                            <div id="normalInputWrapper" class="flex-1 min-w-0 relative flex items-center">
+                                <input type="text" id="messageInput" name="message" placeholder="Tulis balasan Anda..." class="w-full bg-transparent text-xs sm:text-sm font-medium text-slate-700 placeholder-slate-400 focus:outline-none transition-all py-1.5" autocomplete="off" />
+                                
+                                <button type="button" id="cancelVoiceBtn" class="hidden absolute right-1 sm:right-2 text-[10px] font-black uppercase text-white bg-red-500 hover:bg-red-600 px-2.5 py-1.5 rounded-lg shadow-sm transition-all cursor-pointer">Batal ✕</button>
                             </div>
 
                             <div id="recordingWrapper" class="hidden flex-1 items-center justify-between px-2">
@@ -563,6 +565,8 @@
         const normalInputWrapper = document.getElementById('normalInputWrapper');
         const recordingWrapper = document.getElementById('recordingWrapper');
         const timerText = document.getElementById('recordTimer');
+        const btnUploadImage = document.getElementById('btnUploadImage');
+        const cancelVoiceBtn = document.getElementById('cancelVoiceBtn');
 
         function updateTimer() {
             recordSeconds++;
@@ -597,6 +601,7 @@
                         alert("Mikrofon tidak diizinkan atau tidak ditemukan!");
                     }
                 } else {
+                    // SELESAI REKAMAN
                     mediaRecorder.onstop = () => {
                         const audioBlob = new Blob(audioChunks, { type: 'audio/webm' });
                         const file = new File([audioBlob], "voice.webm", { type: "audio/webm" });
@@ -609,18 +614,23 @@
                         recordingWrapper.classList.remove('flex');
                         normalInputWrapper.classList.remove('hidden');
                         
-                        recordBtn.classList.remove('text-red-500', 'bg-red-100', 'animate-pulse', 'border-red-500');
-                        recordBtn.classList.add('text-slate-400', 'bg-red-50', 'hover:bg-red-100');
+                        recordBtn.classList.add('hidden');
+                        btnUploadImage.classList.add('hidden');
                         
-                        messageInput.placeholder = "▶ ılıılıılı Rekaman siap dikirim...";
+                        // MUNCULKAN TOMBOL BATAL & UBAH INPUT TEKS JADI INDIKATOR REKAMAN
+                        messageInput.placeholder = "▶ ılıılı Voice Note siap dikirim...";
                         messageInput.disabled = true; 
-                        messageInput.classList.add('font-bold', 'text-blue-600');
+                        messageInput.classList.add('font-bold', 'text-blue-600', 'bg-blue-50', 'rounded-xl', 'px-4');
+                        messageInput.classList.remove('bg-transparent');
+                        
+                        cancelVoiceBtn.classList.remove('hidden');
                     };
                     mediaRecorder.stop();
                     clearInterval(recordInterval);
                 }
             });
 
+            // TOMBOL BATAL SAAT PROSES MEREKAM
             cancelRecordBtn.addEventListener('click', () => {
                 if(mediaRecorder && mediaRecorder.state !== "inactive") mediaRecorder.stop();
                 clearInterval(recordInterval);
@@ -631,12 +641,31 @@
                 recordingWrapper.classList.remove('flex');
                 normalInputWrapper.classList.remove('hidden');
                 
-                recordBtn.classList.remove('text-red-500', 'bg-red-100', 'animate-pulse', 'border-red-500');
+                recordBtn.classList.remove('text-red-500', 'bg-red-100', 'animate-pulse', 'border-red-500', 'hidden');
                 recordBtn.classList.add('text-slate-400', 'bg-red-50', 'hover:bg-red-100');
+                btnUploadImage.classList.remove('hidden');
+                cancelVoiceBtn.classList.add('hidden');
                 
                 messageInput.placeholder = "Tulis balasan Anda...";
                 messageInput.disabled = false;
-                messageInput.classList.remove('font-bold', 'text-blue-600');
+                messageInput.classList.remove('font-bold', 'text-blue-600', 'bg-blue-50', 'rounded-xl', 'px-4');
+                messageInput.classList.add('bg-transparent');
+            });
+
+            // TOMBOL BATAL SAAT REKAMAN SUDAH SIAP KIRIM (X Merah Kanan)
+            cancelVoiceBtn.addEventListener('click', () => {
+                voiceInput.value = ''; // Hapus file rekaman
+                
+                // Kembalikan ke tampilan awal input teks
+                messageInput.placeholder = "Tulis balasan Anda...";
+                messageInput.disabled = false;
+                messageInput.classList.remove('font-bold', 'text-blue-600', 'bg-blue-50', 'rounded-xl', 'px-4');
+                messageInput.classList.add('bg-transparent');
+                
+                cancelVoiceBtn.classList.add('hidden');
+                btnUploadImage.classList.remove('hidden');
+                recordBtn.classList.remove('hidden', 'text-red-500', 'bg-red-100', 'animate-pulse', 'border-red-500');
+                recordBtn.classList.add('text-slate-400');
             });
         }
 
@@ -652,6 +681,8 @@
             chatForm.addEventListener('submit', async function (e) {
                 e.preventDefault(); 
                 
+                if (!messageInput.value.trim() && (!imageInput || !imageInput.files.length) && (!voiceInput || !voiceInput.files.length)) return;
+
                 const sendIcon = document.getElementById('sendIcon');
                 const sendLoading = document.getElementById('sendLoading');
                 const btnSubmit = document.getElementById('sendChatBtn');
@@ -674,10 +705,17 @@
                     if (response.ok && data.success) {
                         this.reset();
                         cancelImage(); 
+                        
+                        // Reset Semua Input Voice ke semula
                         voiceInput.value = '';
                         messageInput.disabled = false;
-                        messageInput.classList.remove('text-blue-600', 'font-bold');
+                        messageInput.classList.remove('text-blue-600', 'font-bold', 'bg-blue-50', 'rounded-xl', 'px-4');
+                        messageInput.classList.add('bg-transparent');
                         messageInput.placeholder = "Tulis balasan Anda...";
+                        cancelVoiceBtn.classList.add('hidden');
+                        btnUploadImage.classList.remove('hidden');
+                        recordBtn.classList.remove('hidden', 'text-red-500', 'bg-red-100', 'animate-pulse', 'border-red-500');
+                        recordBtn.classList.add('text-slate-400');
                         
                         const d = data.diskusi;
                         let mediaHtml = '';

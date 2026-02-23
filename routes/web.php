@@ -17,6 +17,7 @@ use App\Http\Controllers\MahasiswaDashboardController;
 use App\Http\Controllers\MahasiswaProfileController;
 use App\Http\Controllers\MahasiswaJoinKelasController;
 use App\Http\Controllers\Mahasiswa\AttendanceController as MahasiswaAttendanceController;
+use App\Http\Controllers\DiscussionController;
 
 // Dosen
 use App\Http\Controllers\Dosen\DashboardController;
@@ -91,13 +92,25 @@ Route::middleware('auth:mahasiswa')->group(function () {
 
     // --- Fitur Tambahan ---
     Route::get('/pemberitahuan', function () { return view('notifications'); })->name('notifications');
-    Route::get('/pesan', function () { return view('messages'); })->name('messages');
+    Route::get('/pesan', [DiscussionController::class, 'index'])->name('messages');
+Route::post('/discussion/{session}', [DiscussionController::class, 'store'])->name('discussion.store');
     Route::get('/bantuan', function () { return view('help'); })->name('help');
+    Route::get('/student/chat/{conversation}/messages', 
+        [DiscussionController::class,'messages']);
+
+    Route::post('/student/chat/{conversation}/send', 
+        [DiscussionController::class,'send']);
 
     // --- Presensi Mahasiswa ---
     Route::controller(MahasiswaAttendanceController::class)->group(function () {
-        Route::get('/presensi/{session}', 'index')->name('mahasiswa.presensi');
-        Route::post('/presensi/{session}/{status}', 'store')->name('mahasiswa.presensi.store');
+        Route::get(
+        '/presensi/{session}',
+        [AttendanceController::class, 'attendance']
+    )->name('mahasiswa.presensi');
+
+    Route::post('/presensi/{id}/{status}', 
+    [MahasiswaAttendanceController::class, 'store']
+)->name('presensi.store');
     });
     
     // --- Bergabung Kelas ---
@@ -108,11 +121,20 @@ Route::middleware('auth:mahasiswa')->group(function () {
     Route::prefix('mata-kuliah/struktur-data')->group(function () {
         Route::get('/', function () { return view('course_detail'); })->name('course.prototype.detail');
         Route::get('mata-kuliah/{kelas}/topik/array', [MahasiswaController::class, 'topic'])->name('topic.detail');
-        Route::get('/penugasan', function () { return view('course_assignments'); })->name('course.assignments');
+        Route::get('/penugasan/{session}', function ($session) {
+    return view('course_assignments', [
+        'session' => \App\Models\CourseSession::findOrFail($session)
+    ]);
+})->name('course.assignments');
         Route::get('/penugasan/detail', function () { return view('assignment_detail'); })->name('assignment.detail');
         Route::get('/presensi/{session}', [MahasiswaAttendanceController::class, 'attendance'])->name('course.attendance');
-        Route::get('/anggota', function () { return view('course_members'); })->name('course.members');
+        Route::get(
+    '/mata-kuliah/{kelas}/anggota',
+    [MahasiswaController::class, 'members']
+)->name('course.members');
     });
+    Route::get('/kelas/{kelas}/anggota/search', [MahasiswaController::class, 'search'])
+    ->name('course.members.search');
 
     // --- Fitur Ujian Online (Prototype) ---
     Route::prefix('ujian')->group(function () {
@@ -175,6 +197,8 @@ Route::prefix('dosen')->middleware('auth:dosen')->group(function () {
     Route::controller(CourseSessionController::class)->group(function () {
         Route::get('/mata-kuliah/{kelas}/session/{session}', 'detail')->name('dosen.course.session.detail');
         Route::post('/session/{id}/diskusi', 'storeDiskusi')->name('session.diskusi.store');
+        Route::post('/discussion/{session}', [DiscussionController::class, 'store'])
+    ->name('discussion.store');
     });
 
     Route::get('/session/{id}', [SessionController::class, 'show'])->name('session.show');

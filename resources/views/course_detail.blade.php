@@ -455,7 +455,7 @@
                 let teks = "";
 
                 if (nomor === 0) {
-                    tujuan = "{{ route('courses') ?? '#' }}";
+                    tujuan = "{{ route('dashboard') ?? '#' }}";
                     teks = "Kembali ke Daftar Mata Kuliah.";
                 } else if (nomor === 1) {
                     teks = "Anda sudah berada di halaman Pembelajaran.";
@@ -466,10 +466,10 @@
 ]) }}";
                     teks = "Membuka halaman Presensi.";
                 } else if (nomor === 3) {
-                    tujuan = "{{ route('course.assignments') ?? '#' }}";
+                    tujuan = "{{ route('course.assignments', $session->kelas->id) ?? '#' }}";
                     teks = "Membuka halaman Penugasan.";
                 } else if (nomor === 4) {
-                    tujuan = "{{ route('course.members') ?? '#' }}";
+                    tujuan = "{{ route('course.members', $session->kelas->id) ?? '#' }}";
                     teks = "Membuka daftar Anggota kelas.";
                 } else if (nomor === 11) {
                     teks = "Membuka topik Kontrak Kuliah.";

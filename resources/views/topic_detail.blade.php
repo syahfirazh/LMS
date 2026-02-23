@@ -249,7 +249,7 @@
                                 id="text-pengumuman"
                                 class="text-sm md:text-base font-medium text-slate-700 leading-relaxed"
                             >
-                                {{ $session->description ?? 'Belum ada pesan dari dosen.' }}
+                                {{ $session->instruksi  ?? 'Belum ada pesan dari dosen.' }}
                             </p>
                         </div>
                     </div>
@@ -434,50 +434,19 @@
                                         <p
                                             class="text-xs md:text-[13px] leading-relaxed font-medium whitespace-pre-wrap break-words"
                                         >
-                                            {{ $msg->body }}
+                                            {{ $msg->message }}
                                         </p>
                                     </div>
                                     <p
                                         class="text-[8px] md:text-[9px] mt-1.5 px-1 font-bold text-slate-400"
                                     >
-                                        08:00
+                                        {{ $msg->created_at->format('H:i') }}
                                     </p>
                                 </div>
                             </div>
                         </div>
 
-                        <div class="flex justify-start">
-                            <div
-                                class="flex gap-2 md:gap-3 items-end max-w-[90%] md:max-w-[70%]"
-                            >
-                                <img
-                                    src="https://ui-avatars.com/api/?name=Budi+S&background=random"
-                                    class="w-8 h-8 md:w-9 md:h-9 rounded-full shrink-0 shadow-sm object-cover border border-slate-100"
-                                />
-                                <div class="flex flex-col items-start">
-                                    <p
-                                        class="text-[9px] md:text-[10px] font-bold mb-1 px-1 text-slate-400"
-                                    >
-                                        Budi Santoso
-                                    </p>
-                                    <div
-                                        class="p-3 md:p-4 rounded-2xl shadow-sm border bg-slate-50 text-slate-800 rounded-tl-none border-slate-200"
-                                    >
-                                        <p
-                                            class="text-xs md:text-[13px] leading-relaxed font-medium whitespace-pre-wrap break-words"
-                                        >
-                                            Pak, untuk array 2 dimensi apakah
-                                            harus ukurannya sama tiap baris?
-                                        </p>
-                                    </div>
-                                    <p
-                                        class="text-[8px] md:text-[9px] mt-1.5 px-1 font-bold text-slate-400"
-                                    >
-                                        08:05
-                                    </p>
-                                </div>
-                            </div>
-                        </div>
+                        
                         @endforeach
                     </div>
 
@@ -486,10 +455,6 @@
                     >
                         <form
                             id="chatForm"
-                            onsubmit="
-                                event.preventDefault();
-                                kirimChatManual();
-                            "
                         >
                             <div
                                 class="relative flex items-center gap-2 md:gap-3 bg-slate-50 p-2 md:p-3 rounded-[1.25rem] md:rounded-2xl border border-slate-200 focus-within:border-blue-400 focus-within:ring-2 focus-within:ring-blue-100 transition-all"
@@ -682,13 +647,26 @@
                 chatContainer.scrollTop = chatContainer.scrollHeight;
             }
 
-            function kirimChatManual() {
-                const input = document.getElementById("chat-input");
-                if (input.value.trim() !== "") {
-                    renderChatUI(input.value);
-                    input.value = "";
-                }
-            }
+           async function kirimChatManual() {
+
+    const input = document.getElementById("chat-input");
+
+    if (input.value.trim() === "") return;
+
+    const formData = new FormData();
+    formData.append("message", input.value);
+
+    await fetch("{{ route('discussion.store', $session->id) }}", {
+        method: "POST",
+        headers: {
+            "X-CSRF-TOKEN":
+                document.querySelector('meta[name="csrf-token"]').content
+        },
+        body: formData
+    });
+
+    input.value = "";
+}
 
             function navigasiKe(nomor) {
                 let tujuan = "";
@@ -857,114 +835,105 @@
                 }, 800);
             };
 
-            const sessionId = {{ $session->id }};
-    let lastMessageCount = 0;
-    let lastMateriCount = 0;
 
-    async function fetchRealtime() {
-        try {
-            const res = await fetch(`/session/${sessionId}/realtime`);
-            const data = await res.json();
 
-            // =====================
-            // UPDATE PESAN DOSEN
-            // =====================
-            const pengumuman = document.getElementById("text-pengumuman");
-            if (pengumuman && data.description) {
-                pengumuman.innerText = data.description;
-            }
+/* =========================================
+   GLOBAL
+========================================= */
+const sessionId = {{ $session->id }};
+const chatContainer = document.getElementById("chatContainer");
+const chatForm = document.getElementById("chatForm");
 
-            // =====================
-            // UPDATE MATERI
-            // =====================
-            const materiContainer = document.getElementById("materi-container");
+/* =========================================
+   SUBMIT CHAT (NO DOUBLE)
+========================================= */
+chatForm.addEventListener("submit", async function(e){
+    e.preventDefault();
 
-            if (materiContainer && data.materis.length !== lastMateriCount) {
+    const formData = new FormData(this);
 
-                materiContainer.innerHTML = "";
+    await fetch("{{ route('discussion.store', $session->id) }}", {
+        method: "POST",
+        headers: {
+            "X-CSRF-TOKEN":
+                document.querySelector('meta[name="csrf-token"]').content
+        },
+        body: formData
+    });
 
-                data.materis.forEach(materi => {
+    this.reset();
+});
 
-                    let html = "";
+/* =========================================
+   ECHO REALTIME LISTENER
+========================================= */
+document.addEventListener("DOMContentLoaded", function () {
 
-                    if (materi.type === "file") {
-                        html = `
-                            <div class="border p-4 rounded-2xl">
-                                <a href="/storage/${materi.file}" target="_blank"
-                                   class="font-bold text-blue-600">
-                                   📄 ${materi.judul}
-                                </a>
-                            </div>
-                        `;
-                    }
-
-                    if (materi.type === "video") {
-                        html = `
-                            <div class="border p-4 rounded-2xl">
-                                <video controls class="w-full rounded-xl">
-                                    <source src="/storage/${materi.file}">
-                                </video>
-                                <p class="mt-2 font-semibold">${materi.judul}</p>
-                            </div>
-                        `;
-                    }
-
-                    if (materi.type === "voice") {
-                        html = `
-                            <div class="border p-4 rounded-2xl">
-                                <audio controls class="w-full">
-                                    <source src="/storage/${materi.file}">
-                                </audio>
-                                <p class="mt-2 font-semibold">${materi.judul}</p>
-                            </div>
-                        `;
-                    }
-
-                    materiContainer.insertAdjacentHTML("beforeend", html);
-                });
-
-                lastMateriCount = data.materis.length;
-            }
-
-            // =====================
-            // UPDATE CHAT
-            // =====================
-            const chatContainer = document.getElementById("chatContainer");
-
-            if (chatContainer && data.messages.length !== lastMessageCount) {
-
-                chatContainer.innerHTML = "";
-
-                data.messages.reverse().forEach(msg => {
-
-                    const chatHtml = `
-                        <div class="flex justify-start">
-                            <div class="bg-slate-100 p-3 rounded-xl max-w-[70%]">
-                                <p class="text-sm">${msg.body}</p>
-                            </div>
-                        </div>
-                    `;
-
-                    chatContainer.insertAdjacentHTML("beforeend", chatHtml);
-                });
-
-                chatContainer.scrollTop = chatContainer.scrollHeight;
-
-                lastMessageCount = data.messages.length;
-            }
-
-        } catch (err) {
-            console.error("Realtime error:", err);
-        }
+    if (!window.Echo) {
+        console.error("Echo belum ter-load");
+        return;
     }
 
-    // Polling tiap 3 detik
-    setInterval(fetchRealtime, 3000);
+    window.Echo.private(`session.${sessionId}`)
+        .listen('.discussion.created', (e) => {
 
-    const pengumuman = document.getElementById("text-pengumuman");
-            if (pengumuman && data.description) {
-                pengumuman.innerText = data.description;
+            const d = e.discussion;
+
+            let media = '';
+
+            if (d.image) {
+                media += `
+                    <img src="/storage/${d.image}" 
+                         class="rounded-lg mt-2 max-w-xs shadow">
+                `;
             }
+
+            if (d.voice) {
+                media += `
+                    <audio controls class="mt-2 w-full">
+                        <source src="/storage/${d.voice}">
+                    </audio>
+                `;
+            }
+
+            const now = new Date();
+            const timeStr =
+                now.getHours().toString().padStart(2,"0") +
+                ":" +
+                now.getMinutes().toString().padStart(2,"0");
+
+            const html = `
+                <div class="flex justify-start chat-bubble-new">
+                    <div class="flex gap-3 items-end max-w-[70%]">
+                        <img
+                            src="https://ui-avatars.com/api/?name=${encodeURIComponent(d.sender.nama)}&background=random&color=fff"
+                            class="w-9 h-9 rounded-full shadow"
+                        />
+                        <div class="flex flex-col">
+                            <p class="text-[10px] font-bold text-slate-400">
+                                ${d.sender.nama}
+                                ${d.sender_type === 'dosen' ? '(Dosen)' : ''}
+                            </p>
+                            <div class="p-4 rounded-2xl bg-slate-50 border">
+                                <p class="text-sm whitespace-pre-wrap break-words">
+                                    ${d.message ?? ''}
+                                </p>
+                                ${media}
+                            </div>
+                            <p class="text-[9px] mt-1 text-slate-400 font-bold">
+                                ${timeStr}
+                            </p>
+                        </div>
+                    </div>
+                </div>
+            `;
+
+            chatContainer.insertAdjacentHTML("beforeend", html);
+            chatContainer.scrollTop = chatContainer.scrollHeight;
+        });
+
+});
+
         </script>
     </body>
 </html>

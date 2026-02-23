@@ -671,7 +671,7 @@
                     tujuan = "{{ route('notifications') ?? '#' }}";
                     teks = "Membuka Pemberitahuan.";
                 } else if (nomor === 8) {
-                    tujuan = "{{ route('messages') ?? '#' }}";
+                    tujuan = "{{ route('messages'   ) ?? '#' }}";
                     teks = "Membuka Pesan.";
                 } else if (nomor === 9) {
                     tujuan = "{{ route('help') ?? '#' }}";

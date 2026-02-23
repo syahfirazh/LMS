@@ -627,15 +627,15 @@
                     tujuan = "{{ route('dashboard') ?? '#' }}";
                     teks = "Kembali ke Daftar Mata Kuliah.";
                 } else if (nomor === 1) {
-                    tujuan = "{{ route('course.detail') ?? '#' }}";
+                    tujuan = "{{ route('course.detail', $session->kelas->id) }}";
                     teks = "Membuka halaman Pembelajaran.";
                 } else if (nomor === 2) {
-                    tujuan = "{{ route('course.attendance') ?? '#' }}";
+                    tujuan = "{{ route('course.attendance', $session->kelas->id) ?? '#' }}";
                     teks = "Membuka halaman Presensi.";
                 } else if (nomor === 3) {
                     teks = "Anda sudah di halaman Penugasan.";
                 } else if (nomor === 4) {
-                    tujuan = "{{ route('course.members') ?? '#' }}";
+                    tujuan = "{{ route('course.members', $session->kelas->id) ?? '#' }}";
                     teks = "Membuka daftar Anggota.";
                 }
                 // TUGAS NAV

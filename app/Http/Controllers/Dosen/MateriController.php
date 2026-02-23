@@ -15,61 +15,49 @@ class MateriController extends Controller
     // STORE MATERI (FILE / LINK / VOICE / VIDEO)
     // =========================
     public function store(Request $request, $sessionId)
-    {
-        $request->validate([
-            'judul' => 'required|string|max:255',
-            'type'  => 'required|in:file,link,voice,video',
-            'file'  => 'nullable|file',
-            'link'  => 'nullable|url'
-        ]);
+{
+    $request->validate([
+        'judul' => 'required|string|max:255',
+        'type'  => 'required|in:file,link,voice,video',
+        'file'  => 'nullable|file',
+        'link'  => 'nullable|url'
+    ]);
 
-        // 🔒 Pastikan session milik kelas dosen
-        $session = CourseSession::where('id', $sessionId)
-            ->whereHas('kelas', function ($q) {
-                $q->where('dosen_id', auth('dosen')->id());
-            })
-            ->firstOrFail();
+    $session = CourseSession::where('id', $sessionId)
+        ->whereHas('kelas', function ($q) {
+            $q->where('dosen_id', auth('dosen')->id());
+        })
+        ->firstOrFail();
 
-        $data = [
-            'session_id' => $session->id,
-            'judul'      => $request->judul,
-            'type'       => $request->type,
-        ];
+    $data = [
+        'session_id' => $session->id,
+        'judul'      => $request->judul,
+        'type'       => $request->type,
+    ];
 
-        // ======================
-        // JIKA ADA FILE
-        // ======================
-        if ($request->hasFile('file')) {
+    if ($request->hasFile('file')) {
 
-            $folder = match ($request->type) {
-                'voice' => 'materi/voice',
-                'video' => 'materi/video',
-                default => 'materi/file',
-            };
+        $folder = match ($request->type) {
+            'voice' => 'materi/voice',
+            'video' => 'materi/video',
+            default => 'materi/file',
+        };
 
-            $data['file'] = $request->file('file')
-                ->store($folder, 'public');
-        }
-
-        // ======================
-        // JIKA ADA LINK
-        // ======================
-        if (in_array($request->type, ['link', 'video']) && $request->link) {
-            $data['link'] = $request->link;
-        }
-
-        // ======================
-        // SIMPAN KE DATABASE
-        // ======================
-        $materi = Materi::create($data);
-
-        // ======================
-        // 🔥 TRIGGER REALTIME EVENT
-        // ======================
-        event(new MateriCreated($materi));
-
-        return back()->with('success', 'Materi berhasil ditambahkan');
+        $data['file'] = $request->file('file')
+            ->store($folder, 'public');
     }
+
+    if (in_array($request->type, ['link', 'video']) && $request->link) {
+        $data['link'] = $request->link;
+    }
+
+    $materi = Materi::create($data);
+
+    // 🔥 FIX DI SINI
+    event(new MateriCreated($materi, $materi->session_id));
+
+    return back()->with('success', 'Materi berhasil ditambahkan');
+}
 
     // =========================
     // HAPUS MATERI

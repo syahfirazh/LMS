@@ -317,64 +317,58 @@ $persen = $total > 0 ? round(($stats['hadir'] / $total) * 100) : 0;
                 </div>
 
                 <div class="space-y-4">
-                    <h3
-                        data-aos="fade-in"
-                        class="text-sm font-black text-slate-900 uppercase tracking-widest px-2"
-                    >
-                        Riwayat Pertemuan
-                    </h3>
+    <h3
+        data-aos="fade-in"
+        class="text-sm font-black text-slate-900 uppercase tracking-widest px-2"
+    >
+        Riwayat Pertemuan
+    </h3>
 
+    {{-- 🔵 PERTEMUAN SEDANG BERLANGSUNG --}}
+    @if ($currentSession)
+        <div
+            data-aos="fade-up"
+            data-aos-duration="600"
+            class="group bg-white rounded-[2.5rem] p-1 border-2 border-blue-500 shadow-lg shadow-blue-100 relative overflow-hidden transition-transform hover:scale-[1.01]"
+        >
+            <div
+                class="absolute top-0 right-0 bg-blue-500 text-white text-[9px] font-black px-4 py-1 rounded-bl-xl uppercase tracking-widest"
+            >
+                Sedang Berlangsung
+            </div>
+
+            <div class="p-6">
+                <div class="flex flex-col md:flex-row items-center gap-6 mb-6">
                     <div
-                        data-aos="fade-up"
-                        data-aos-duration="600"
-                        class="group bg-white rounded-[2.5rem] p-1 border-2 border-blue-500 shadow-lg shadow-blue-100 relative overflow-hidden transition-transform hover:scale-[1.01]"
+                        class="w-20 h-20 rounded-2xl bg-blue-50 text-blue-600 flex flex-col items-center justify-center shrink-0 border border-blue-100"
                     >
-                        <div
-                            class="absolute top-0 right-0 bg-blue-500 text-white text-[9px] font-black px-4 py-1 rounded-bl-xl uppercase tracking-widest"
-                        >
-                            Sedang Berlangsung
+                       <span class="text-[10px] font-black uppercase tracking-widest text-blue-400">
+    {{ \Carbon\Carbon::parse($currentSession->created_at)->translatedFormat('M') }}
+</span>
+<span class="text-3xl font-black">
+    {{ \Carbon\Carbon::parse($currentSession->created_at)->translatedFormat('d') }}
+</span>
+                    </div>
+
+                    <div class="flex-1 text-center md:text-left">
+                        <h4 class="text-lg font-black text-slate-900">
+                            Pertemuan {{ $currentSession->urutan }}: {{ $currentSession->judul }}
+                        </h4>
+                        <p class="text-xs font-medium text-slate-500 mt-1">
+                            Silahkan isi kehadiran sesuai jam pembelajaran mata kuliah.
+                        </p>
+
+                        <div class="mt-3 inline-flex items-center gap-2 bg-blue-50 px-3 py-1 rounded-lg">
+                            <span class="w-2 h-2 bg-blue-500 rounded-full animate-pulse"></span>
+                            <span class="text-[9px] font-bold text-blue-600 uppercase tracking-widest">
+                                Presensi Dibuka
+                            </span>
                         </div>
+                    </div>
+                </div>
 
-                        <div class="p-6">
-                            <div
-                                class="flex flex-col md:flex-row items-center gap-6 mb-6"
-                            >
-                                <div
-                                    class="w-20 h-20 rounded-2xl bg-blue-50 text-blue-600 flex flex-col items-center justify-center shrink-0 border border-blue-100"
-                                >
-                                    <span
-                                        class="text-[10px] font-black uppercase tracking-widest text-blue-400"
-                                        >{{ \Carbon\Carbon::parse($session->tanggal)->translatedFormat('M') }}</span
-                                    >
-                                    <span class="text-3xl font-black">{{ \Carbon\Carbon::parse($session->tanggal)->translatedFormat('d') }}</span>
-                                </div>
-                                <div class="flex-1 text-center md:text-left">
-                                    <h4
-                                        class="text-lg font-black text-slate-900"
-                                    >
-                                        Pertemuan {{ $session->urutan }}: {{ $session->judul }}
-                                    </h4>
-                                    <p
-                                        class="text-xs font-medium text-slate-500 mt-1"
-                                    >
-                                        Silahkan isi kehadiran sebelum pukul
-                                        10:00 WIB.
-                                    </p>
-                                    <div
-                                        class="mt-3 inline-flex items-center gap-2 bg-blue-50 px-3 py-1 rounded-lg"
-                                    >
-                                        <span
-                                            class="w-2 h-2 bg-blue-500 rounded-full animate-pulse"
-                                        ></span>
-                                        <span
-                                            class="text-[9px] font-bold text-blue-600 uppercase tracking-widest"
-                                            >Presensi Dibuka</span
-                                        >
-                                    </div>
-                                </div>
-                            </div>
-
-                            <div
+                {{-- BUTTON PRESENSI --}}
+                <div
                                 class="grid grid-cols-1 md:grid-cols-3 gap-4 pt-4 border-t border-slate-100"
                             >
                                 <button
@@ -408,69 +402,84 @@ $persen = $total > 0 ? round(($stats['hadir'] / $total) * 100) : 0;
                                     Izin
                                 </button>
                             </div>
-                        </div>
-                    </div>
+            </div>
+        </div>
+    @endif
 
-                    <div
-                        data-aos="fade-up"
-                        data-aos-duration="600"
-                        data-aos-delay="100"
-                        class="bg-white rounded-[2.5rem] p-6 border border-slate-200 shadow-sm flex flex-col md:flex-row items-center gap-6 opacity-60 hover:opacity-100 transition-all cursor-default"
-                    >
-                        <div
-                            class="w-16 h-16 rounded-2xl bg-slate-50 text-slate-400 flex flex-col items-center justify-center shrink-0"
-                        >
-                            <span
-                                class="text-[8px] font-black uppercase tracking-widest"
-                                >OKT</span
-                            >
-                            <span class="text-2xl font-black">17</span>
-                        </div>
-                        <div class="flex-1 text-center md:text-left">
-                            <h4 class="text-base font-bold text-slate-700">
-                                Pertemuan 2: Array & Memory
-                            </h4>
-                            <p
-                                class="text-[10px] font-medium text-slate-400 mt-1"
-                            >
-                                08:00 - 10:00 WIB
-                            </p>
-                        </div>
-                        <div
-                            class="px-6 py-2 rounded-xl bg-emerald-50 text-emerald-600 font-black text-[10px] uppercase tracking-widest border border-emerald-100 flex items-center gap-2"
-                        >
-                            <svg
-                                class="w-4 h-4"
-                                fill="none"
-                                stroke="currentColor"
-                                viewBox="0 0 24 24"
-                            >
-                                <path
-                                    stroke-linecap="round"
-                                    stroke-linejoin="round"
-                                    stroke-width="3"
-                                    d="M5 13l4 4L19 7"
-                                ></path>
-                            </svg>
-                            Hadir
-                        </div>
-                    </div>
-                </div>
+    {{-- ⚪ RIWAYAT PERTEMUAN SEBELUMNYA --}}
+@foreach ($sessions->where('id','!=', optional($currentSession)->id) as $session)
+
+    @php
+        $attendance = $myAttendances[$session->id] ?? null;
+    @endphp
+
+    <div
+        data-aos="fade-up"
+        data-aos-duration="600"
+        class="bg-white rounded-[2.5rem] p-6 border border-slate-200 shadow-sm
+               flex flex-col md:flex-row items-center gap-6
+               {{ $attendance ? '' : 'opacity-60' }}"
+    >
+        {{-- TANGGAL --}}
+        <div class="w-16 h-16 rounded-2xl bg-slate-50 text-slate-400 flex flex-col items-center justify-center shrink-0">
+            <span class="text-[8px] font-black uppercase tracking-widest">
+                {{ \Carbon\Carbon::parse($session->tanggal)->translatedFormat('M') }}
+            </span>
+            <span class="text-2xl font-black">
+                {{ \Carbon\Carbon::parse($session->tanggal)->translatedFormat('d') }}
+            </span>
+        </div>
+
+        {{-- INFO SESI --}}
+        <div class="flex-1 text-center md:text-left">
+            <h4 class="text-base font-bold text-slate-700">
+                Pertemuan {{ $session->urutan }}: {{ $session->judul }}
+            </h4>
+            <p class="text-[10px] font-medium text-slate-400 mt-1">
+                {{ $session->jam_mulai }} - {{ $session->jam_selesai }} WIB
+            </p>
+        </div>
+
+        {{-- STATUS / BUTTON --}}
+        @if ($attendance)
+            <button
+                disabled
+                class="px-6 py-2 rounded-xl font-black text-[10px] uppercase tracking-widest border flex items-center gap-2 cursor-not-allowed
+                {{ $attendance->status === 'hadir' ? 'bg-emerald-50 text-emerald-600 border-emerald-100' :
+                   ($attendance->status === 'izin' ? 'bg-blue-50 text-blue-600 border-blue-100' :
+                   'bg-orange-50 text-orange-600 border-orange-100') }}"
+            >
+                ✔ {{ ucfirst($attendance->status) }}
+            </button>
+        @else
+            <span class="text-[10px] font-bold text-slate-400 uppercase tracking-widest">
+                Belum Absen
+            </span>
+        @endif
+    </div>
+
+@endforeach
+</div>
             </div>
         </main>
 
         <script src="https://unpkg.com/aos@2.3.1/dist/aos.js"></script>
-        <script>
+<script>
 AOS.init({ once: true, easing: "ease-out-cubic" });
 
 const statusDesc = document.getElementById("status-desc");
 const waveBars = document.querySelectorAll(".wave-bar");
 const synth = window.speechSynthesis;
 
+// 🔐 SESSION ID AMAN (sinkron Blade)
+const CURRENT_SESSION_ID = @json(optional($currentSession)->id);
+
 let rec = null;
 let interval;
 
+// ==============================
 // SAFE SpeechRecognition
+// ==============================
 if ('webkitSpeechRecognition' in window || 'SpeechRecognition' in window) {
     const SpeechRec = window.webkitSpeechRecognition || window.SpeechRecognition;
     rec = new SpeechRec();
@@ -487,6 +496,9 @@ function setWave(active) {
     });
 }
 
+// ==============================
+// TEXT TO SPEECH
+// ==============================
 function bicara(teks, callback) {
     synth.cancel();
     const utter = new SpeechSynthesisUtterance(teks);
@@ -509,11 +521,16 @@ function bicara(teks, callback) {
 }
 
 // ==============================
-// PRESENSI FUNCTION (FIX 404 SAFE)
+// PRESENSI FUNCTION (FINAL FIX)
 // ==============================
 function kirimPresensi(status) {
 
-    fetch("{{ url('presensi/'.$session->id) }}/" + status, {
+    if (!CURRENT_SESSION_ID) {
+        alert("Tidak ada sesi aktif.");
+        return;
+    }
+
+    fetch("{{ url('presensi') }}/" + CURRENT_SESSION_ID + "/" + status, {
         method: "POST",
         headers: {
             "X-CSRF-TOKEN": "{{ csrf_token() }}",
@@ -522,13 +539,14 @@ function kirimPresensi(status) {
     })
     .then(response => {
         if (!response.ok) {
-            throw new Error("Route tidak ditemukan (404) atau akses ditolak");
+            throw new Error("Presensi gagal atau akses ditolak");
         }
         return response.json();
     })
     .then(data => {
-        alert(data.message ?? "Presensi berhasil");
-        location.reload();
+        bicara("Presensi " + status + " berhasil dicatat.", () => {
+            location.reload();
+        });
     })
     .catch(error => {
         console.error(error);
@@ -536,6 +554,9 @@ function kirimPresensi(status) {
     });
 }
 
+// ==============================
+// NAVIGASI + VOICE COMMAND
+// ==============================
 function navigasiKe(nomor) {
 
     let tujuan = "";
@@ -546,18 +567,18 @@ function navigasiKe(nomor) {
         teks = "Kembali ke Beranda.";
     }
     else if (nomor === 1) {
-        tujuan = "{{ route('course.detail', $session->kelas->id) }}";
+        tujuan = "{{ route('course.detail', $currentSession?->kelas->id ?? 0) }}";
         teks = "Membuka Menu Pembelajaran.";
     }
     else if (nomor === 2) {
         teks = "Anda sudah berada di Halaman Presensi.";
     }
     else if (nomor === 3) {
-        tujuan = "{{ route('course.assignments') ?? '#' }}";
+        tujuan = "{{ route('course.assignments', $currentSession?->kelas->id ?? 0) }}";
         teks = "Membuka Menu Penugasan.";
     }
     else if (nomor === 4) {
-        tujuan = "{{ route('course.members') ?? '#' }}";
+        tujuan = "{{ route('course.members', $currentSession?->kelas->id ?? 0) }}";
         teks = "Membuka Menu Anggota Kelas.";
     }
 
@@ -600,9 +621,7 @@ function mulaiMendengar() {
 
             const angka = hasil.match(/\d+/);
 
-            if (angka) {
-                navigasiKe(parseInt(angka[0]));
-            }
+            if (angka) navigasiKe(parseInt(angka[0]));
             else if (hasil.includes("nol") || hasil.includes("kembali")) navigasiKe(0);
             else if (hasil.includes("satu") || hasil.includes("pembelajaran")) navigasiKe(1);
             else if (hasil.includes("dua") || hasil.includes("presensi")) navigasiKe(2);
@@ -613,15 +632,16 @@ function mulaiMendengar() {
             else if (hasil.includes("tujuh") || hasil.includes("izin")) navigasiKe(7);
         };
 
-        rec.onend = () => {
-            rec.start();
-        };
+        rec.onend = () => rec.start();
 
     } catch (e) {
         console.error("Speech recognition error:", e);
     }
 }
 
+// ==============================
+// INIT
+// ==============================
 window.onload = () => {
     const orientasi =
         "Menu Presensi. Sebutkan Lima untuk Hadir, Enam untuk Sakit, Tujuh untuk Izin. Atau sebutkan tab navigasi di atas.";

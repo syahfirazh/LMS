@@ -166,4 +166,38 @@ class MahasiswaController extends Controller
         'mahasiswa' // 🔥 TAMBAHKAN INI
     ));
 }
+
+public function members($kelasId)
+{
+    $kelas = Kelas::with([
+        'mataKuliah',
+        'dosen',
+        'mahasiswa',
+        'courseSessions'
+    ])->findOrFail($kelasId);
+
+    $session = $kelas->courseSessions()
+        ->orderBy('urutan')
+        ->first();
+
+    return view('course_members', [
+        'kelas'        => $kelas,
+        'session'      => $session,
+        'mataKuliah'   => $kelas->mataKuliah,
+        'dosen'        => $kelas->dosen,
+        'members'      => $kelas->mahasiswa,
+        'totalMembers' => $kelas->mahasiswa->count(),
+    ]);
+}
+
+public function search(Request $request, $kelasId)
+{
+    $kelas = Kelas::findOrFail($kelasId);
+
+    $members = $kelas->mahasiswa()
+        ->where('nama', 'like', "%{$request->q}%")
+        ->get();
+
+    return response()->json($members);
+}
 }

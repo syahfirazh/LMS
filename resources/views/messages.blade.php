@@ -1,6 +1,7 @@
 <!DOCTYPE html>
 <html lang="id" class="h-full">
     <head>
+        <meta name="csrf-token" content="{{ csrf_token() }}">
         <meta charset="UTF-8" />
         <meta
             name="viewport"
@@ -459,130 +460,134 @@
                     </div>
 
                     <div
-                        class="flex-1 p-6 overflow-y-auto space-y-6 custom-scrollbar"
-                        id="chat-container"
-                    >
-                        <div
-                            data-aos="fade-up"
-                            data-aos-duration="400"
-                            data-aos-delay="100"
-                            class="flex flex-col items-start max-w-[80%]"
-                        >
-                            <div
-                                class="bg-white p-4 rounded-2xl rounded-tl-none shadow-sm border border-slate-100"
-                            >
-                                <p
-                                    class="text-sm text-slate-700 leading-relaxed font-medium"
-                                >
-                                    Ridwan, apakah ada kendala dalam pengerjaan
-                                    tugas nomor 2?
-                                </p>
-                            </div>
-                            <span
-                                class="text-[9px] font-bold text-slate-400 mt-1 ml-1"
-                                >10:40 AM</span
-                            >
-                        </div>
+    class="flex-1 p-6 overflow-y-auto space-y-6 custom-scrollbar"
+    id="chat-container"
+>
 
-                        <div
-                            data-aos="fade-up"
-                            data-aos-duration="400"
-                            data-aos-delay="200"
-                            class="flex flex-col items-end ml-auto max-w-[80%]"
-                        >
-                            <div
-                                class="bg-blue-600 p-4 rounded-2xl rounded-tr-none shadow-md shadow-blue-100"
-                            >
-                                <p
-                                    class="text-sm text-white leading-relaxed font-medium"
-                                >
-                                    Belum ada pak, sedang saya kerjakan bagian
-                                    logikanya. Nanti saya kabari lagi.
-                                </p>
-                            </div>
-                            <span
-                                class="text-[9px] font-bold text-slate-400 mt-1 mr-1"
-                                >10:42 AM</span
-                            >
-                        </div>
-                    </div>
+    @foreach($discussions as $chat)
+
+        @php
+            $isDosen = $chat->sender_id === auth('dosen')->id();
+        @endphp
+
+        <div
+            class="flex flex-col {{ $isDosen ? 'items-end ml-auto' : 'items-start' }} max-w-[80%]"
+        >
+            <div
+                class="{{ $isDosen 
+                    ? 'bg-blue-600 text-white rounded-2xl rounded-tr-none shadow-md shadow-blue-100' 
+                    : 'bg-white text-slate-700 rounded-2xl rounded-tl-none border border-slate-100 shadow-sm'
+                }} p-4"
+            >
+                {{-- TEXT MESSAGE --}}
+                @if($chat->message)
+                    <p class="text-sm leading-relaxed font-medium whitespace-pre-wrap break-words">
+                        {{ $chat->message }}
+                    </p>
+                @endif
+
+                {{-- IMAGE --}}
+                @if($chat->image)
+                    <img 
+                        src="{{ asset('storage/'.$chat->image) }}"
+                        class="mt-2 rounded-lg max-w-xs"
+                    >
+                @endif
+
+                {{-- VOICE --}}
+                @if($chat->voice)
+                    <audio controls class="mt-2 w-48">
+                        <source src="{{ asset('storage/'.$chat->voice) }}">
+                    </audio>
+                @endif
+
+            </div>
+
+            <span class="text-[9px] font-bold text-slate-400 mt-1 {{ $isDosen ? 'mr-1' : 'ml-1' }}">
+                {{ $chat->created_at->format('H:i') }}
+            </span>
+        </div>
+
+    @endforeach
+
+</div>
 
                     <div
                         data-aos="fade-up"
                         data-aos-anchor="bottom"
                         class="p-4 bg-white border-t border-slate-200 shrink-0 z-20 relative"
                     >
-                        <div
-                            class="flex items-center gap-2 bg-slate-50 p-2 rounded-2xl border border-slate-200 focus-within:ring-2 focus-within:ring-blue-100 transition-all"
-                        >
-                            <button
-                                onclick="navigasiKe(12)"
-                                class="w-10 h-10 flex items-center justify-center text-slate-400 hover:text-blue-600 hover:bg-white rounded-xl transition-all cursor-pointer"
-                                title="Kirim Gambar (12)"
-                            >
-                                <svg
-                                    class="w-6 h-6"
-                                    fill="none"
-                                    stroke="currentColor"
-                                    viewBox="0 0 24 24"
-                                >
-                                    <path
-                                        stroke-linecap="round"
-                                        stroke-linejoin="round"
-                                        stroke-width="2"
-                                        d="M4 16l4.586-4.586a2 2 0 012.828 0L16 16m-2-2l1.586-1.586a2 2 0 012.828 0L20 14m-6-6h.01M6 20h12a2 2 0 002-2V6a2 2 0 00-2-2H6a2 2 0 00-2 2v12a2 2 0 002 2z"
-                                    ></path>
-                                </svg>
-                            </button>
+                        <form id="chat-form"
+      action="{{ route('discussion.store', $session->id) }}"
+      method="POST"
+      enctype="multipart/form-data"
+      class="flex items-center gap-2 bg-slate-50 p-2 rounded-2xl border border-slate-200 focus-within:ring-2 focus-within:ring-blue-100 transition-all">
 
-                            <input
-                                onclick="navigasiKe(11)"
-                                type="text"
-                                id="chat-input"
-                                placeholder="Ketik pesan... (11)"
-                                class="flex-1 bg-transparent text-sm font-medium text-slate-700 placeholder-slate-400 focus:outline-none px-2"
-                            />
+    @csrf
 
-                            <button
-                                onclick="navigasiKe(13)"
-                                class="w-10 h-10 flex items-center justify-center text-slate-400 hover:text-red-500 hover:bg-red-50 rounded-xl transition-all cursor-pointer"
-                                title="Voice Note (13)"
-                            >
-                                <svg
-                                    class="w-6 h-6"
-                                    fill="none"
-                                    stroke="currentColor"
-                                    viewBox="0 0 24 24"
-                                >
-                                    <path
-                                        stroke-linecap="round"
-                                        stroke-linejoin="round"
-                                        stroke-width="2"
-                                        d="M19 11a7 7 0 01-7 7m0 0a7 7 0 01-7-7m7 7v4m0 0H8m4 0h4m-4-8a3 3 0 01-3-3V5a3 3 0 116 0v6a3 3 0 01-3 3z"
-                                    ></path>
-                                </svg>
-                            </button>
+    {{-- IMAGE INPUT (HIDDEN) --}}
+    <input type="file" name="image" id="imageInput" accept="image/*" class="hidden">
 
-                            <button
-                                onclick="navigasiKe(14)"
-                                class="w-12 h-10 bg-blue-600 text-white rounded-xl flex items-center justify-center shadow-md hover:bg-blue-700 transition-all cursor-pointer"
-                                title="Kirim (14)"
-                            >
-                                <svg
-                                    class="w-5 h-5 transform rotate-90 ml-0.5"
-                                    fill="none"
-                                    stroke="currentColor"
-                                    viewBox="0 0 24 24"
-                                >
-                                    <path
-                                        stroke-linecap="round"
-                                        stroke-linejoin="round"
-                                        stroke-width="2.5"
-                                        d="M12 19l9 2-9-18-9 18 9-2zm0 0v-8"
-                                    ></path>
-                                </svg>
-                            </button>
-                        </div>
+    {{-- VOICE INPUT (HIDDEN) --}}
+    <input type="file" name="voice" id="voiceInput" accept="audio/*" class="hidden">
+
+    {{-- BUTTON IMAGE --}}
+    <button type="button"
+        onclick="document.getElementById('imageInput').click()"
+        class="w-10 h-10 flex items-center justify-center text-slate-400 hover:text-blue-600 hover:bg-white rounded-xl transition-all cursor-pointer"
+        title="Kirim Gambar">
+
+        <svg class="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+            <path stroke-linecap="round"
+                  stroke-linejoin="round"
+                  stroke-width="2"
+                  d="M4 16l4.586-4.586a2 2 0 012.828 0L16 16m-2-2l1.586-1.586a2 2 0 012.828 0L20 14m-6-6h.01M6 20h12a2 2 0 002-2V6a2 2 0 00-2-2H6a2 2 0 00-2 2v12a2 2 0 002 2z">
+            </path>
+        </svg>
+    </button>
+
+    {{-- TEXT MESSAGE --}}
+    <input
+        type="text"
+        name="message"
+        id="chat-input"
+        placeholder="Ketik pesan..."
+        class="flex-1 bg-transparent text-sm font-medium text-slate-700 placeholder-slate-400 focus:outline-none px-2"
+    />
+
+    {{-- BUTTON VOICE --}}
+    <button type="button"
+        onclick="document.getElementById('voiceInput').click()"
+        class="w-10 h-10 flex items-center justify-center text-slate-400 hover:text-red-500 hover:bg-red-50 rounded-xl transition-all cursor-pointer"
+        title="Voice Note">
+
+        <svg class="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+            <path stroke-linecap="round"
+                  stroke-linejoin="round"
+                  stroke-width="2"
+                  d="M19 11a7 7 0 01-7 7m0 0a7 7 0 01-7-7m7 7v4m0 0H8m4 0h4m-4-8a3 3 0 01-3-3V5a3 3 0 116 0v6a3 3 0 01-3 3z">
+            </path>
+        </svg>
+    </button>
+
+    {{-- BUTTON SEND --}}
+    <button
+        type="submit"
+        class="w-12 h-10 bg-blue-600 text-white rounded-xl flex items-center justify-center shadow-md hover:bg-blue-700 transition-all cursor-pointer"
+        title="Kirim">
+
+        <svg class="w-5 h-5 transform rotate-90 ml-0.5"
+             fill="none"
+             stroke="currentColor"
+             viewBox="0 0 24 24">
+            <path stroke-linecap="round"
+                  stroke-linejoin="round"
+                  stroke-width="2.5"
+                  d="M12 19l9 2-9-18-9 18 9-2zm0 0v-8">
+            </path>
+        </svg>
+    </button>
+</form>
                     </div>
                 </div>
             </div>
@@ -591,6 +596,80 @@
         <script src="https://unpkg.com/aos@2.3.1/dist/aos.js"></script>
 
         <script>
+            document.addEventListener("DOMContentLoaded", function(){
+
+    const chatContainer = document.getElementById("chat-container");
+    const chatForm = document.getElementById("chat-form");
+    const conversationId = document.getElementById("conversation_id").value;
+
+    // LOAD MESSAGE AWAL
+    async function loadMessages() {
+        const res = await fetch(`/student/chat/${conversationId}/messages`);
+        const messages = await res.json();
+
+        chatContainer.innerHTML = "";
+
+        messages.forEach(renderMessage);
+
+        chatContainer.scrollTop = chatContainer.scrollHeight;
+    }
+
+    function renderMessage(msg){
+
+        const isMe = msg.sender_type === 'student';
+
+        const wrapper = document.createElement("div");
+        wrapper.className = isMe
+            ? "flex flex-col items-end ml-auto max-w-[80%]"
+            : "flex flex-col items-start max-w-[80%]";
+
+        wrapper.innerHTML = `
+            <div class="${
+                isMe
+                    ? "bg-blue-600 text-white rounded-2xl rounded-tr-none"
+                    : "bg-white border border-slate-100 rounded-2xl rounded-tl-none"
+            } p-4 shadow-sm">
+                <p class="text-sm font-medium whitespace-pre-wrap break-words">
+                    ${msg.message}
+                </p>
+            </div>
+            <span class="text-[9px] font-bold text-slate-400 mt-1">
+                ${new Date(msg.created_at)
+                    .toLocaleTimeString([], {hour:'2-digit', minute:'2-digit'})}
+            </span>
+        `;
+
+        chatContainer.appendChild(wrapper);
+    }
+
+    // SUBMIT MESSAGE
+    chatForm.addEventListener("submit", async function(e){
+        e.preventDefault();
+
+        const formData = new FormData(this);
+
+        await fetch(`/student/chat/${conversationId}/send`, {
+            method: "POST",
+            headers: {
+                "X-CSRF-TOKEN":
+                    document.querySelector('meta[name="csrf-token"]').content
+            },
+            body: formData
+        });
+
+        this.reset();
+    });
+
+    // REALTIME LISTENER
+    window.Echo.private(`chat.${conversationId}`)
+        .listen('.message.sent', (e) => {
+            renderMessage(e.message);
+            chatContainer.scrollTop = chatContainer.scrollHeight;
+        });
+
+    loadMessages();
+
+});
             // INIT ANIMASI AOS
             AOS.init({ once: true, easing: "ease-out-cubic" });
 

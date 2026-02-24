@@ -3,24 +3,21 @@
 namespace App\Providers;
 
 use Illuminate\Support\ServiceProvider;
-use Carbon\Carbon;
+use Illuminate\Database\Eloquent\Relations\Relation; // <-- 1. Tambahkan ini
 
 class AppServiceProvider extends ServiceProvider
 {
-    /**
-     * Register any application services.
-     */
-    public function register(): void
+    public function register()
     {
         //
     }
 
-    /**
-     * Bootstrap any application services.
-     */
     public function boot()
-{
-    Carbon::setLocale('id');
-}
-
+    {
+        // 2. Tambahkan pemetaan ini
+        Relation::enforceMorphMap([
+            'dosen' => 'App\Models\Dosen',
+            'mahasiswa' => 'App\Models\Mahasiswa', // Sesuaikan dengan model mahasiswa Anda
+        ]);
+    }
 }

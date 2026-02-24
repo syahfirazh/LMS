@@ -3,6 +3,7 @@
     <head>
         <meta charset="UTF-8" />
         <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no" />
+        <meta name="csrf-token" content="{{ csrf_token() }}">
         <title>Periksa Tugas | Portal Dosen</title>
         
         <link href="https://unpkg.com/aos@2.3.1/dist/aos.css" rel="stylesheet" />
@@ -64,7 +65,7 @@
                         </h1>
                         <div class="flex items-center justify-center gap-2 mt-1">
                             <span class="text-[9px] md:text-[10px] font-bold text-blue-600 uppercase tracking-widest bg-blue-100 px-2 py-0.5 rounded-md">
-                                {{ $kelas->nama ?? 'Kelas' }}
+                                {{ $kelas->mataKuliah->nama ?? 'Kelas' }}
                             </span>
                             <span class="text-[10px] md:text-[11px] font-bold text-slate-400 uppercase tracking-wider truncate">
                                 {{ $assignment ? $assignment->submissions()->count() : 0 }}/{{ $mahasiswas->count() }} Terkumpul
@@ -108,7 +109,7 @@
                         @foreach ($mahasiswas as $mhs)
                         <a href="{{ route('dosen.assignment.grade', [$kelas->id, $assignment->id, $mhs->id]) }}" class="mahasiswa-item block" data-name="{{ strtolower($mhs->nama) }}">
                             <div class="p-3 {{ $activeMahasiswaId == $mhs->id ? 'bg-blue-50 border-blue-200 shadow-sm' : 'border-transparent' }} border rounded-xl flex items-center gap-3 transition-all">
-                                <img src="https://ui-avatars.com/api/?name={{ urlencode($mhs->nama) }}&background=0ea5e9&color=fff" class="w-8 h-8 rounded-full" />
+                                <img src="{{ $mhs->foto ? asset('storage/'.$mhs->foto) : 'https://ui-avatars.com/api/?name='.urlencode($mhs->nama).'&background=64748b&color=fff' }}" class="w-8 h-8 rounded-full object-cover" />
                                 <div class="flex-1 min-w-0">
                                     <h4 class="text-xs font-bold truncate">{{ $mhs->nama }}</h4>
                                     <p class="text-[9px] font-bold {{ $mhs->status_pengumpulan === 'tepat_waktu' ? 'text-blue-600' : 'text-red-500' }} uppercase">{{ $mhs->status_label ?? 'Belum' }}</p>
@@ -119,83 +120,69 @@
                     </div>
                 </div>
 
-                {{-- KOLOM 2: PREVIEW TUGAS DINAMIS (ANTI ERROR) --}}
+                {{-- KOLOM 2: PREVIEW TUGAS --}}
                 <div class="lg:col-span-6 bg-slate-900 rounded-[2rem] shadow-xl flex flex-col overflow-hidden relative border border-slate-800 h-[700px]">
-                    <div class="flex-1 flex flex-col items-center justify-center p-4 overflow-y-auto custom-scrollbar">
+                    <div class="flex-1 flex flex-col items-center justify-center p-4 overflow-y-auto custom-scrollbar space-y-4">
                         
-                        @if ($submission)
-                            @php
-                                // Ambil ekstensi file jika ada
-                                $ext = $submission->file_url ? strtolower(pathinfo($submission->file_url, PATHINFO_EXTENSION)) : '';
-                            @endphp
+                        @php
+                            $teks = $submission ? ($submission->text_online ?? $submission->text_submission) : null;
+                            $voice = $submission ? ($submission->voice_url ?? $submission->voice_submission) : null;
+                            $file = $submission ? $submission->file_path : null;
+                        @endphp
 
-                            {{-- 1. JIKA FILE ADALAH PDF --}}
-                            @if ($ext === 'pdf')
-                                <iframe src="{{ asset('storage/' . $submission->file_url) }}" class="w-full h-full bg-white rounded-xl"></iframe>
+                        @if ($submission && ($file || $teks || $voice))
                             
-                            {{-- 2. JIKA FILE ADALAH GAMBAR --}}
-                            @elseif (in_array($ext, ['jpg', 'jpeg', 'png', 'gif', 'webp']))
-                                <div class="w-full h-full flex items-center justify-center bg-slate-800 rounded-xl p-4">
-                                    <img src="{{ asset('storage/' . $submission->file_url) }}" class="max-w-full max-h-full object-contain rounded-lg shadow-lg">
-                                </div>
-
-                            {{-- 3. JIKA FILE ADALAH VOICE NOTE / AUDIO --}}
-                            @elseif ($submission->voice_url || in_array($ext, ['webm', 'mp3', 'wav', 'ogg']))
-                                @php 
-                                    $audioSrc = $submission->voice_url ? asset('storage/'.$submission->voice_url) : asset('storage/'.$submission->file_url); 
-                                @endphp
-                                <div class="bg-slate-800 p-8 rounded-3xl border border-slate-700 text-center w-full max-w-sm">
-                                    <div class="w-20 h-20 bg-purple-500/20 text-purple-400 rounded-full flex items-center justify-center mx-auto mb-4">
-                                        <svg class="w-10 h-10" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 11a7 7 0 01-7 7m0 0a7 7 0 01-7-7m7 7v4m0 0H8m4 0h4m-4-8a3 3 0 01-3-3V5a3 3 0 116 0v6a3 3 0 01-3 3z"></path></svg>
-                                    </div>
-                                    <h3 class="text-white font-bold mb-4">Tugas Voice Note Mahasiswa</h3>
-                                    <div class="flex items-center gap-3 bg-slate-900 p-3 rounded-2xl border border-slate-700">
-                                        <button type="button" onclick="togglePlay('main-voice')" id="btn-main-voice" class="w-10 h-10 shrink-0 rounded-full bg-purple-600 text-white flex items-center justify-center shadow hover:scale-105 transition-transform">▶</button>
-                                        <div id="main-voice" class="flex-1" data-audio="{{ $audioSrc }}"></div>
-                                    </div>
-                                </div>
-
-                            {{-- 4. JIKA JAWABAN TEKS ONLINE --}}
-                            @elseif ($submission->text_online)
-                                <div class="w-full h-full bg-white rounded-xl p-8 overflow-y-auto text-slate-800 shadow-inner">
-                                    <h3 class="text-lg font-black border-b pb-4 mb-4 text-slate-900">Jawaban Teks:</h3>
-                                    <div class="whitespace-pre-wrap leading-relaxed text-sm font-medium">{{ $submission->text_online }}</div>
-                                </div>
-
-                            {{-- 5. JIKA JAWABAN LINK --}}
-                            @elseif ($submission->link_url)
-                                <div class="text-center p-8 bg-slate-800 rounded-2xl border border-slate-700 w-full max-w-md">
-                                    <div class="w-16 h-16 bg-blue-500/20 text-blue-400 rounded-full flex items-center justify-center mx-auto mb-4">
-                                        <svg class="w-8 h-8" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M13.828 10.172a4 4 0 00-5.656 0l-4 4a4 4 0 105.656 5.656l1.102-1.101m-.758-4.828a4 4 0 005.656 0l4-4a4 4 0 00-5.656-5.656l-1.1 1.1"></path></svg>
-                                    </div>
-                                    <h3 class="text-white text-lg font-bold mb-2">Tautan Tugas Eksternal</h3>
-                                    <a href="{{ $submission->link_url }}" target="_blank" class="block w-full py-3 bg-blue-600 hover:bg-blue-500 text-white rounded-xl font-bold transition-colors">
-                                        Buka Tautan di Tab Baru
-                                    </a>
-                                </div>
-
-                            {{-- 6. JIKA FILE FORMAT LAIN (Word, Excel, Zip dll) --}}
-                            @elseif ($submission->file_url)
-                                <div class="text-center p-8 bg-slate-800 rounded-2xl border border-slate-700 w-full max-w-md">
-                                    <div class="w-16 h-16 bg-slate-700 rounded-full flex items-center justify-center mx-auto mb-4 border border-slate-600">
-                                        <svg class="w-8 h-8 text-slate-400" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M4 16v1a3 3 0 003 3h10a3 3 0 003-3v-1m-4-4l-4 4m0 0l-4-4m4 4V4"></path></svg>
-                                    </div>
-                                    <h3 class="text-white text-lg font-bold mb-1">File Terlampir</h3>
-                                    <p class="text-slate-400 text-xs mb-4">Format file ini tidak dapat dipreview langsung.</p>
-                                    <a href="{{ asset('storage/' . $submission->file_url) }}" download class="block w-full py-3 bg-emerald-600 hover:bg-emerald-500 text-white rounded-xl font-bold transition-colors">
-                                        Download File
-                                    </a>
-                                </div>
+                            {{-- TAMPILAN TEXT --}}
+                            @if($teks)
+                            <div class="w-full bg-white rounded-xl p-6 overflow-y-auto text-slate-800 shadow-inner max-h-[300px] custom-scrollbar shrink-0">
+                                <h3 class="text-sm font-black border-b pb-2 mb-2 text-slate-900 uppercase">Jawaban Teks</h3>
+                                <div class="whitespace-pre-wrap leading-relaxed text-sm font-medium">{{ $teks }}</div>
+                            </div>
                             @endif
-                        
+
+                            {{-- TAMPILAN VOICE NOTE --}}
+                            @if($voice)
+                            <div class="bg-slate-800 p-6 rounded-3xl border border-slate-700 w-full max-w-sm shrink-0">
+                                <div class="w-16 h-16 bg-blue-500/20 text-blue-400 rounded-full flex items-center justify-center mx-auto mb-3">
+                                    <svg class="w-8 h-8" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 11a7 7 0 01-7 7m0 0a7 7 0 01-7-7m7 7v4m0 0H8m4 0h4m-4-8a3 3 0 01-3-3V5a3 3 0 116 0v6a3 3 0 01-3 3z"></path></svg>
+                                </div>
+                                <h3 class="text-white font-bold text-sm text-center mb-3">Jawaban Voice Note</h3>
+                                <div class="flex items-center gap-3 bg-slate-900 p-3 rounded-2xl border border-slate-700">
+                                    <button type="button" onclick="togglePlay('main-voice')" id="btn-main-voice" class="w-10 h-10 shrink-0 rounded-full bg-blue-600 text-white flex items-center justify-center shadow hover:scale-105 transition-transform">▶</button>
+                                    <div id="main-voice" class="flex-1" data-audio="{{ asset('storage/'.$voice) }}"></div>
+                                </div>
+                            </div>
+                            @endif
+
+                            {{-- TAMPILAN FILE --}}
+                            @if($file)
+                                @php $ext = strtolower(pathinfo($file, PATHINFO_EXTENSION)); @endphp
+                                @if ($ext === 'pdf')
+                                    <iframe src="{{ asset('storage/' . $file) }}" class="w-full flex-1 bg-white rounded-xl min-h-[400px]"></iframe>
+                                @elseif (in_array($ext, ['jpg', 'jpeg', 'png', 'gif', 'webp']))
+                                    <div class="w-full flex-1 flex items-center justify-center bg-slate-800 rounded-xl p-4">
+                                        <img src="{{ asset('storage/' . $file) }}" class="max-w-full max-h-full object-contain rounded-lg shadow-lg">
+                                    </div>
+                                @else
+                                    <div class="text-center p-8 bg-slate-800 rounded-2xl border border-slate-700 w-full max-w-md shrink-0">
+                                        <div class="w-16 h-16 bg-slate-700 rounded-full flex items-center justify-center mx-auto mb-4 border border-slate-600">
+                                            <svg class="w-8 h-8 text-slate-400" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M4 16v1a3 3 0 003 3h10a3 3 0 003-3v-1m-4-4l-4 4m0 0l-4-4m4 4V4"></path></svg>
+                                        </div>
+                                        <h3 class="text-white text-lg font-bold mb-1">File Terlampir</h3>
+                                        <p class="text-slate-400 text-xs mb-4">Format {{ strtoupper($ext) }} tidak dapat dipreview.</p>
+                                        <a href="{{ asset('storage/' . $file) }}" download class="block w-full py-3 bg-emerald-600 hover:bg-emerald-500 text-white rounded-xl font-bold transition-colors text-center">
+                                            Download File
+                                        </a>
+                                    </div>
+                                @endif
+                            @endif
                         @else
-                            {{-- MAHASISWA BELUM MENGUMPULKAN TUGAS --}}
                             <div class="text-center p-8">
                                 <div class="w-20 h-20 bg-slate-800 rounded-full flex items-center justify-center mx-auto mb-4 border border-slate-700 shadow-inner">
                                     <svg class="w-10 h-10 text-slate-500" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 8v4m0 4h.01M21 12a9 9 0 11-18 0 9 9 0 0118 0z"></path></svg>
                                 </div>
                                 <h3 class="text-white text-lg font-black tracking-wide">Belum Mengumpulkan</h3>
-                                <p class="text-slate-400 text-sm mt-1 max-w-xs mx-auto">Mahasiswa belum mengirimkan file tugas. Anda bisa mengirim pesan via Diskusi.</p>
+                                <p class="text-slate-400 text-sm mt-1 max-w-xs mx-auto">Mahasiswa belum mengirimkan tugas.</p>
                             </div>
                         @endif
                     </div>
@@ -229,18 +216,31 @@
                             </button>
                         </div>
 
-                        <div id="chatContainer" class="flex-1 p-4 flex flex-col gap-4 overflow-y-auto custom-scrollbar bg-white">
+                        <div id="chatContainer" class="flex-1 p-4 flex flex-col gap-4 overflow-y-auto custom-scrollbar bg-slate-50/50">
                             @php
-                                $pesanDiskusi = isset($diskusiList) ? $diskusiList : (($submission && $submission->messages) ? $submission->messages->sortBy('created_at') : collect());
+                                $pesanDiskusi = ($submission && method_exists($submission, 'messages')) ? $submission->messages()->orderBy('created_at', 'asc')->get() : collect();
                             @endphp
 
                             @forelse ($pesanDiskusi as $diskusi)
                                 @php
-                                    $from = $diskusi->from ?? '';
-                                    $isMe = ($from === 'dosen'); 
-                                    $nama = $isMe ? 'Anda' : ($activeMahasiswa->nama ?? 'Mahasiswa');
-                                    $foto = 'https://ui-avatars.com/api/?name=' . urlencode($nama) . '&background=' . ($isMe ? '2563eb' : 'f8fafc') . '&color=' . ($isMe ? 'fff' : '475569');
-                                    $body = $diskusi->body ?? '';
+                                    $from = $diskusi->from ?? $diskusi->sender_type ?? 'mahasiswa';
+                                    $isMe = ($from === 'dosen' || $from === 'App\Models\Dosen'); 
+                                    
+                                    $namaDosen = auth('dosen')->user()->nama ?? 'Anda';
+                                    $namaMahasiswa = $activeMahasiswa->nama ?? 'Mahasiswa';
+                                    
+                                    $namaLabel = $isMe ? 'Anda' : $namaMahasiswa;
+                                    
+                                    // LOGIKA FOTO ASLI (Blade)
+                                    $fotoProfil = $isMe 
+                                        ? (auth('dosen')->user()->foto ? asset('storage/'.auth('dosen')->user()->foto) : 'https://ui-avatars.com/api/?name=' . urlencode($namaDosen) . '&background=2563eb&color=fff') 
+                                        : ($activeMahasiswa->foto ? asset('storage/'.$activeMahasiswa->foto) : 'https://ui-avatars.com/api/?name=' . urlencode($namaMahasiswa) . '&background=64748b&color=fff');
+                                    
+                                    // TEMA WARNA BUBBLE CHAT
+                                    $bgChat = $isMe ? 'bg-blue-600 text-white rounded-tr-none border-blue-700' : 'bg-white text-slate-800 rounded-tl-none border-slate-200';
+                                    $labelTeksWarna = $isMe ? 'text-blue-500' : 'text-slate-400';
+                                    
+                                    $body = $diskusi->body ?? $diskusi->message ?? '';
                                     $image = $diskusi->image ?? null; 
                                     $voice = $diskusi->voice ?? null; 
                                     $time = !empty($diskusi->created_at) ? \Carbon\Carbon::parse($diskusi->created_at)->format('H:i') : '';
@@ -248,13 +248,14 @@
                                 @endphp
                                 <div class="flex {{ $isMe ? 'justify-end' : 'justify-start' }}">
                                     <div class="flex gap-2 items-end max-w-[90%] {{ $isMe ? 'flex-row-reverse' : '' }}">
-                                        <img src="{{ $foto }}" class="w-7 h-7 rounded-full shrink-0 shadow-sm border border-slate-100" />
+                                        <img src="{{ $fotoProfil }}" class="w-7 h-7 rounded-full shrink-0 shadow-sm object-cover border border-slate-100" />
                                         <div class="flex flex-col {{ $isMe ? 'items-end' : 'items-start' }}">
-                                            <div class="p-3 rounded-2xl shadow-sm text-xs {{ $isMe ? 'bg-blue-600 text-white rounded-tr-none' : 'bg-slate-50 text-slate-800 rounded-tl-none border border-slate-200' }}">
+                                            <p class="text-[8px] font-bold mb-1 px-1 {{ $labelTeksWarna }} sender-name">{{ $namaLabel }}</p>
+                                            <div class="p-3 rounded-2xl shadow-sm text-xs {{ $bgChat }}">
                                                 @if(!empty($body)) <p class="whitespace-pre-wrap break-words leading-relaxed">{{ $body }}</p> @endif
                                                 @if(!empty($image)) <img src="{{ asset('storage/' . $image) }}" class="mt-2 rounded-xl max-w-full border {{ $isMe ? 'border-white/20' : 'border-slate-200' }}"> @endif
                                                 @if(!empty($voice))
-                                                    <div class="mt-2 flex items-center gap-2 {{ $isMe ? 'bg-white/20 border-white/30' : 'bg-white border-slate-200' }} p-1.5 rounded-xl border w-[160px]">
+                                                    <div class="mt-2 flex items-center gap-2 {{ $isMe ? 'bg-white/20 border-white/30' : 'bg-slate-50 border-slate-200' }} p-1.5 rounded-xl border w-[160px]">
                                                         <button type="button" onclick="togglePlay('wave-{{ $diskusiId }}')" id="btn-wave-{{ $diskusiId }}" class="w-6 h-6 shrink-0 flex items-center justify-center rounded-full {{ $isMe ? 'bg-white text-blue-600' : 'bg-blue-600 text-white' }} shadow text-[9px]">▶</button>
                                                         <div id="wave-{{ $diskusiId }}" class="flex-1 h-4" data-audio="{{ asset('storage/' . $voice) }}"></div>
                                                     </div>
@@ -269,16 +270,15 @@
                                     <div class="w-10 h-10 bg-blue-50 text-blue-400 rounded-full flex items-center justify-center mb-2">
                                         <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M8 12h.01M12 12h.01M16 12h.01M21 12c0 4.418-4.03 8-9 8a9.863 9.863 0 01-4.255-.949L3 20l1.395-3.72C3.512 15.042 3 13.574 3 12c0-4.418 4.03-8 9-8s9 3.582 9 8z"></path></svg>
                                     </div>
-                                    <p class="text-[10px] text-slate-500 font-bold uppercase tracking-widest">{{ !$submission ? 'Kirim Peringatan' : 'Belum Ada Diskusi' }}</p>
+                                    <p class="text-[10px] text-slate-500 font-bold uppercase tracking-widest">Belum Ada Diskusi</p>
                                 </div>
                             @endforelse
                         </div>
 
-                        {{-- Form Input Diskusi dengan Tombol Batal Voice --}}
-                        <div class="p-3 border-t border-slate-100 bg-white shrink-0">
+                        <div class="p-3 border-t border-slate-100 bg-white shrink-0 relative z-20">
                             <div id="imagePreviewContainer" class="hidden mb-2 relative w-fit">
                                 <img id="imagePreviewElement" class="h-16 w-auto object-cover rounded-lg border border-slate-200">
-                                <button type="button" onclick="cancelImage()" class="absolute -top-2 -right-2 bg-red-500 text-white rounded-full w-5 h-5 flex items-center justify-center text-xs shadow">✕</button>
+                                <button type="button" onclick="cancelImage()" class="absolute -top-2 -right-2 bg-red-500 text-white rounded-full w-5 h-5 flex items-center justify-center font-bold text-xs shadow-lg hover:bg-red-600">✕</button>
                             </div>
 
                             <form id="chatForm" method="POST" action="{{ route('dosen.assignment.message.store', ['assignment' => $assignment->id, 'mahasiswa' => $activeMahasiswaId]) }}" enctype="multipart/form-data">
@@ -286,34 +286,35 @@
                                 <input type="file" name="image" id="imageInput" accept="image/*" class="hidden" onchange="previewImage(this)">
                                 <input type="file" name="voice" id="voiceInput" accept="audio/webm" class="hidden">
                                 
-                                <div class="relative flex items-center bg-slate-50 border border-slate-200 rounded-[1.25rem] p-1 focus-within:ring-2 focus-within:ring-blue-100 transition-all w-full">
-                                    <button type="button" id="btnUploadImage" onclick="document.getElementById('imageInput').click()" class="w-9 h-9 shrink-0 flex items-center justify-center rounded-[0.8rem] text-slate-400 hover:bg-slate-100 hover:text-blue-600 transition-colors">
+                                <div class="relative flex items-center bg-slate-50 border border-slate-200 rounded-full p-1.5 pr-2 focus-within:ring-2 focus-within:ring-blue-100 transition-all shadow-sm w-full">
+                                    
+                                    <button type="button" onclick="document.getElementById('imageInput').click()" id="btnUploadImage" class="relative w-10 h-10 rounded-full flex items-center justify-center text-slate-400 hover:text-blue-600 hover:bg-slate-50 transition-all shrink-0">
                                         <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="1.8" d="M4 16l4.586-4.586a2 2 0 012.828 0L16 16m-2-2l1.586-1.586a2 2 0 012.828 0L20 14m-6-6h.01M6 20h12a2 2 0 002-2V6a2 2 0 00-2-2H6a2 2 0 00-2 2v12a2 2 0 002 2z"></path></svg>
                                     </button>
-                                    
-                                    <div id="normalInputWrapper" class="flex-1 relative flex items-center min-w-0 px-2">
-                                        <input type="text" id="messageInput" name="body" placeholder="Pesan..." class="w-full bg-transparent border-none focus:ring-0 text-xs text-slate-700 py-2" autocomplete="off" />
-                                        
-                                        <button type="button" id="cancelVoiceBtn" class="hidden absolute right-1 text-[9px] font-black uppercase text-white bg-red-500 hover:bg-red-600 px-2 py-1 rounded-lg shadow-sm transition-all cursor-pointer">Batal ✕</button>
+
+                                    <div id="normalInputWrapper" class="flex-1 relative flex items-center min-w-0 px-2 border-l border-slate-200 ml-1 pl-3">
+                                        <input type="text" name="message" id="messageInput" placeholder="Tulis pesan balasan..." autocomplete="off" class="w-full bg-transparent border-none focus:ring-0 text-xs text-slate-700 py-2" />
                                     </div>
 
-                                    <div id="recordingWrapper" class="hidden flex-1 items-center justify-between px-3 bg-red-50/80 rounded-xl h-8 mx-1">
+                                    <div id="recordingWrapper" class="hidden flex-1 items-center justify-between px-3 bg-red-50/80 rounded-full h-10 mx-1 border border-red-100">
                                         <div class="flex items-center gap-2">
-                                            <span class="w-2 h-2 bg-red-500 rounded-full animate-pulse"></span>
-                                            <span class="text-[10px] font-bold text-red-500 font-mono" id="recordTimer">00:00</span>
-                                            <div class="recording-wave flex items-center gap-[2px] h-3 ml-1">
+                                            <span class="w-2.5 h-2.5 bg-red-500 rounded-full animate-pulse shadow-[0_0_8px_rgba(239,68,68,0.8)]"></span>
+                                            <span class="text-xs font-bold text-red-600 font-mono tracking-wider" id="recordTimer">00:00</span>
+                                            <div class="recording-wave flex items-center gap-[2px] h-4 ml-2">
                                                 <div class="bar"></div><div class="bar"></div><div class="bar"></div><div class="bar"></div><div class="bar"></div>
                                             </div>
                                         </div>
-                                        <button type="button" id="cancelRecordBtn" class="text-[9px] font-black uppercase text-red-500/70 hover:text-red-600 cursor-pointer">Batal</button>
+                                        <button type="button" id="cancelRecordBtn" class="text-[10px] font-black uppercase text-red-500 hover:text-red-700 cursor-pointer">Batal ✕</button>
                                     </div>
 
-                                    <button type="button" id="recordBtn" class="w-9 h-9 flex items-center justify-center rounded-[0.8rem] text-slate-400 hover:bg-slate-100 transition-colors shrink-0">
+                                    <button type="button" id="cancelVoiceBtn" class="hidden absolute right-16 text-[10px] font-black uppercase text-white bg-red-500 hover:bg-red-600 px-2 py-1 rounded-lg shadow-sm transition-all cursor-pointer z-20">✕ Batal</button>
+
+                                    <button type="button" id="recordBtn" class="relative w-10 h-10 rounded-full flex items-center justify-center text-slate-400 hover:text-red-500 hover:bg-red-50 transition-all shrink-0">
                                         <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="1.8" d="M12 18.75a6 6 0 006-6v-1.5m-6 7.5a6 6 0 01-6-6v-1.5m6 7.5v3.75m-3.75 0h7.5M12 15.75a3 3 0 01-3-3V4.5a3 3 0 116 0v8.25a3 3 0 01-3 3z"></path></svg>
                                     </button>
                                     
-                                    <button type="submit" id="sendChatBtn" class="w-8 h-8 shrink-0 bg-blue-600 text-white rounded-xl flex items-center justify-center shadow-md hover:bg-blue-700 transition-all cursor-pointer ml-1">
-                                        <span id="sendIcon"><svg class="w-4 h-4 transform rotate-90" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 19l9 2-9-18-9 18 9-2zm0 0v-8"></path></svg></span>
+                                    <button type="submit" id="sendChatBtn" class="w-10 h-10 shrink-0 bg-blue-600 text-white rounded-full flex items-center justify-center shadow-md hover:bg-blue-700 transition-all cursor-pointer ml-1">
+                                        <span id="sendIcon"><svg class="w-4 h-4 transform rotate-90 ml-0.5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2.5" d="M12 19l9 2-9-18-9 18 9-2zm0 0v-8"></path></svg></span>
                                         <span id="sendLoading" class="hidden"><svg class="w-4 h-4 animate-spin text-white" fill="none" viewBox="0 0 24 24"><circle class="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" stroke-width="4"></circle><path class="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8v8H4z"></path></svg></span>
                                     </button>
                                 </div>
@@ -362,7 +363,7 @@
                 wavesurfers[id] = WaveSurfer.create({
                     container: '#' + id,
                     waveColor: isMe ? 'rgba(255,255,255,0.4)' : '#cbd5e1',
-                    progressColor: isMe ? '#fff' : '#2563eb',
+                    progressColor: isMe ? '#fff' : '#2563eb', // Progress color (Putih jika biru, Biru jika putih)
                     height: 16, barWidth: 2, barGap: 2, cursorWidth: 0, url: url
                 });
                 wavesurfers[id].on('finish', () => document.getElementById('btn-'+id).innerHTML = '▶');
@@ -378,7 +379,7 @@
                 if(chatContainer) chatContainer.scrollTop = chatContainer.scrollHeight;
                 
                 document.querySelectorAll('[id^="wave-"]').forEach(el => {
-                    initWaveSurfer(el.id, el.getAttribute('data-audio'), el.parentElement.classList.contains('bg-white/20'));
+                    initWaveSurfer(el.id, el.getAttribute('data-audio'), el.parentElement.classList.contains('bg-blue-600'));
                 });
                 
                 const mainVoice = document.getElementById('main-voice');
@@ -403,9 +404,7 @@
                 document.getElementById('imagePreviewContainer').classList.add('hidden');
             }
 
-            // ==========================================
-            // LOGIKA REKAMAN & TOMBOL BATAL VOICE NOTE
-            // ==========================================
+            // REKAM SUARA CHAT DOSEN
             let mediaRecorder, audioChunks = [], recordInterval, recordSeconds = 0;
             const recordBtn = document.getElementById('recordBtn');
             const cancelRecordBtn = document.getElementById('cancelRecordBtn');
@@ -441,7 +440,6 @@
                         mediaRecorder.ondataavailable = e => audioChunks.push(e.data);
                     } catch(err) { alert("Mic error!"); }
                 } else {
-                    // Selesai merekam
                     mediaRecorder.onstop = () => {
                         const file = new File([new Blob(audioChunks, { type: 'audio/webm' })], "voice.webm", { type: "audio/webm" });
                         const dt = new DataTransfer(); dt.items.add(file);
@@ -456,7 +454,7 @@
                         
                         messageInput.placeholder = "▶ ılıılı Voice Note siap...";
                         messageInput.disabled = true;
-                        messageInput.classList.add('font-bold', 'text-blue-600', 'bg-blue-50', 'rounded-xl', 'px-3');
+                        messageInput.classList.add('font-bold', 'text-blue-600');
                         cancelVoiceBtn.classList.remove('hidden');
                     };
                     mediaRecorder.stop();
@@ -464,7 +462,6 @@
                 }
             });
 
-            // Batal saat SEDANG merekam
             cancelRecordBtn.addEventListener('click', () => {
                 if(mediaRecorder) mediaRecorder.stop();
                 clearInterval(recordInterval);
@@ -478,12 +475,11 @@
                 recordBtn.classList.add('text-slate-400');
             });
 
-            // Batal setelah rekaman SIAP DIKIRIM (Tombol X merah)
             cancelVoiceBtn.addEventListener('click', () => {
                 voiceInput.value = '';
                 messageInput.disabled = false;
-                messageInput.placeholder = "Pesan...";
-                messageInput.classList.remove('font-bold', 'text-blue-600', 'bg-blue-50', 'rounded-xl', 'px-3');
+                messageInput.placeholder = "Tulis pesan balasan...";
+                messageInput.classList.remove('font-bold', 'text-blue-600');
                 
                 cancelVoiceBtn.classList.add('hidden');
                 btnUploadImage.classList.remove('hidden');
@@ -491,9 +487,12 @@
                 recordBtn.classList.add('text-slate-400');
             });
 
-            const myName = "{{ auth('dosen')->user()->nama ?? 'Dosen' }}";
-            const myAvatar = `https://ui-avatars.com/api/?name=${encodeURIComponent(myName)}&background=2563eb&color=fff`;
+            // LOGIKA FOTO ASLI (AJAX)
+            const myName = "{{ auth('dosen')->user()->nama ?? 'Anda' }}";
+            const myFotoRaw = "{{ auth('dosen')->user()->foto ?? '' }}";
+            const myAvatar = myFotoRaw ? `/storage/${myFotoRaw}` : `https://ui-avatars.com/api/?name=${encodeURIComponent(myName)}&background=2563eb&color=fff`;
 
+            // AJAX SEND DOSEN
             document.getElementById('chatForm').addEventListener('submit', async function(e) {
                 e.preventDefault();
                 
@@ -517,27 +516,26 @@
                     const data = await res.json();
 
                     if(res.ok && data.success) {
-                        this.reset();
-                        cancelImage();
-                        
-                        // Kembalikan form voice ke semula
+                        this.reset(); cancelImage();
                         voiceInput.value = '';
                         messageInput.disabled = false;
-                        messageInput.placeholder = "Pesan...";
-                        messageInput.classList.remove('font-bold', 'text-blue-600', 'bg-blue-50', 'rounded-xl', 'px-3');
+                        messageInput.placeholder = "Tulis pesan balasan...";
+                        messageInput.classList.remove('font-bold', 'text-blue-600');
                         cancelVoiceBtn.classList.add('hidden');
                         btnUploadImage.classList.remove('hidden');
                         recordBtn.classList.remove('hidden', 'text-red-500', 'bg-red-50');
                         recordBtn.classList.add('text-slate-400');
 
-                        const d = data.message || data.diskusi; 
+                        const d = data.diskusi; 
                         if(d) {
-                            let media = '';
-                            const uid = 'wave-' + Date.now();
+                            let media = ''; const uid = 'wave-' + Date.now();
                             if(d.image) media += `<img src="${d.image}" class="mt-2 rounded-xl max-w-full border border-white/20">`;
                             if(d.voice) media += `<div class="mt-2 flex items-center gap-2 bg-white/20 border-white/30 p-1.5 rounded-xl border w-[160px]"><button type="button" onclick="togglePlay('${uid}')" id="btn-${uid}" class="w-6 h-6 shrink-0 flex items-center justify-center rounded-full bg-white text-blue-600 shadow text-[9px]">▶</button><div id="${uid}" class="flex-1 h-4" data-audio="${d.voice}"></div></div>`;
                             
-                            const html = `<div class="flex justify-end chat-bubble-new"><div class="flex gap-2 items-end max-w-[90%] flex-row-reverse"><img src="${myAvatar}" class="w-7 h-7 rounded-full shrink-0 shadow-sm border border-slate-100"><div class="flex flex-col items-end"><div class="p-3 rounded-2xl shadow-sm text-xs bg-blue-600 text-white rounded-tr-none">${d.body ? `<p class="whitespace-pre-wrap break-words leading-relaxed">${d.body}</p>` : ''}${media}</div><p class="text-[8px] mt-1 px-1 font-bold text-slate-400">${d.time || 'Baru Saja'}</p></div></div></div>`;
+                            const bodyText = d.message;
+                            
+                            // Tema AJAX Sender: Biru
+                            const html = `<div class="flex justify-end chat-bubble-new"><div class="flex gap-2 items-end max-w-[90%] flex-row-reverse"><img src="${myAvatar}" class="w-7 h-7 rounded-full shrink-0 shadow-sm object-cover border border-slate-100"><div class="flex flex-col items-end"><p class="text-[8px] font-bold mb-1 px-1 text-blue-500">Anda</p><div class="p-3 rounded-2xl shadow-sm text-xs bg-blue-600 text-white rounded-tr-none border border-blue-700">${bodyText ? `<p class="whitespace-pre-wrap break-words leading-relaxed">${bodyText}</p>` : ''}${media}</div><p class="text-[8px] mt-1 px-1 font-bold text-slate-400">${d.time}</p></div></div></div>`;
                             
                             const box = document.getElementById('chatContainer');
                             const empty = document.getElementById('emptyChat');
@@ -546,20 +544,52 @@
                             box.insertAdjacentHTML('beforeend', html);
                             box.scrollTop = box.scrollHeight;
                             if(d.voice) setTimeout(() => initWaveSurfer(uid, d.voice, true), 100);
-                        } else {
-                            window.location.reload();
                         }
                     } else {
-                        alert("Gagal mengirim pesan: " + (data.message || "Pastikan route benar"));
+                        alert(data.error || "Gagal mengirim pesan.");
                     }
-                } catch(err) {
-                    this.submit(); 
-                } finally {
+                } catch(err) { 
+                    alert("Koneksi bermasalah."); 
+                } 
+                finally {
                     btn.disabled = false;
                     document.getElementById('sendLoading').classList.add('hidden');
                     document.getElementById('sendIcon').classList.remove('hidden');
                 }
             });
+
+            // LOGIKA FOTO ASLI (ECHO/PUSHER MAHASISWA)
+            @if($submission)
+                const submissionId = {{ $submission->id }};
+                if (window.Echo) {
+                    window.Echo.private(`submission.${submissionId}`)
+                        .listen('.assignment.message', (e) => {
+                            const d = e.message;
+                            
+                            const isMe = d.from === 'dosen' || d.sender_type === 'dosen' || d.sender_type === 'App\\Models\\Dosen';
+                            if (isMe) return; 
+
+                            const senderName = "{{ $activeMahasiswa->nama ?? 'Mahasiswa' }}";
+                            const mhsFotoRaw = "{{ $activeMahasiswa->foto ?? '' }}";
+                            const avatarMahasiswa = mhsFotoRaw ? `/storage/${mhsFotoRaw}` : `https://ui-avatars.com/api/?name=${encodeURIComponent(senderName)}&background=64748b&color=fff`;
+                            
+                            let media = ''; const uid = 'wave-' + Date.now();
+                            if(d.image) media += `<img src="${d.image}" class="mt-2 rounded-xl max-w-full border border-slate-200">`;
+                            if(d.voice) media += `<div class="mt-2 flex items-center gap-2 bg-white border-slate-200 p-1.5 rounded-xl border w-[160px]"><button type="button" onclick="togglePlay('${uid}')" id="btn-${uid}" class="w-6 h-6 shrink-0 flex items-center justify-center rounded-full bg-blue-600 text-white shadow text-[9px]">▶</button><div id="${uid}" class="flex-1 h-4" data-audio="${d.voice}"></div></div>`;
+                            
+                            // Tema Echo Receiver: Putih/Abu
+                            const html = `<div class="flex justify-start chat-bubble-new"><div class="flex gap-2 items-end max-w-[90%]"><img src="${avatarMahasiswa}" class="w-7 h-7 rounded-full shrink-0 shadow-sm object-cover border border-slate-100"><div class="flex flex-col items-start"><p class="text-[8px] md:text-[9px] font-bold mb-1 px-1 text-slate-400">${senderName}</p><div class="p-3 rounded-2xl shadow-sm text-xs sm:text-[13px] bg-white text-slate-800 rounded-tl-none border border-slate-200">${d.message ? `<p class="whitespace-pre-wrap break-words leading-relaxed">${d.message}</p>` : ''}${media}</div><p class="text-[8px] mt-1.5 px-1 font-bold text-slate-400">${d.time}</p></div></div></div>`;
+                            
+                            const box = document.getElementById('chatContainer');
+                            const empty = document.getElementById('emptyChat');
+                            if(empty) empty.remove();
+                            
+                            box.insertAdjacentHTML('beforeend', html);
+                            box.scrollTop = box.scrollHeight;
+                            if(d.voice) setTimeout(() => initWaveSurfer(uid, d.voice, false), 100);
+                        });
+                }
+            @endif
         </script>
     </body>
 </html>

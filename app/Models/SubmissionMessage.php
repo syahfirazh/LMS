@@ -11,10 +11,11 @@ class SubmissionMessage extends Model
 
     protected $table = 'submission_messages';
 
+    // Sesuaikan dengan kolom database Anda
     protected $fillable = [
         'submission_id',
-        'from',
-        'body',
+        'from', // 'dosen' atau 'mahasiswa'
+        'body', // isi pesan teks
         'image',
         'voice',
     ];

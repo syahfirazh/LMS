@@ -95,11 +95,12 @@
             @php
                 $isPublished = $assignment->status === 'published';
                 
-                // PERBAIKAN LOGIKA COUNT (Hanya hitung yang benar-benar kumpul tugas file/tanggal)
+                // LOGIKA COUNT DIPERBARUI: Hanya menggunakan kolom yang benar-benar ada di database Anda
                 $hadirCount = \App\Models\Submission::where('assignment_id', $assignment->id)
                                 ->where(function($query) {
                                     $query->whereNotNull('file_path')
-                                          ->orWhereNotNull('submitted_at');
+                                          ->orWhereNotNull('text_submission')
+                                          ->orWhereNotNull('voice_submission');
                                 })->count();
                                 
                 $totalCount = $kelas->mahasiswa_count ?? 0;

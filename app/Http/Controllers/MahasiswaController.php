@@ -6,63 +6,14 @@ use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Auth;
 use App\Models\Kelas;
 use App\Models\CourseSession;
-use App\Models\User;
+use App\Models\Discussion; 
 use App\Models\Message;
+use App\Models\Dosen;
+use App\Models\Submission; 
+use App\Models\SubmissionMessage; 
 
 class MahasiswaController extends Controller
 {
-    // ============================
-    // JOIN KELAS (KODE AKSES)
-    // ============================
-    public function joinKelas(Request $request)
-    {
-        $request->validate([
-            'kode_akses' => 'required|string'
-        ]);
-
-        $kelas = Kelas::where('kode_akses', $request->kode_akses)->first();
-
-        if (!$kelas) {
-            return back()->with('error', 'Kode tidak ditemukan');
-        }
-
-        $mahasiswa = Auth::guard('mahasiswa')->user();
-
-        if ($kelas->mahasiswa()->where('mahasiswa_id', $mahasiswa->id)->exists()) {
-            return back()->with('error', 'Sudah tergabung');
-        }
-
-        $kelas->mahasiswa()->attach($mahasiswa->id);
-
-        return back()->with('success', 'Berhasil bergabung');
-    }
-
-    // ============================
-    // ALTERNATIF JOIN
-    // ============================
-    public function joinByCode(Request $request)
-    {
-        $request->validate([
-            'kode_akses' => 'required|string'
-        ]);
-
-        $kelas = Kelas::where('kode_akses', $request->kode_akses)->first();
-
-        if (!$kelas) {
-            return back()->with('error', 'Kode tidak valid');
-        }
-
-        $mahasiswa = Auth::guard('mahasiswa')->user();
-
-        if ($kelas->mahasiswa()->where('mahasiswa_id', $mahasiswa->id)->exists()) {
-            return back()->with('error', 'Sudah tergabung');
-        }
-
-        $kelas->mahasiswa()->attach($mahasiswa->id);
-
-        return back()->with('success', 'Berhasil bergabung');
-    }
-
     // ============================
     // LIST KELAS MAHASISWA
     // ============================
@@ -75,9 +26,19 @@ class MahasiswaController extends Controller
         }
 
         $kelas = $mahasiswa->kelas()
-            ->with('mataKuliah')
+            ->with(['mataKuliah', 'courseSessions.materis'])
             ->get()
             ->map(function ($k, $i) {
+                $totalSession = $k->courseSessions->count();
+                $completedSession = 0;
+
+                foreach ($k->courseSessions as $session) {
+                    if ($session->materis->isNotEmpty()) {
+                        $completedSession++;
+                    }
+                }
+                $progress = $totalSession > 0 ? round(($completedSession / $totalSession) * 100) : 0;
+
                 return [
                     'nomor'      => $i + 1,
                     'id'         => $k->id,
@@ -85,7 +46,8 @@ class MahasiswaController extends Controller
                     'kode'       => $k->mataKuliah->kode ?? '-',
                     'sks'        => $k->mataKuliah->sks ?? 0,
                     'deskripsi'  => $k->mataKuliah->deskripsi ?? '',
-                    'progress'   => 0, // ❗ real progress dihitung di detail
+                    'sampul'     => $k->sampul ?? null,
+                    'progress'   => $progress,
                 ];
             });
 
@@ -93,7 +55,7 @@ class MahasiswaController extends Controller
     }
 
     // ============================
-    // DETAIL KELAS + PROGRESS
+    // DETAIL KELAS
     // ============================
     public function show($id)
     {
@@ -105,99 +67,133 @@ class MahasiswaController extends Controller
             }
         ])->findOrFail($id);
 
-        // ============================
-        // HITUNG PROGRESS
-        // ============================
-
         $totalSession = $kelas->courseSessions->count();
         $completedSession = 0;
 
-        foreach ($kelas->courseSessions as $session) {
-            // dianggap selesai jika punya materi
-            if (method_exists($session, 'materis') && $session->materis()->exists()) {
+        foreach ($kelas->courseSessions as $sesi) {
+            if (method_exists($sesi, 'materis') && $sesi->materis()->exists()) {
                 $completedSession++;
             } else {
                 break;
             }
         }
 
-        $progress = $totalSession > 0
-            ? round(($completedSession / $totalSession) * 100)
-            : 0;
+        $progress = $totalSession > 0 ? round(($completedSession / $totalSession) * 100) : 0;
+        $session = $kelas->courseSessions->first();
 
-        return view('course_detail', compact(
-            'kelas',
-            'progress',
-            'completedSession',
-            'totalSession'
-        ));
+        return view('course_detail', compact('kelas', 'progress', 'completedSession', 'totalSession', 'session'));
     }
 
-    public function topic(Kelas $kelas)
-{
-    $mahasiswa = Auth::guard('mahasiswa')->user();
+    // ============================
+    // DISKUSI TOPIK KELAS
+    // ============================
+    public function topic(Kelas $kelas, $sessionId)
+    {
+        $mahasiswa = Auth::guard('mahasiswa')->user();
+        
+        $session = CourseSession::with(['materis', 'discussions.sender'])
+                    ->where('kelas_id', $kelas->id)
+                    ->where('id', $sessionId)
+                    ->firstOrFail();
+                    
+        $onlineUsers = $kelas->mahasiswa()->count();
 
-    $session = CourseSession::where('kelas_id', $kelas->id)
-                ->orderBy('urutan', 'asc')
-                ->first();
+        $messages = collect();
+        if ($session) {
+            $messages = Discussion::where('session_id', $session->id)
+                        ->orderBy('created_at', 'asc')
+                        ->get();
+        }
 
-    $onlineUsers = $kelas->mahasiswa()->get();
+        return view('topic_detail', compact('kelas', 'session', 'onlineUsers', 'messages', 'mahasiswa'));
+    }
 
-    $messages = Message::where(function ($q) use ($mahasiswa, $kelas) {
-            $q->where('sender_type', 'mahasiswa')
-              ->where('sender_id', $mahasiswa->id)
-              ->where('receiver_type', 'dosen')
-              ->where('receiver_id', $kelas->dosen_id);
-        })
-        ->orWhere(function ($q) use ($mahasiswa, $kelas) {
-            $q->where('sender_type', 'dosen')
-              ->where('sender_id', $kelas->dosen_id)
-              ->where('receiver_type', 'mahasiswa')
-              ->where('receiver_id', $mahasiswa->id);
-        })
-        ->orderBy('created_at', 'asc')
-        ->get();
+    // ============================
+    // ANGGOTA KELAS
+    // ============================
+    public function members(Kelas $kelas)
+    {
+        $kelas->load(['mataKuliah', 'dosen', 'mahasiswa', 'courseSessions']);
+        $session = $kelas->courseSessions()->orderBy('urutan', 'asc')->first();
 
-    return view('topic_detail', compact(
-        'kelas',
-        'session',
-        'onlineUsers',
-        'messages',
-        'mahasiswa' // 🔥 TAMBAHKAN INI
-    ));
-}
+        return view('course_members', [
+            'kelas'        => $kelas,
+            'session'      => $session,
+            'mataKuliah'   => $kelas->mataKuliah,
+            'dosen'        => $kelas->dosen,
+            'members'      => $kelas->mahasiswa,
+            'totalMembers' => $kelas->mahasiswa->count(),
+        ]);
+    }
 
-public function members($kelasId)
-{
-    $kelas = Kelas::with([
-        'mataKuliah',
-        'dosen',
-        'mahasiswa',
-        'courseSessions'
-    ])->findOrFail($kelasId);
+    // ============================
+    // PENCARIAN DOSEN UNTUK JAPRI
+    // ============================
+    public function searchDosen(Request $request)
+    {
+        $keyword = $request->query('q');
 
-    $session = $kelas->courseSessions()
-        ->orderBy('urutan')
-        ->first();
+        if (empty(trim($keyword))) {
+            return response()->json([]);
+        }
 
-    return view('course_members', [
-        'kelas'        => $kelas,
-        'session'      => $session,
-        'mataKuliah'   => $kelas->mataKuliah,
-        'dosen'        => $kelas->dosen,
-        'members'      => $kelas->mahasiswa,
-        'totalMembers' => $kelas->mahasiswa->count(),
-    ]);
-}
+        $dosens = Dosen::where('nama', 'LIKE', "%{$keyword}%")
+                       ->orWhere('nidn', 'LIKE', "%{$keyword}%") 
+                       ->limit(10)
+                       ->get(['id', 'nama']); 
 
-public function search(Request $request, $kelasId)
-{
-    $kelas = Kelas::findOrFail($kelasId);
+        return response()->json($dosens);
+    }
 
-    $members = $kelas->mahasiswa()
-        ->where('nama', 'like', "%{$request->q}%")
-        ->get();
+    // ============================
+    // CHAT DISKUSI PRIVAT TUGAS 
+    // ============================
+    public function sendMessage(Request $request, $assignmentId)
+    {
+        try {
+            $request->validate([
+                'message' => 'nullable|string',
+                'image'   => 'nullable|image|max:2048',
+                'voice'   => 'nullable|file|max:5120',
+            ]);
 
-    return response()->json($members);
-}
+            $mahasiswaId = auth('mahasiswa')->id();
+            
+            // JIKA BELUM SUBMIT TUGAS, BUATKAN WADAH SUBMISSION KOSONG
+            $submission = Submission::firstOrCreate([
+                'assignment_id' => $assignmentId,
+                'mahasiswa_id'  => $mahasiswaId
+            ]);
+
+            $pathImage = $request->hasFile('image') ? $request->file('image')->store('diskusi_tugas/images', 'public') : null;
+            $pathVoice = $request->hasFile('voice') ? $request->file('voice')->store('diskusi_tugas/voices', 'public') : null;
+
+            if (!$request->message && !$pathImage && !$pathVoice) {
+                return response()->json(['error' => 'Pesan tidak boleh kosong.'], 422);
+            }
+
+            // SIMPAN KE SUBMISSION MESSAGE
+            $message = SubmissionMessage::create([
+                'submission_id' => $submission->id,
+                'from'          => 'mahasiswa', // Sesuaikan dengan kolom 'from' di DB Anda
+                'body'          => $request->message, // Pesan masuk ke kolom 'body'
+                'image'         => $pathImage,
+                'voice'         => $pathVoice,
+            ]);
+
+            return response()->json([
+                'success' => true,
+                'diskusi' => [
+                    'id'      => $message->id,
+                    'message' => $message->body, 
+                    'image'   => $message->image ? asset('storage/' . $message->image) : null,
+                    'voice'   => $message->voice ? asset('storage/' . $message->voice) : null,
+                    'time'    => $message->created_at->format('H:i'),
+                    'from'    => 'mahasiswa'
+                ]
+            ]);
+        } catch (\Exception $e) {
+            return response()->json(['error' => 'Backend Error: ' . $e->getMessage()], 500);
+        }
+    }
 }

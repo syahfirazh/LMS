@@ -5,152 +5,105 @@ namespace App\Http\Controllers\Dosen;
 use App\Http\Controllers\Controller;
 use Illuminate\Http\Request;
 use App\Models\Kelas;
+use App\Models\Assignment;
 use App\Models\Submission;
-use App\Models\SubmissionMessage; // Pastikan ini mengarah ke model SubmissionMessage
+use App\Models\SubmissionMessage;
 
 class AssignmentGradeController extends Controller
 {
+    // ============================
+    // TAMPILKAN HALAMAN GRADE
+    // ============================
     public function show($kelasId, $assignmentId, $mahasiswaId = null)
     {
-        // 🔒 Pastikan kelas milik dosen
-        $kelas = Kelas::where('id', $kelasId)
-            ->where('dosen_id', auth('dosen')->id())
-            ->firstOrFail();
+        $kelas = Kelas::with('mahasiswa')->findOrFail($kelasId);
+        $assignment = Assignment::findOrFail($assignmentId);
+        $mahasiswas = $kelas->mahasiswa;
 
-        // 🔒 Ambil assignment hanya dari kelas ini
-        $assignment = $kelas->assignments()
-            ->where('id', $assignmentId)
-            ->firstOrFail();
+        $activeMahasiswaId = $mahasiswaId ?? ($mahasiswas->first()->id ?? null);
+        $activeMahasiswa = $mahasiswas->firstWhere('id', $activeMahasiswaId);
 
-        $mahasiswas = $kelas->mahasiswa()->get();
+        // Load riwayat pesan tugas untuk mahasiswa yang aktif
+        $submission = Submission::with(['messages' => function($q) {
+            $q->orderBy('created_at', 'asc');
+        }])->where('assignment_id', $assignmentId)->where('mahasiswa_id', $activeMahasiswaId)->first();
 
-        if ($mahasiswas->isEmpty()) {
-            return view('dosen_grade_assignment', [
-                'kelas' => $kelas,
-                'assignment' => $assignment,
-                'mahasiswas' => collect(),
-                'activeMahasiswa' => null,
-                'submission' => null,
-                'activeMahasiswaId' => null,
-            ]);
+        // Set status kumpul untuk daftar kiri
+        foreach ($mahasiswas as $mhs) {
+            $sub = Submission::where('assignment_id', $assignmentId)->where('mahasiswa_id', $mhs->id)->first();
+            
+            // Anggap "Sudah Kumpul" jika ada file ATAU teks ATAU voice
+            $isSubmitted = $sub && ($sub->file_path || $sub->text_online || $sub->text_submission || $sub->voice_url || $sub->voice_submission);
+            
+            $mhs->status_pengumpulan = $isSubmitted ? 'tepat_waktu' : 'terlambat';
+            $mhs->status_label = $isSubmitted ? 'Sudah' : 'Belum';
         }
 
-        $activeMahasiswa = $mahasiswaId
-            ? $mahasiswas->where('id', $mahasiswaId)->first()
-            : $mahasiswas->first();
-
-        if (!$activeMahasiswa) {
-            $activeMahasiswa = $mahasiswas->first();
-        }
-
-        // 🔒 Submission HARUS milik assignment & mahasiswa aktif
-        $submission = Submission::where('assignment_id', $assignment->id)
-            ->where('mahasiswa_id', $activeMahasiswa->id)
-            ->first();
-
-        return view('dosen_grade_assignment', compact(
-            'kelas',
-            'assignment',
-            'mahasiswas',
-            'activeMahasiswa',
-            'submission'
-        ))->with('activeMahasiswaId', $activeMahasiswa->id);
+        return view('dosen_grade_assignment', compact('kelas', 'assignment', 'mahasiswas', 'activeMahasiswaId', 'activeMahasiswa', 'submission'));
     }
 
+    // ============================
+    // SIMPAN NILAI DAN FEEDBACK DOSEN
+    // ============================
     public function store(Request $request, $kelasId, $assignmentId, $mahasiswaId)
     {
-        $request->validate([
-            'nilai' => 'nullable|integer|min:0|max:100',
-            'feedback' => 'nullable|string',
-        ]);
-
-        // 🔒 Validasi kelas & assignment
-        $kelas = Kelas::where('id', $kelasId)
-            ->where('dosen_id', auth('dosen')->id())
-            ->firstOrFail();
-
-        $assignment = $kelas->assignments()
-            ->where('id', $assignmentId)
-            ->firstOrFail();
-
-        // 🔒 Submission HARUS dari assignment ini
-        $submission = Submission::where('assignment_id', $assignment->id)
-            ->where('mahasiswa_id', $mahasiswaId)
-            ->first();
-
-        if (!$submission) {
-            return back()->with('error', 'Mahasiswa belum mengumpulkan tugas');
-        }
-
+        $submission = Submission::where('assignment_id', $assignmentId)->where('mahasiswa_id', $mahasiswaId)->firstOrFail();
         $submission->update([
             'nilai' => $request->nilai,
-            'feedback' => $request->feedback,
+            'feedback' => $request->feedback
         ]);
-
-        return back()->with('success', 'Nilai berhasil disimpan');
+        return back()->with('success', 'Nilai berhasil disimpan.');
     }
 
-    /**
-     * =========================================================
-     * SIMPAN PESAN DISKUSI TUGAS (Mendukung Voice & Image)
-     * =========================================================
-     */
+    // ============================
+    // BALAS CHAT DISKUSI TUGAS DARI DOSEN
+    // ============================
     public function storeMessage(Request $request, $assignmentId, $mahasiswaId)
     {
         try {
             $request->validate([
-                'body'  => 'nullable|string',
-                'image' => 'nullable|image|max:5120',
-                'voice' => 'nullable|file|max:5120'
+                'message' => 'nullable|string',
+                'image'   => 'nullable|image|max:2048',
+                'voice'   => 'nullable|file|max:5120',
             ]);
 
-            if (empty($request->body) && !$request->hasFile('image') && !$request->hasFile('voice')) {
-                return response()->json(['success' => false, 'message' => 'Pesan tidak boleh kosong.'], 400);
+            $dosenId = auth('dosen')->id();
+            
+            // JIKA BELUM SUBMIT TUGAS, BUATKAN WADAH SUBMISSION KOSONG AGAR DOSEN BISA CHAT DULUAN
+            $submission = Submission::firstOrCreate([
+                'assignment_id' => $assignmentId, 
+                'mahasiswa_id' => $mahasiswaId
+            ]);
+
+            $pathImage = $request->hasFile('image') ? $request->file('image')->store('diskusi_tugas/images', 'public') : null;
+            $pathVoice = $request->hasFile('voice') ? $request->file('voice')->store('diskusi_tugas/voices', 'public') : null;
+
+            if (!$request->message && !$pathImage && !$pathVoice) {
+                return response()->json(['error' => 'Pesan tidak boleh kosong.'], 422);
             }
 
-            // 1. Validasi Keamanan: Pastikan tugas dan kelas ini milik dosen yang sedang login
-            $dosenId = auth('dosen')->id();
-            $assignment = \App\Models\Assignment::where('id', $assignmentId)
-                ->whereHas('kelas', function($q) use ($dosenId) {
-                    $q->where('dosen_id', $dosenId);
-                })->firstOrFail();
-
-            // 2. Cari atau Buat Submission. 
-            // Jika mahasiswa belum mengumpulkan, ini akan membuatkan submission kosong agar bisa dichat.
-            $submission = Submission::firstOrCreate(
-                [
-                    'assignment_id' => $assignment->id,
-                    'mahasiswa_id'  => $mahasiswaId
-                ]
-            );
-
-            // 3. Simpan file jika ada
-            $imagePath = $request->hasFile('image') ? $request->file('image')->store('diskusi_tugas', 'public') : null;
-            $voicePath = $request->hasFile('voice') ? $request->file('voice')->store('diskusi_tugas', 'public') : null;
-
-            // 4. Buat Pesan di tabel submission_messages
-            $message = SubmissionMessage::create([
+            // SIMPAN PESAN KE SUBMISSION MESSAGE
+            $msg = SubmissionMessage::create([
                 'submission_id' => $submission->id,
                 'from'          => 'dosen',
-                'body'          => $request->body,
-                'image'         => $imagePath,
-                'voice'         => $voicePath,
+                'body'          => $request->message,
+                'image'         => $pathImage,
+                'voice'         => $pathVoice,
             ]);
 
-            // 5. Kembalikan Response ke JS Frontend
             return response()->json([
                 'success' => true,
                 'diskusi' => [
-                    'id'    => $message->id,
-                    'body'  => $message->body,
-                    'image' => $message->image ? asset('storage/' . $message->image) : null,
-                    'voice' => $message->voice ? asset('storage/' . $message->voice) : null,
-                    'time'  => $message->created_at->format('H:i')
+                    'id'          => $msg->id,
+                    'message'     => $msg->body,
+                    'image'       => $msg->image ? asset('storage/' . $msg->image) : null,
+                    'voice'       => $msg->voice ? asset('storage/' . $msg->voice) : null,
+                    'time'        => $msg->created_at->format('H:i'),
+                    'from'        => 'dosen',
                 ]
             ]);
-
         } catch (\Exception $e) {
-            return response()->json(['success' => false, 'message' => $e->getMessage()], 500);
+            return response()->json(['error' => 'Backend Error: ' . $e->getMessage()], 500);
         }
     }
 }

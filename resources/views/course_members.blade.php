@@ -6,7 +6,7 @@
             name="viewport"
             content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no"
         />
-        <title>Anggota - Struktur Data 3C | LMS Inklusi UMMI</title>
+        <title>Anggota - {{ $mataKuliah->nama ?? 'Struktur Data 3C' }} | LMS Inklusi UMMI</title>
 
         <link
             href="https://unpkg.com/aos@2.3.1/dist/aos.css"
@@ -113,12 +113,12 @@
                             <h1
                                 class="text-lg md:text-xl font-extrabold text-slate-900 tracking-tight leading-none truncate max-w-[250px] md:max-w-none"
                             >
-                               {{ $mataKuliah->nama }}
+                               {{ $mataKuliah->nama ?? 'Nama Mata Kuliah' }}
                             </h1>
                             <p
                                 class="text-[10px] font-bold text-blue-600 uppercase tracking-widest mt-1 truncate"
                             >
-                                {{ $dosen->nama }}
+                                {{ $dosen->nama ?? 'Nama Dosen' }}
                             </p>
                         </div>
                     </div>
@@ -195,7 +195,7 @@
                         <div
                             class="w-20 h-20 rounded-full bg-white/20 border-4 border-white/10 flex items-center justify-center text-2xl font-black shadow-inner"
                         >
-                            {{ strtoupper(substr($dosen->nama, 0, 2)) }}
+                            {{ strtoupper(substr($dosen->nama ?? 'A', 0, 2)) }}
                         </div>
                         <div class="flex-1 text-center md:text-left space-y-1">
                             <span
@@ -204,7 +204,7 @@
                                 Dosen Pengampu
                             </span>
                             <h2 class="text-2xl font-black tracking-tight">
-                                {{ $dosen->nama }}
+                                {{ $dosen->nama ?? 'Nama Dosen' }}
                             </h2>
                             <p
                                 class="text-xs font-medium text-blue-100 flex items-center justify-center md:justify-start gap-2"
@@ -212,7 +212,7 @@
                                 <span
                                     class="w-2 h-2 bg-emerald-400 rounded-full animate-pulse"
                                 ></span>
-                                {{ $dosen->nidn }}
+                                {{ $dosen->nidn ?? '-' }}
                             </p>
                         </div>
                         <button
@@ -237,7 +237,7 @@
                             Mahasiswa
                             <span
                                 class="bg-slate-200 text-slate-600 px-2 py-0.5 rounded-md text-[9px]"
-                                >{{ $totalMembers }} Orang</span
+                                >{{ $totalMembers ?? 0 }} Orang</span
                             >
                         </h3>
 
@@ -268,41 +268,45 @@
                     </div>
 
                     <div
-    class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4"
->
-    @foreach ($members as $index => $mhs)
-        <div
-            data-aos="fade-up"
-            data-aos-duration="600"
-            data-aos-delay="{{ 100 + ($index * 50) }}"
-            class="bg-white p-5 rounded-3xl border border-slate-200 shadow-sm hover:shadow-md transition-all flex items-center gap-4 cursor-pointer hover:-translate-y-1 active:scale-[0.98]"
-        >
-            <div
-                class="w-12 h-12 rounded-2xl bg-indigo-50 text-indigo-600 flex items-center justify-center font-black text-sm border border-indigo-100"
-            >
-                {{ strtoupper(substr($mhs->nama, 0, 2)) }}
-            </div>
+                        class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4"
+                    >
+                        @forelse ($members as $index => $mhs)
+                            <div
+                                data-aos="fade-up"
+                                data-aos-duration="600"
+                                data-aos-delay="{{ 100 + ($index * 50) }}"
+                                class="bg-white p-5 rounded-3xl border border-slate-200 shadow-sm hover:shadow-md transition-all flex items-center gap-4 cursor-pointer hover:-translate-y-1 active:scale-[0.98]"
+                            >
+                                <div
+                                    class="w-12 h-12 rounded-2xl bg-indigo-50 text-indigo-600 flex items-center justify-center font-black text-sm border border-indigo-100"
+                                >
+                                    {{ strtoupper(substr($mhs->nama, 0, 2)) }}
+                                </div>
 
-            <div class="flex-1 min-w-0">
-                <h4
-                    class="text-sm font-bold text-slate-800 truncate"
-                >
-                    {{ $mhs->nama }}
-                </h4>
-                <p
-                    class="text-[10px] text-slate-400 font-medium"
-                >
-                    {{ $mhs->nim }}
-                </p>
-            </div>
+                                <div class="flex-1 min-w-0">
+                                    <h4
+                                        class="text-sm font-bold text-slate-800 truncate"
+                                    >
+                                        {{ $mhs->nama }}
+                                    </h4>
+                                    <p
+                                        class="text-[10px] text-slate-400 font-medium"
+                                    >
+                                        {{ $mhs->nim }}
+                                    </p>
+                                </div>
 
-            <div
-                class="w-2 h-2 {{ $mhs->is_online ? 'bg-emerald-500' : 'bg-slate-300' }} rounded-full"
-                title="{{ $mhs->is_online ? 'Online' : 'Offline' }}"
-            ></div>
-        </div>
-    @endforeach
-</div>
+                                <div
+                                    class="w-2 h-2 {{ $mhs->is_online ? 'bg-emerald-500' : 'bg-slate-300' }} rounded-full"
+                                    title="{{ $mhs->is_online ? 'Online' : 'Offline' }}"
+                                ></div>
+                            </div>
+                        @empty
+                            <div class="col-span-full text-center py-8">
+                                <p class="text-slate-400 font-bold text-sm">Belum ada mahasiswa yang terdaftar di kelas ini.</p>
+                            </div>
+                        @endforelse
+                    </div>
                 </div>
             </div>
         </main>
@@ -357,28 +361,33 @@
                 synth.speak(utter);
             }
 
+            // MENGGUNAKAN VARIABEL AMAN UNTUK RUTE (Mencegah Missing Parameter Error)
+            const urlPembelajaran = "{{ route('course.detail', ['kelas' => $kelas->id]) }}";
+            const urlPresensi = "{{ (isset($session) && $session) ? route('course.attendance', ['kelas' => $kelas->id, 'session' => $session->id]) : '#' }}";
+            const urlPenugasan = "{{ route('course.assignments', ['kelas' => $kelas->id]) }}";
+
             function navigasiKe(nomor) {
                 let tujuan = "";
                 let teks = "";
 
                 if (nomor === 0) {
                     tujuan = "{{ route('dashboard') ?? '#' }}";
-                    teks = "Kembali ke Beranda.";
+                    teks = "Kembali ke Beranda Kelas.";
                 } else if (nomor === 1) {
-                    tujuan = "{{ route('course.detail', $session->kelas->id) ?? '#' }}";
+                    tujuan = urlPembelajaran;
                     teks = "Membuka Menu Pembelajaran.";
                 } else if (nomor === 2) {
-                    tujuan = "{{ route('course.attendance', $session->kelas->id) ?? '#' }}";
-                    teks = "Membuka halaman Presensi.";
+                    tujuan = urlPresensi;
+                    teks = tujuan === '#' ? "Halaman presensi belum tersedia di kelas ini." : "Membuka Menu Presensi.";
                 } else if (nomor === 3) {
-                    tujuan = "{{ route('course.assignments', $session->kelas->id    ) ?? '#' }}";
-                    teks = "Membuka halaman Penugasan.";
+                    tujuan = urlPenugasan;
+                    teks = "Membuka Menu Penugasan.";
                 } else if (nomor === 4) {
                     teks = "Anda sudah di Halaman Anggota.";
                 }
                 // KONTEN ANGGOTA
                 else if (nomor === 5) {
-                    teks = "Membuka chat dengan Dosen Asril.";
+                    teks = "Membuka chat dengan Dosen {{ $dosen->nama ?? '' }}.";
                     bicara(teks, () => {
                         setTimeout(
                             () => alert("Fitur Chat Dosen Terbuka"),

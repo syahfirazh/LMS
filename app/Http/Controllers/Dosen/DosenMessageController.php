@@ -7,6 +7,7 @@ use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Auth;
 use App\Models\Message;
 use App\Models\Mahasiswa;
+use App\Events\MessageSent; // TAMBAHAN: Import Event Pusher
 
 class DosenMessageController extends Controller
 {
@@ -81,11 +82,6 @@ class DosenMessageController extends Controller
     | SEND MESSAGE - Kirim Pesan (AJAX)
     |--------------------------------------------------------------------------
     */
-    /*
-    |--------------------------------------------------------------------------
-    | SEND MESSAGE - Kirim Pesan (AJAX)
-    |--------------------------------------------------------------------------
-    */
     public function send(Request $request)
     {
         try {
@@ -117,6 +113,7 @@ class DosenMessageController extends Controller
                 return response()->json(['success' => false, 'error' => 'Pesan tidak boleh kosong.']);
             }
 
+            // 1. Simpan pesan ke Database
             $message = Message::create([
                 'sender_type'   => 'dosen',
                 'sender_id'     => $dosen->id,
@@ -128,7 +125,10 @@ class DosenMessageController extends Controller
                 'is_read'       => 0
             ]);
 
-            // PERBAIKAN: Format data agar rapi dan mudah dibaca oleh Javascript
+            // 2. TRIGGER EVENT PUSHER DI SINI
+            // toOthers() memastikan pesan dikirim ke mahasiswa, tapi tidak memantul balik ke layar dosen
+            broadcast(new MessageSent($message))->toOthers();
+
             return response()->json([
                 'success' => true,
                 'message' => [
@@ -137,7 +137,7 @@ class DosenMessageController extends Controller
                     'body'        => $message->body,
                     'image_path'  => $message->image_path,
                     'voice_path'  => $message->voice_path,
-                    'time'        => $message->created_at->format('H:i') // Format jam agar tidak undefined
+                    'time'        => $message->created_at->format('H:i') 
                 ]
             ]);
 
@@ -150,6 +150,9 @@ class DosenMessageController extends Controller
     |--------------------------------------------------------------------------
     | FETCH CHAT - Smart Polling
     |--------------------------------------------------------------------------
+    | Catatan: Karena kita sudah pakai Pusher/Websockets (Real-time), 
+    | fungsi polling ini pelan-pelan bisa kamu tinggalkan di sisi Frontend.
+    | Tapi saya biarkan tetap ada agar tidak error jika script JS lama masih berjalan.
     */
     public function fetch(Request $request, $mahasiswa)
     {
@@ -167,7 +170,6 @@ class DosenMessageController extends Controller
             ->orderBy('created_at', 'asc')
             ->get()
             ->map(function ($msg) {
-                // PERBAIKAN: Format data polling agar sama dengan output send()
                 return [
                     'id'          => $msg->id,
                     'sender_type' => $msg->sender_type,

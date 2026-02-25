@@ -194,6 +194,8 @@ Route::post(
  
     // --- MANAJEMEN UJIAN ---
     Route::controller(ExamController::class)->group(function () {
+        Route::get('/exams', [ExamController::class, 'index'])->name('dosen.exams.index');
+        Route::post('/exams', [ExamController::class, 'store'])->name('dosen.exams.store');
         Route::get('/ujian', 'index')->name('dosen.exams');
         Route::post('/ujian', 'store')->name('dosen.exams.store');
     });

@@ -7,6 +7,7 @@ use Illuminate\Http\Request;
 use App\Events\DiscussionCreated;
 use App\Models\CourseSession;
 use Illuminate\Support\Facades\Auth;
+use App\Models\Notification;
 
 class DiscussionController extends Controller
 {
@@ -28,87 +29,86 @@ class DiscussionController extends Controller
      * Menyimpan pesan baru ke dalam Diskusi Grup Kelas
      */
     public function store(Request $request, $sessionId)
-    {
-        // 1. Validasi input, tambahkan validasi untuk sender_type
-        $request->validate([
-            'message'     => 'nullable|string',
-            'image'       => 'nullable|image|max:2048',
-            'voice'       => 'nullable|mimes:mp3,wav,ogg,webm|max:5120',
-            'sender_type' => 'nullable|string', 
-        ]);
+{
+    $request->validate([
+        'message'     => 'nullable|string',
+        'image'       => 'nullable|image|max:2048',
+        'voice'       => 'nullable|mimes:mp3,wav,ogg,webm|max:5120',
+        'sender_type' => 'nullable|string',
+    ]);
 
-        $senderId = null;
-        $senderType = null;
+    $senderId = null;
+    $senderType = null;
 
-        // 2. Tangkap siapa pengirim yang dikirim dari form hidden input
-        $requestedSender = $request->input('sender_type');
+    $requestedSender = $request->input('sender_type');
 
-        // 3. Logika Pengecekan Guard yang kebal tabrakan session browser
-        if ($requestedSender === 'mahasiswa' && Auth::guard('mahasiswa')->check()) {
-            $senderId = Auth::guard('mahasiswa')->id();
-            $senderType = 'mahasiswa'; // Map ke App\Models\Mahasiswa
-        } elseif ($requestedSender === 'dosen' && Auth::guard('dosen')->check()) {
-            $senderId = Auth::guard('dosen')->id();
-            $senderType = 'dosen'; // Map ke App\Models\Dosen
-        } else {
-            // Fallback (jika form tidak mengirim sender_type karena alasan tertentu)
-            if (Auth::guard('mahasiswa')->check() && !Auth::guard('dosen')->check()) {
-                $senderId = Auth::guard('mahasiswa')->id();
-                $senderType = 'mahasiswa';
-            } elseif (Auth::guard('dosen')->check()) {
-                $senderId = Auth::guard('dosen')->id();
-                $senderType = 'dosen';
-            }
-        }
+    if ($requestedSender === 'mahasiswa' && Auth::guard('mahasiswa')->check()) {
+        $senderId = Auth::guard('mahasiswa')->id();
+        $senderType = 'mahasiswa';
+    } elseif ($requestedSender === 'dosen' && Auth::guard('dosen')->check()) {
+        $senderId = Auth::guard('dosen')->id();
+        $senderType = 'dosen';
+    }
 
-        // Jika tetap tidak ketemu siapa yang login
-        if (!$senderId) {
-            return response()->json(['error' => 'Sesi login telah habis atau tidak valid. Silakan login kembali.'], 403);
-        }
+    if (!$senderId) {
+        return response()->json(['error' => 'Sesi login tidak valid.'], 403);
+    }
 
-        $pathImage = null;
-        $pathVoice = null;
+    $pathImage = $request->hasFile('image')
+        ? $request->file('image')->store('diskusi/images', 'public')
+        : null;
 
-        if ($request->hasFile('image')) {
-            $pathImage = $request->file('image')->store('diskusi/images', 'public');
-        }
+    $pathVoice = $request->hasFile('voice')
+        ? $request->file('voice')->store('diskusi/voices', 'public')
+        : null;
 
-        if ($request->hasFile('voice')) {
-            $pathVoice = $request->file('voice')->store('diskusi/voices', 'public');
-        }
+    if (!$request->message && !$pathImage && !$pathVoice) {
+        return response()->json(['error' => 'Konten pesan tidak boleh kosong.'], 422);
+    }
 
-        // Validasi agar tidak mengirim pesan kosong total
-        if (!$request->message && !$pathImage && !$pathVoice) {
-            return response()->json(['error' => 'Konten pesan tidak boleh kosong.'], 422);
-        }
+    $discussion = \App\Models\Discussion::create([
+        'session_id'  => $sessionId,
+        'sender_id'   => $senderId,
+        'sender_type' => $senderType,
+        'message'     => $request->message,
+        'image'       => $pathImage,
+        'voice'       => $pathVoice,
+    ]);
 
-        $discussion = Discussion::create([
-            'session_id'  => $sessionId,
-            'sender_id'   => $senderId,
-            'sender_type' => $senderType,
-            'message'     => $request->message,
-            'image'       => $pathImage,
-            'voice'       => $pathVoice,
-        ]);
+    // 🔎 Ambil session + kelas untuk notif
+    $session = \App\Models\Session::with('kelas')->findOrFail($sessionId);
+    $dosenId = $session->kelas->dosen_id;
 
-        // Load relasi sender agar data nama/foto tampil di realtime broadcast
-        $discussion->load('sender');
-
-        broadcast(new DiscussionCreated($discussion))->toOthers();
-
-        return response()->json([
-            'success' => true,
-            'diskusi' => [
-                'id'          => $discussion->id,
-                'message'     => $discussion->message,
-                'image'       => $discussion->image ? asset('storage/' . $discussion->image) : null,
-                'voice'       => $discussion->voice ? asset('storage/' . $discussion->voice) : null,
-                'time'        => $discussion->created_at->format('H:i'),
-                'sender_name' => $discussion->sender->nama ?? 'User',
-                'sender_type' => $discussion->sender_type,
-            ]
+    // 🔔 Kirim notif jika pengirim mahasiswa
+    if ($senderType === 'mahasiswa') {
+        \App\Models\Notification::create([
+            'user_id'   => $dosenId,
+            'user_type' => 'dosen',
+            'type'      => 'info',
+            'title'     => 'Pesan Diskusi Baru',
+            'message'   => 'Mahasiswa <b>' . Auth::guard('mahasiswa')->user()->name . '</b> mengirim pesan pada diskusi sesi.',
+            'url'       => route('dosen.session.show', $sessionId),
+            'is_read'   => false,
         ]);
     }
+
+    $discussion->load('sender');
+
+    broadcast(new \App\Events\DiscussionCreated($discussion))->toOthers();
+
+    return response()->json([
+        'success' => true,
+        'diskusi' => [
+            'id'          => $discussion->id,
+            'message'     => $discussion->message,
+            'image'       => $discussion->image ? asset('storage/' . $discussion->image) : null,
+            'voice'       => $discussion->voice ? asset('storage/' . $discussion->voice) : null,
+            'time'        => $discussion->created_at->format('H:i'),
+            'sender_name' => $discussion->sender->nama ?? 'User',
+            'sender_type' => $discussion->sender_type,
+        ]
+    ]);
+}
 
     /**
      * Halaman index diskusi (Opsional, jika ingin halaman khusus diskusi)

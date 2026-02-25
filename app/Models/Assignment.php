@@ -22,8 +22,9 @@ public function submissions()
     return $this->hasMany(Submission::class);
 }
 
- public function kelas() {
-        return $this->belongsTo(Kelas::class);
-    }
+ public function kelas()
+{
+    return $this->belongsTo(\App\Models\Kelas::class);
+}
 
 }

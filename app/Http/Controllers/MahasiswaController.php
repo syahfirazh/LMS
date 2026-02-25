@@ -11,6 +11,8 @@ use App\Models\Message;
 use App\Models\Dosen;
 use App\Models\Submission; 
 use App\Models\SubmissionMessage; 
+use App\Models\Notification;
+use App\Models\Assignment;
 
 class MahasiswaController extends Controller
 {
@@ -148,52 +150,106 @@ class MahasiswaController extends Controller
     // ============================
     // CHAT DISKUSI PRIVAT TUGAS 
     // ============================
-    public function sendMessage(Request $request, $assignmentId)
-    {
-        try {
-            $request->validate([
-                'message' => 'nullable|string',
-                'image'   => 'nullable|image|max:2048',
-                'voice'   => 'nullable|file|max:5120',
-            ]);
+    public function sendMessage(Request $request, $kelasId, $assignmentId)
+{
+    $request->validate([
+        'message' => 'nullable|string',
+        'image'   => 'nullable|image|max:2048',
+        'voice'   => 'nullable|file|max:5120',
+    ]);
 
-            $mahasiswaId = auth('mahasiswa')->id();
-            
-            // JIKA BELUM SUBMIT TUGAS, BUATKAN WADAH SUBMISSION KOSONG
-            $submission = Submission::firstOrCreate([
-                'assignment_id' => $assignmentId,
-                'mahasiswa_id'  => $mahasiswaId
-            ]);
+    $mahasiswaId = auth()->guard('mahasiswa')->id();
 
-            $pathImage = $request->hasFile('image') ? $request->file('image')->store('diskusi_tugas/images', 'public') : null;
-            $pathVoice = $request->hasFile('voice') ? $request->file('voice')->store('diskusi_tugas/voices', 'public') : null;
+    $assignment = \App\Models\Assignment::with('session.kelas')
+        ->findOrFail($assignmentId);
 
-            if (!$request->message && !$pathImage && !$pathVoice) {
-                return response()->json(['error' => 'Pesan tidak boleh kosong.'], 422);
-            }
+    $kelas   = $assignment->session->kelas;
+    $dosenId = $kelas->dosen_id;
 
-            // SIMPAN KE SUBMISSION MESSAGE
-            $message = SubmissionMessage::create([
-                'submission_id' => $submission->id,
-                'from'          => 'mahasiswa', // Sesuaikan dengan kolom 'from' di DB Anda
-                'body'          => $request->message, // Pesan masuk ke kolom 'body'
-                'image'         => $pathImage,
-                'voice'         => $pathVoice,
-            ]);
+    $submission = \App\Models\Submission::firstOrCreate([
+        'assignment_id' => $assignmentId,
+        'mahasiswa_id'  => $mahasiswaId
+    ]);
 
-            return response()->json([
-                'success' => true,
-                'diskusi' => [
-                    'id'      => $message->id,
-                    'message' => $message->body, 
-                    'image'   => $message->image ? asset('storage/' . $message->image) : null,
-                    'voice'   => $message->voice ? asset('storage/' . $message->voice) : null,
-                    'time'    => $message->created_at->format('H:i'),
-                    'from'    => 'mahasiswa'
-                ]
-            ]);
-        } catch (\Exception $e) {
-            return response()->json(['error' => 'Backend Error: ' . $e->getMessage()], 500);
-        }
+    $pathImage = $request->hasFile('image')
+        ? $request->file('image')->store('diskusi_tugas/images', 'public')
+        : null;
+
+    $pathVoice = $request->hasFile('voice')
+        ? $request->file('voice')->store('diskusi_tugas/voices', 'public')
+        : null;
+
+    if (!$request->message && !$pathImage && !$pathVoice) {
+        return back()->with('error', 'Pesan tidak boleh kosong.');
     }
+
+    \App\Models\SubmissionMessage::create([
+        'submission_id' => $submission->id,
+        'from'          => 'mahasiswa',
+        'body'          => $request->message,
+        'image'         => $pathImage,
+        'voice'         => $pathVoice,
+    ]);
+
+    // 🔔 NOTIF KE DOSEN
+    \App\Models\Notification::create([
+        'user_id'   => $dosenId,
+        'user_type' => 'dosen',
+        'type'      => 'info',
+        'title'     => 'Pesan Diskusi Tugas',
+        'message'   => 'Mahasiswa <b>' . auth()->guard('mahasiswa')->user()->name . '</b> mengirim pesan pada diskusi tugas.',
+        'url'       => route('dosen.assignment.recap', $kelas->id),
+        'is_read'   => false,
+    ]);
+
+    return back()->with('success', 'Pesan berhasil dikirim.');
+}
+
+    public function submitAssignment(Request $request, $kelas, $assignment)
+{
+    $request->validate([
+        'file' => 'nullable|file|mimes:pdf,doc,docx,zip|max:10240',
+        'text_submission' => 'nullable|string',
+        'voice_submission' => 'nullable|file|mimes:webm|max:10240',
+    ]);
+
+    $assignmentData = \App\Models\Assignment::with('kelas')->findOrFail($assignment);
+
+    $kelasData = $assignmentData->kelas;
+    $dosenId   = $kelasData->dosen_id;
+
+    // Upload file jika ada
+    $filePath = null;
+    if ($request->hasFile('file')) {
+        $filePath = $request->file('file')->store('submissions/files', 'public');
+    }
+
+    // Upload voice jika ada
+    $voicePath = null;
+    if ($request->hasFile('voice_submission')) {
+        $voicePath = $request->file('voice_submission')->store('submissions/voices', 'public');
+    }
+
+    // Simpan submission
+    \App\Models\Submission::create([
+        'assignment_id'   => $assignmentData->id,
+        'mahasiswa_id'    => auth()->guard('mahasiswa')->id(),
+        'file_path'       => $filePath,
+        'text_submission' => $request->text_submission,
+        'voice_path'      => $voicePath,
+        'status'          => 'submitted',
+    ]);
+
+    // Kirim notifikasi ke dosen
+    \App\Models\DosenNotification::create([
+        'dosen_id' => $dosenId,
+        'type'     => 'info',
+        'title'    => 'Tugas Baru Dikumpulkan',
+        'message'  => 'Mahasiswa <b>' . auth()->guard('mahasiswa')->user()->nama . '</b> telah mengumpulkan tugas.',
+        'url'      => route('dosen.assignment.recap', $kelasData->id),
+        'is_read'  => false,
+    ]);
+
+    return back()->with('success', 'Tugas berhasil dikumpulkan.');
+}
 }

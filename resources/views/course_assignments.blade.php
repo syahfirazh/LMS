@@ -149,7 +149,7 @@
                                 $iconBg = $isSelesai ? 'bg-emerald-100 text-emerald-700' : 'bg-orange-100 text-orange-700';
                             @endphp
 
-                            <a href="{{ route('assignment.detail', ['kelas' => $kelas->id, 'assignment' => $tugas->id]) }}" class="group flex flex-col md:flex-row items-start md:items-center gap-4 p-4 rounded-2xl border {{ $borderClass }} transition-all cursor-pointer relative overflow-hidden block">
+                            <a href="{{ route('mahasiswa.assignment.detail', ['kelas' => $kelas->id,'assignment' => $tugas->id]) }}" class="group flex flex-col md:flex-row items-start md:items-center gap-4 p-4 rounded-2xl border {{ $borderClass }} transition-all cursor-pointer relative overflow-hidden block">
                                 <div class="absolute left-0 top-0 bottom-0 w-1 {{ $lineClass }} rounded-l-2xl"></div>
                                 <div class="flex items-center gap-4 flex-1">
                                     <div class="w-12 h-12 rounded-xl {{ $iconBg }} flex items-center justify-center shrink-0 font-black text-sm shadow-sm group-hover:scale-105 transition-transform">
@@ -247,7 +247,7 @@
 
         const urlPembelajaran = "{{ route('course.detail', ['kelas' => $kelas->id]) }}";
         const urlPresensi = "{{ (isset($session) && $session) ? route('course.attendance', ['kelas' => $kelas->id, 'session' => $session->id]) : '#' }}";
-        const urlPenugasan = "{{ route('course.assignments', ['kelas' => $kelas->id]) }}";
+        const urlPenugasan = "{{ route('course.assignments', ['kelas' => $kelas->id, 'session' => $session->id]) }}";
         const urlAnggota = "{{ route('course.members', ['kelas' => $kelas->id]) }}";
 
         function navigasiKe(nomor) {
@@ -272,7 +272,7 @@
                 // Buka Tugas
                 let tugasTujuan = tugasList.find(t => t.voiceId === nomor);
                 if(tugasTujuan) {
-                    tujuan = `/mata-kuliah/{{ $kelas->id }}/penugasan/${tugasTujuan.id}`;
+                    tujuan = "{{ route('mahasiswa.assignment.detail', ['kelas' => $kelas->id,'assignment' => '__ID__']) }}".replace('__ID__', tugasTujuan.id);
                     teks = `Membuka Tugas ${tugasTujuan.judul}.`;
                 } else {
                     teks = "Nomor tugas tidak ditemukan.";

@@ -141,30 +141,36 @@
                             $colorStr = $notif->type == 'warning' ? 'orange' : ($notif->type == 'success' ? 'blue' : 'slate');
                             $opacity = $notif->is_read ? 'opacity-75 hover:opacity-100 bg-slate-50' : 'bg-white shadow-sm';
                         @endphp
-                        <div data-aos="fade-up" data-aos-delay="100" class="{{ $opacity }} p-6 md:p-8 rounded-[2rem] md:rounded-[2.5rem] border-l-8 border-{{ $colorStr }}-500 hover:shadow-md transition-all flex flex-col md:flex-row items-start md:items-center gap-5 md:gap-6 cursor-pointer group">
-                            <div class="w-14 h-14 md:w-16 md:h-16 bg-{{ $colorStr }}-50 rounded-2xl md:rounded-3xl flex items-center justify-center text-{{ $colorStr }}-600 shrink-0 group-hover:scale-110 transition-transform">
-                                @if($notif->type == 'warning')
-                                    <svg class="w-7 h-7 md:w-8 md:h-8" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 8v4l3 3m6-3a9 9 0 11-18 0 9 9 0 0118 0z"></path></svg>
-                                @elseif($notif->type == 'success')
-                                    <svg class="w-7 h-7 md:w-8 md:h-8" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 12h6m-6 4h6m2 5H7a2 2 0 01-2-2V5a2 2 0 012-2h5.586a1 1 0 01.707.293l5.414 5.414a1 1 0 01.293.707V19a2 2 0 01-2 2z"></path></svg>
-                                @else
-                                    <svg class="w-7 h-7 md:w-8 md:h-8" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 11H5m14 0a2 2 0 012 2v6a2 2 0 01-2 2H5a2 2 0 01-2-2v-6a2 2 0 012-2m14 0V9a2 2 0 00-2-2M5 11V9a2 2 0 012-2m0 0V5a2 2 0 012-2h6a2 2 0 012 2v2M7 7h10"></path></svg>
-                                @endif
-                            </div>
-                            <div class="flex-1 w-full">
-                                <div class="flex flex-col md:flex-row justify-between items-start mb-2 gap-2">
-                                    <h4 class="text-base md:text-lg font-bold text-slate-900 group-hover:text-{{ $colorStr }}-600 transition-colors">
-                                        {{ $notif->title }}
-                                    </h4>
-                                    <span class="text-[9px] md:text-[10px] font-bold text-slate-400 uppercase tracking-widest bg-{{ $notif->is_read ? 'white' : 'slate-50' }} px-2.5 py-1 rounded-lg border border-slate-200 whitespace-nowrap">
-                                        {{ $notif->created_at->diffForHumans() }}
-                                    </span>
-                                </div>
-                                <p class="text-sm text-slate-500 leading-relaxed font-medium">
-                                    {!! $notif->message !!}
-                                </p>
-                            </div>
-                        </div>
+                        
+                        <a href="{{ route('dosen.notifications.read.single', $notif->id) }}" 
+   data-aos="fade-up" 
+   data-aos-delay="100" 
+   class="{{ $opacity }} p-6 md:p-8 rounded-[2rem] md:rounded-[2.5rem] border-l-8 border-{{ $colorStr }}-500 hover:shadow-md transition-all flex flex-col md:flex-row items-start md:items-center gap-5 md:gap-6 cursor-pointer group no-underline decoration-transparent">
+    
+    <div class="w-14 h-14 md:w-16 md:h-16 bg-{{ $colorStr }}-50 rounded-2xl md:rounded-3xl flex items-center justify-center text-{{ $colorStr }}-600 shrink-0 group-hover:scale-110 transition-transform">
+        @if($notif->type == 'warning')
+            <svg class="w-7 h-7 md:w-8 md:h-8" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 8v4l3 3m6-3a9 9 0 11-18 0 9 9 0 0118 0z"></path></svg>
+        @elseif($notif->type == 'success')
+            <svg class="w-7 h-7 md:w-8 md:h-8" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 12h6m-6 4h6m2 5H7a2 2 0 01-2-2V5a2 2 0 012-2h5.586a1 1 0 01.707.293l5.414 5.414a1 1 0 01.293.707V19a2 2 0 01-2 2z"></path></svg>
+        @else
+            <svg class="w-7 h-7 md:w-8 md:h-8" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 11H5m14 0a2 2 0 012 2v6a2 2 0 01-2 2H5a2 2 0 01-2-2v-6a2 2 0 012-2m14 0V9a2 2 0 00-2-2M5 11V9a2 2 0 012-2m0 0V5a2 2 0 012-2h6a2 2 0 012 2v2M7 7h10"></path></svg>
+        @endif
+    </div>
+
+    <div class="flex-1 w-full text-left">
+        <div class="flex flex-col md:flex-row justify-between items-start mb-2 gap-2">
+            <h4 class="text-base md:text-lg font-bold text-slate-900 group-hover:text-{{ $colorStr }}-600 transition-colors">
+                {{ $notif->title }}
+            </h4>
+            <span class="text-[9px] md:text-[10px] font-bold text-slate-400 uppercase tracking-widest bg-{{ $notif->is_read ? 'white' : 'slate-50' }} px-2.5 py-1 rounded-lg border border-slate-200 whitespace-nowrap">
+                {{ $notif->created_at->diffForHumans() }}
+            </span>
+        </div>
+        <p class="text-sm text-slate-500 leading-relaxed font-medium">
+            {!! $notif->message !!}
+        </p>
+    </div>
+</a>
                     @empty
                         <div class="text-center py-20 opacity-60">
                             <svg class="w-16 h-16 mx-auto text-slate-400 mb-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="1.5" d="M20 13V6a2 2 0 00-2-2H6a2 2 0 00-2 2v7m16 0v5a2 2 0 01-2 2H6a2 2 0 01-2-2v-5m16 0h-2.586a1 1 0 00-.707.293l-2.414 2.414a1 1 0 01-.707.293h-3.172a1 1 0 01-.707-.293l-2.414-2.414A1 1 0 006.586 13H4"></path></svg>

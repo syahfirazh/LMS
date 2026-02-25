@@ -342,7 +342,10 @@
                             <button type="button" onclick="cancelImage()" class="absolute -top-2 -right-2 bg-red-500 text-white rounded-full w-6 h-6 flex items-center justify-center font-bold text-xs shadow-lg hover:bg-red-600 hover:scale-110 transition-transform">✕</button>
                         </div>
 
-                        <form id="chatForm" action="{{ route('mahasiswa.assignment.message.store', $assignment->id) }}" method="POST" enctype="multipart/form-data">
+                        <form id="chatForm" action="{{ route('mahasiswa.assignment.message.store', [
+    'kelas' => $kelas->id,
+    'assignment' => $assignment->id
+]) }}" method="POST" enctype="multipart/form-data">
                             @csrf
                             <input type="file" name="image" id="imageInput" accept="image/*" class="hidden" onchange="previewImage(this)">
                             <input type="file" name="voice" id="voiceInput" accept="audio/webm" class="hidden">

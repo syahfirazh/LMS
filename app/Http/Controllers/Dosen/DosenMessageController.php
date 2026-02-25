@@ -141,6 +141,14 @@ class DosenMessageController extends Controller
                 ]
             ]);
 
+            notifyMahasiswa(
+    $request->receiver_id,
+    'message',
+    'Pesan Baru dari Dosen',
+    $request->body ?? 'Dosen mengirim pesan.',
+    route('messages')
+);
+
         } catch (\Exception $e) {
             return response()->json(['success' => false, 'error' => 'System Error: ' . $e->getMessage()]);
         }

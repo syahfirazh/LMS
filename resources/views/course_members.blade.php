@@ -364,7 +364,10 @@
             // MENGGUNAKAN VARIABEL AMAN UNTUK RUTE (Mencegah Missing Parameter Error)
             const urlPembelajaran = "{{ route('course.detail', ['kelas' => $kelas->id]) }}";
             const urlPresensi = "{{ (isset($session) && $session) ? route('course.attendance', ['kelas' => $kelas->id, 'session' => $session->id]) : '#' }}";
-            const urlPenugasan = "{{ route('course.assignments', ['kelas' => $kelas->id]) }}";
+            const urlPenugasan = "{{ (isset($session) && $session)
+    ? route('course.assignments', ['kelas' => $kelas->id, 'session' => $session->id])
+    : '#'
+}}";
 
             function navigasiKe(nomor) {
                 let tujuan = "";

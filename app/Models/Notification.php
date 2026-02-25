@@ -2,19 +2,21 @@
 
 namespace App\Models;
 
-use Illuminate\Database\Eloquent\Factories\HasFactory;
 use Illuminate\Database\Eloquent\Model;
 
 class Notification extends Model
 {
-    use HasFactory;
-
     protected $fillable = [
-        'user_type',
-        'user_id',
+        'mahasiswa_id',
+        'type',
         'title',
         'message',
-        'type',
-        'is_read',
+        'url',
+        'is_read'
     ];
+
+    public function mahasiswa()
+    {
+        return $this->belongsTo(Mahasiswa::class);
+    }
 }

@@ -251,14 +251,14 @@
             }
 
             function bukaSession(sessionId) {
-                const url = `/mata-kuliah/{{ $kelas->id }}/topik/${sessionId}`;
-                window.location.href = url;
-            }
+    const url = "{{ route('topic.detail', ['kelas' => $kelas->id, 'session' => 'SESSION_ID']) }}";
+    window.location.href = url.replace('SESSION_ID', sessionId);
+}
 
             // DEFINE ROUTE SECARA AMAN DARI BLADE KE JS
             const urlPembelajaran = "{{ route('course.detail', ['kelas' => $kelas->id]) }}";
             const urlPresensi = "{{ (isset($session) && $session) ? route('course.attendance', ['kelas' => $kelas->id, 'session' => $session->id]) : '#' }}";
-            const urlPenugasan = "{{ route('course.assignments', ['kelas' => $kelas->id]) }}";
+           const urlPenugasan = "{{ route('course.assignments', ['kelas' => $kelas->id, 'session' => $session->id]) }}";
             const urlAnggota = "{{ route('course.members', ['kelas' => $kelas->id]) }}";
 
             function navigasiKe(nomor) {
@@ -286,7 +286,7 @@
                             teks = `Maaf, materi ${sesiTujuan.judul} saat ini masih terkunci. Silakan selesaikan materi sebelumnya.`;
                         } else {
                             teks = `Membuka materi ${sesiTujuan.judul}.`;
-                            tujuan = `/mata-kuliah/{{ $kelas->id }}/topik/${sesiTujuan.id}`; 
+                            const baseUrl = "{{ route('topic.detail', ['kelas' => $kelas->id, 'session' => 'SESSION_ID']) }}"; tujuan = baseUrl.replace('SESSION_ID', sesiTujuan.id);
                         }
                     } else {
                         teks = "Nomor topik tidak ditemukan.";

@@ -26,19 +26,29 @@ class AssignmentController extends Controller
 
     // 2. FUNGSI SHOW (MENAMPILKAN DETAIL TUGAS)
     public function show($kelasId, $assignmentId)
-    {
-        $kelas = Kelas::findOrFail($kelasId);
-        $assignment = Assignment::findOrFail($assignmentId);
-        $mahasiswaId = Auth::guard('mahasiswa')->id();
+{
+    $kelas = Kelas::findOrFail($kelasId);
 
-        $submission = Submission::with(['messages' => function($q) {
-            $q->orderBy('created_at', 'asc');
-        }])->where('assignment_id', $assignmentId)
-          ->where('mahasiswa_id', $mahasiswaId)
-          ->first();
+    $assignment = Assignment::where('kelas_id', $kelasId)
+    ->findOrFail($assignmentId);
 
-        return view('assignment_detail', compact('kelas', 'assignment', 'submission'));
-    }
+    $mahasiswaId = Auth::guard('mahasiswa')->id();
+
+    $submission = Submission::with(['messages' => function($q) {
+        $q->orderBy('created_at', 'asc');
+    }])->where('assignment_id', $assignmentId)
+      ->where('mahasiswa_id', $mahasiswaId)
+      ->first();
+
+    $session = $assignment->session;
+
+    return view('assignment_detail', compact(
+        'kelas',
+        'assignment',
+        'submission',
+        'session'
+    ));
+}
 
     // 3. FUNGSI STORE (PENGUMPULAN TUGAS)
     public function store(Request $request, $kelasId, $assignmentId)

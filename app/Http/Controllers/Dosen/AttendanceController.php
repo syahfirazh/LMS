@@ -165,6 +165,16 @@ class AttendanceController extends Controller
             );
         }
 
+        foreach ($session->kelas->mahasiswa as $mhs) {
+    notifyMahasiswa(
+        $mhs->id,
+        'attendance',
+        'Absensi Diperbarui',
+        "Presensi pertemuan {$session->urutan} telah dicatat oleh dosen.",
+        route('mahasiswa.attendance.detail', $session->id)
+    );
+}
+
         return redirect()
             ->route('dosen.attendance.history', $session->id)
             ->with('success', 'Presensi berhasil disimpan');
@@ -195,6 +205,16 @@ class AttendanceController extends Controller
                 ]
             );
         }
+
+        foreach ($session->kelas->mahasiswa as $mhs) {
+    notifyMahasiswa(
+        $mhs->id,
+        'attendance',
+        'Absensi Diperbarui',
+        "Presensi pertemuan {$session->urutan} telah dicatat oleh dosen.",
+        route('mahasiswa.attendance.detail', $session->id)
+    );
+}
 
         return redirect()
             ->route('dosen.attendance.history', $session->id)

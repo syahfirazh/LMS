@@ -7,12 +7,10 @@ use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Auth;
 use App\Models\Message;
 use App\Models\Dosen;
+use App\Models\DosenNotification;
 
 class MahasiswaMessageController extends Controller
 {
-    /**
-     * Helper: Mengambil daftar kontak dosen di Sidebar
-     */
     private function getConversations($mahasiswaId)
     {
         $allMessages = Message::where(function($q) use ($mahasiswaId) {
@@ -23,10 +21,8 @@ class MahasiswaMessageController extends Controller
 
         $conversations = [];
         foreach ($allMessages as $msg) {
-            // Tentukan ID lawan bicara (Dosen)
             $dosenId = ($msg->sender_type === 'dosen') ? $msg->sender_id : $msg->receiver_id;
             
-            // Simpan pesan terakhir per dosen untuk sidebar preview
             if (!isset($conversations[$dosenId])) {
                 $conversations[$dosenId] = collect([$msg]);
             }
@@ -35,9 +31,6 @@ class MahasiswaMessageController extends Controller
         return $conversations;
     }
 
-    /**
-     * Tampilkan halaman awal Pesan (Daftar Kontak Saja)
-     */
     public function index()
     {
         $mahasiswa = Auth::guard('mahasiswa')->user();
@@ -46,9 +39,6 @@ class MahasiswaMessageController extends Controller
         return view('messages', compact('conversations'));
     }
 
-    /**
-     * Buka obrolan dengan dosen tertentu
-     */
     public function show($dosenId)
     {
         $mahasiswa = Auth::guard('mahasiswa')->user();
@@ -69,7 +59,6 @@ class MahasiswaMessageController extends Controller
             ->orderBy('created_at', 'asc')
             ->get();
 
-        // Tandai pesan dari dosen ini sebagai sudah dibaca
         Message::where('sender_type', 'dosen')
            ->where('sender_id', $dosenId)
            ->where('receiver_type', 'mahasiswa')
@@ -77,14 +66,11 @@ class MahasiswaMessageController extends Controller
            ->where('is_read', 0)
            ->update(['is_read' => 1]);
 
-        $dosen = $dosenId; // Kirim ID dosen yang sedang aktif ke view
+        $dosen = $dosenId; 
 
         return view('messages', compact('conversations', 'chatMessages', 'dosen'));
     }
 
-    /**
-     * Kirim pesan ke dosen
-     */
     public function send(Request $request)
     {
         try {
@@ -121,8 +107,19 @@ class MahasiswaMessageController extends Controller
                 'is_read'       => 0
             ]);
 
-            // TRIGGER EVENT PUSHER (Jika Pusher sudah aktif)
-            // broadcast(new \App\Events\MessageSent($message))->toOthers();
+            // NOTIF KE DOSEN (Teks Sederhana)
+            try {
+                DosenNotification::create([
+                    'dosen_id' => $request->receiver_id,
+                    'type'     => 'info',
+                    'title'    => 'Pesan',
+                    'message'  => 'Ada 1 pesan masuk.',
+                    'url'      => route('dosen.messages.show', ['mahasiswa' => $mahasiswa->id]),
+                    'is_read'  => false,
+                ]);
+            } catch (\Exception $notifErr) {
+                \Illuminate\Support\Facades\Log::error("Gagal kirim notif chat mahasiswa: " . $notifErr->getMessage());
+            }
 
             return response()->json([
                 'success' => true,
@@ -138,5 +135,21 @@ class MahasiswaMessageController extends Controller
         } catch (\Exception $e) {
             return response()->json(['success' => false, 'error' => 'System Error: ' . $e->getMessage()]);
         }
+    }
+
+    public function search(Request $request)
+    {
+        $keyword = $request->get('q');
+        
+        if (!$keyword) {
+            return response()->json([]);
+        }
+
+        $dosens = Dosen::where('nama', 'LIKE', "%{$keyword}%")
+                       ->select('id', 'nama')
+                       ->limit(10) 
+                       ->get();
+
+        return response()->json($dosens);
     }
 }

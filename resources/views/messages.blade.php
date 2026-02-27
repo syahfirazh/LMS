@@ -24,7 +24,7 @@
     $lastMsgTextVA = $lastMsgVA ? ($lastMsgVA->body ?: ($lastMsgVA->voice_path ? 'Pesan suara' : 'Mengirim gambar')) : 'Belum ada pesan';
     $senderNameVA = ($lastMsgVA && $lastMsgVA->sender_type == 'dosen') ? $displayName : 'Anda';
 @endphp
-<html lang="id" class="h-full">
+<html lang="id">
     <head>
         <meta name="csrf-token" content="{{ csrf_token() }}">
         <meta charset="UTF-8" />
@@ -77,34 +77,34 @@
             <nav class="flex-1 p-6 space-y-3 overflow-y-auto custom-scrollbar">
                 <a href="{{ url('/dashboard') }}" onclick="navigasiKe(5)" class="flex items-center justify-between p-4 text-slate-500 hover:bg-slate-50 hover:text-slate-900 rounded-2xl font-bold transition-all">
                     <div class="flex items-center gap-4">
-                        <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2.5" d="M3 12l2-2m0 0l7-7m9 9l-2-2m0 0l-7-7m7 7v10a1 1 0 01-1 1h-3m-6 0a1 1 0 001-1v-4a1 1 0 011-1h2a1 1 0 011 1v4a1 1 0 001 1m-6 0h6"></path></svg>
+                        <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M4 6a2 2 0 012-2h2a2 2 0 012 2v2a2 2 0 01-2 2H6a2 2 0 01-2-2V6zM14 6a2 2 0 012-2h2a2 2 0 012 2v2a2 2 0 01-2 2h-2a2 2 0 01-2-2V6zM4 16a2 2 0 012-2h2a2 2 0 012 2v2a2 2 0 01-2 2H6a2 2 0 01-2-2v-2zM14 16a2 2 0 012-2h2a2 2 0 012 2v2a2 2 0 01-2 2h-2a2 2 0 01-2-2v-2z"></path></svg>
                         <span>Beranda</span>
                     </div>
-                    <span class="text-[10px] bg-slate-900 text-white px-2 py-1 rounded-lg font-black shadow-sm">5</span>
+                    <span class="text-[10px] bg-black text-white px-2 py-1 rounded-lg font-black shadow-sm">5</span>
                 </a>
 
                 <a href="{{ url('/mahasiswa/profile') }}" onclick="navigasiKe(6)" class="flex items-center justify-between p-4 text-slate-500 hover:bg-slate-50 hover:text-slate-900 rounded-2xl font-bold transition-all">
                     <div class="flex items-center gap-4">
-                        <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2.5" d="M16 7a4 4 0 11-8 0 4 4 0 018 0zM12 14a7 7 0 00-7 7h14a7 7 0 00-7-7z"></path></svg>
+                        <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M16 7a4 4 0 11-8 0 4 4 0 018 0zM12 14a7 7 0 00-7 7h14a7 7 0 00-7-7z"></path></svg>
                         <span>Profil Saya</span>
                     </div>
-                    <span class="text-[10px] bg-slate-900 text-white px-2 py-1 rounded-lg font-black shadow-sm">6</span>
+                    <span class="text-[10px] bg-black text-white px-2 py-1 rounded-lg font-black shadow-sm">6</span>
                 </a>
 
                 <a href="{{ url('/pemberitahuan') }}" onclick="navigasiKe(7)" class="flex items-center justify-between p-4 text-slate-500 hover:bg-slate-50 hover:text-slate-900 rounded-2xl font-bold transition-all">
                     <div class="flex items-center gap-4">
-                        <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2.5" d="M15 17h5l-1.405-1.405A2.032 2.032 0 0118 14.158V11a6.002 6.002 0 00-4-5.659V5a2 2 0 10-4 0v.341C7.67 6.165 6 8.388 6 11v3.159c0 .538-.214 1.055-.595 1.436L4 17h5m6 0v1a3 3 0 11-6 0v-1m6 0H9"></path></svg>
+                        <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M15 17h5l-1.405-1.405A2.032 2.032 0 0118 14.158V11a6.002 6.002 0 00-4-5.659V5a2 2 0 10-4 0v.341C7.67 6.165 6 8.388 6 11v3.159c0 .538-.214 1.055-.595 1.436L4 17h5m6 0v1a3 3 0 11-6 0v-1m6 0H9"></path></svg>
                         <span>Pemberitahuan</span>
                     </div>
-                    <span class="text-[10px] bg-slate-900 text-white px-2 py-1 rounded-lg font-black shadow-sm">7</span>
+                    <span class="text-[10px] bg-black text-white px-2 py-1 rounded-lg font-black shadow-sm">7</span>
                 </a>
 
                 <a href="{{ url('/pesan') }}" onclick="navigasiKe(8)" class="flex items-center justify-between p-4 bg-blue-50 text-blue-700 rounded-2xl font-bold transition-all shadow-sm border border-blue-100">
                     <div class="flex items-center gap-4">
-                        <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2.5" d="M8 10h.01M12 10h.01M16 10h.01M9 16H5a2 2 0 01-2-2V6a2 2 0 012-2h14a2 2 0 012 2v8a2 2 0 01-2 2h-5l-5 5v-5z"></path></svg>
+                        <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M8 10h.01M12 10h.01M16 10h.01M9 16H5a2 2 0 01-2-2V6a2 2 0 012-2h14a2 2 0 012 2v8a2 2 0 01-2 2h-5l-5 5v-5z"></path></svg>
                         <span>Pesan</span>
                     </div>
-                    <span class="text-[10px] bg-slate-900 text-white px-2 py-1 rounded-lg font-black shadow-sm">8</span>
+                    <span class="text-[10px] bg-black text-white px-2 py-1 rounded-lg font-black shadow-sm">8</span>
                 </a>
 
                 <a href="{{ url('/bantuan') }}" onclick="navigasiKe(9)" class="flex items-center justify-between p-4 text-slate-500 hover:bg-slate-50 hover:text-slate-900 rounded-2xl font-bold transition-all">
@@ -112,7 +112,7 @@
                         <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2.5" d="M8.228 9c.549-1.165 2.03-2 3.772-2 2.21 0 4 1.343 4 3 0 1.4-1.278 2.575-3.006 2.907-.542.104-.994.54-.994 1.093m0 3h.01M21 12a9 9 0 11-18 0 9 9 0 0118 0z"></path></svg>
                         <span>Bantuan</span>
                     </div>
-                    <span class="text-[10px] bg-slate-900 text-white px-2 py-1 rounded-lg font-black shadow-sm">9</span>
+                    <span class="text-[10px] bg-black text-white px-2 py-1 rounded-lg font-black shadow-sm">9</span>
                 </a>
             </nav>
 
@@ -122,7 +122,7 @@
                         <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2.5" d="M17 16l4-4m0 0l-4-4m4 4H7m6 4v1a3 3 0 01-3 3H6a3 3 0 01-3-3V7a3 3 0 013-3h4a3 3 0 013 3v1"></path></svg>
                         <span>Keluar</span>
                     </div>
-                    <span class="text-[10px] bg-slate-900 text-white px-2 py-1 rounded-lg font-black shadow-sm">0</span>
+                    <span class="text-[10px] bg-black text-white px-2 py-1 rounded-lg font-black shadow-sm">0</span>
                 </button>
             </div>
         </aside>
@@ -144,10 +144,10 @@
                         <div class="flex items-center gap-3 pr-4 border-r border-slate-200">
                             <button onclick="navigasiKe(7)" class="relative p-2 text-slate-400 hover:text-blue-600 transition-all cursor-pointer">
                                 <svg class="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M15 17h5l-1.405-1.405A2.032 2.032 0 0118 14.158V11a6.002 6.002 0 00-4-5.659V5a2 2 0 10-4 0v.341C7.67 6.165 6 8.388 6 11v3.159c0 .538-.214 1.055-.595 1.436L4 17h5m6 0v1a3 3 0 11-6 0v-1m6 0H9"></path></svg>
-                                @if($unreadCount > 0)<span class="absolute top-2 right-2 w-2 h-2 bg-red-500 rounded-full border-2 border-white"></span>@endif
+                                @if($unreadCount > 0)<span class="absolute top-2 right-2 w-2 h-2 bg-red-500 rounded-full animate-pulse border-2 border-white z-10"></span>@endif
                             </button>
                             <button onclick="navigasiKe(9)" class="p-2 text-slate-400 hover:text-blue-600 transition-all cursor-pointer relative">
-                                <svg class="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M8.228 9c.549-1.165 2.03-2 3.772-2 2.21 0 4 1.343 4 3 0 1.4-1.278 2.575-3.006 2.907-.542.104-.994.54-.994 1.093m0 3h.01M21 12a9 9 0 11-18 0 9 9 0 0118 0z"></path></svg>
+                                <svg class="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2.5" d="M8.228 9c.549-1.165 2.03-2 3.772-2 2.21 0 4 1.343 4 3 0 1.4-1.278 2.575-3.006 2.907-.542.104-.994.54-.994 1.093m0 3h.01M21 12a9 9 0 11-18 0 9 9 0 0118 0z"></path></svg>
                             </button>
                         </div>
                         <div class="hidden md:flex items-center gap-3 pl-4">
@@ -182,7 +182,7 @@
                                 <div class="p-3 {{ $activeDosenId == $d_id ? 'bg-blue-50 border border-blue-100 shadow-sm' : 'hover:bg-slate-50 border border-transparent hover:border-slate-100' }} rounded-xl flex gap-3 cursor-pointer transition-all relative">
                                     @if($isUnread) <span class="absolute top-2 right-2 w-2.5 h-2.5 bg-red-500 rounded-full animate-pulse border-2 border-white z-10"></span> @endif
                                     
-                                    <div class="absolute -left-1 -top-1 bg-slate-900 text-white text-[10px] font-black px-1.5 py-0.5 rounded-md shadow-sm z-10">{{ $voiceIdCounter }}</div>
+                                    <div class="absolute -left-1 -top-1 bg-black text-white text-[10px] font-black px-1.5 py-0.5 rounded-md shadow-sm z-10">{{ $voiceIdCounter }}</div>
 
                                     <div class="w-10 h-10 rounded-xl bg-slate-200 shrink-0 overflow-hidden border border-slate-100 flex items-center justify-center ml-1">
                                         <img src="https://ui-avatars.com/api/?name={{ urlencode($dsn->nama) }}&background=0D8ABC&color=fff" class="w-full h-full object-cover" />
@@ -267,23 +267,19 @@
                                 <input type="file" name="voice" id="voiceInput" accept="audio/webm" class="hidden">
 
                                 <div class="flex items-center gap-2 sm:gap-3">
-                                    
-                                    {{-- TEXT MESSAGE (1 - Voice to Text) --}}
                                     <div id="normalInputWrapper" class="flex-1 min-w-0 relative flex items-center bg-slate-50 p-2 sm:p-3 rounded-[1.25rem] sm:rounded-2xl border border-slate-200 transition-all">
-                                        <div class="absolute left-2 text-[10px] font-black text-white bg-slate-900 px-1.5 py-0.5 rounded-md shadow-sm">1</div>
+                                        <div class="absolute left-2 text-[10px] font-black text-white bg-black px-1.5 py-0.5 rounded-md shadow-sm">1</div>
                                         <input type="text" name="body" id="messageInput" placeholder="Sebutkan 1 untuk ketik suara..." autocomplete="off" class="w-full bg-transparent text-xs sm:text-sm font-medium text-slate-700 placeholder-slate-400 focus:outline-none transition-all py-1.5 pl-8" />
                                         <button type="button" id="cancelVoiceToTextBtn" onclick="batalKetikSuara()" class="hidden absolute right-1 sm:right-2 text-[10px] font-black uppercase text-white bg-red-500 hover:bg-red-600 px-2.5 py-1.5 rounded-lg shadow-sm transition-all cursor-pointer">Batal ✕</button>
                                     </div>
 
-                                    {{-- BUTTON IMAGE (2) --}}
                                     <div class="relative shrink-0">
                                         <button type="button" id="btnUploadImage" onclick="document.getElementById('imageInput').click()" class="w-9 h-9 sm:w-10 sm:h-10 rounded-xl flex items-center justify-center text-slate-400 hover:text-blue-600 hover:bg-white transition-all cursor-pointer shadow-sm border border-transparent hover:border-blue-100">
                                             <svg class="w-5 h-5 sm:w-6 sm:h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M4 16l4.586-4.586a2 2 0 012.828 0L16 16m-2-2l1.586-1.586a2 2 0 012.828 0L20 14m-6-6h.01M6 20h12a2 2 0 002-2V6a2 2 0 00-2-2H6a2 2 0 00-2 2v12a2 2 0 002 2z"></path></svg>
                                         </button>
-                                        <span class="absolute -top-1.5 -right-1.5 bg-slate-900 text-white text-[8px] font-black px-1.5 py-0.5 rounded-md shadow-sm border border-white">2</span>
+                                        <span class="absolute -top-1.5 -right-1.5 bg-black text-white text-[8px] font-black px-1.5 py-0.5 rounded-md shadow-sm border border-white">2</span>
                                     </div>
 
-                                    {{-- RECORDING STATE UI (Tersembunyi) --}}
                                     <div id="recordingWrapper" class="hidden flex-1 items-center justify-between px-2">
                                         <div class="flex items-center gap-2">
                                             <span class="w-2 h-2 sm:w-2.5 sm:h-2.5 bg-red-500 rounded-full animate-pulse shadow-[0_0_8px_rgba(239,68,68,0.8)]"></span>
@@ -295,21 +291,19 @@
                                         <button type="button" id="cancelRecordBtn" class="text-[9px] sm:text-[10px] font-black uppercase text-slate-400 hover:text-red-500 px-1 sm:px-2 transition-colors cursor-pointer">Batal</button>
                                     </div>
 
-                                    {{-- BUTTON VOICE NOTE (3) --}}
                                     <div class="relative shrink-0">
                                         <button type="button" id="recordBtn" class="w-9 h-9 sm:w-10 sm:h-10 rounded-xl flex items-center justify-center text-slate-400 hover:text-red-500 hover:bg-red-50 transition-all cursor-pointer border border-transparent hover:border-red-100 shadow-sm">
                                             <svg class="w-4 h-4 sm:w-5 sm:h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 18.75a6 6 0 006-6v-1.5m-6 7.5a6 6 0 01-6-6v-1.5m6 7.5v3.75m-3.75 0h7.5M12 15.75a3 3 0 01-3-3V4.5a3 3 0 116 0v8.25a3 3 0 01-3 3z"></path></svg>
                                         </button>
-                                        <span class="absolute -top-1.5 -right-1.5 bg-slate-900 text-white text-[8px] font-black px-1.5 py-0.5 rounded-md shadow-sm border border-white">3</span>
+                                        <span class="absolute -top-1.5 -right-1.5 bg-black text-white text-[8px] font-black px-1.5 py-0.5 rounded-md shadow-sm border border-white">3</span>
                                     </div>
 
-                                    {{-- BUTTON SEND (4) --}}
                                     <div class="relative shrink-0">
                                         <button type="submit" id="sendChatBtn" class="w-10 h-9 sm:w-12 sm:h-10 rounded-xl bg-blue-600 text-white flex items-center justify-center hover:bg-blue-700 transition-transform transform hover:scale-105 active:scale-95 shadow-md shadow-blue-200 cursor-pointer">
                                             <span id="sendIcon"><svg class="w-4 h-4 sm:w-5 sm:h-5 transform rotate-90 ml-0.5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2.5" d="M12 19l9 2-9-18-9 18 9-2zm0 0v-8"></path></svg></span>
                                             <span id="sendLoading" class="hidden"><svg class="w-4 h-4 sm:w-5 sm:h-5 animate-spin text-white" fill="none" viewBox="0 0 24 24"><circle class="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" stroke-width="4"></circle><path class="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8v8H4z"></path></svg></span>
                                         </button>
-                                        <span class="absolute -top-1.5 -right-1.5 bg-slate-900 text-white text-[8px] font-black px-1.5 py-0.5 rounded-md shadow-sm border border-white z-10">4</span>
+                                        <span class="absolute -top-1.5 -right-1.5 bg-black text-white text-[8px] font-black px-1.5 py-0.5 rounded-md shadow-sm border border-white z-10">4</span>
                                     </div>
                                 </div>
                             </form>
@@ -352,10 +346,7 @@
                 document.getElementById("mobileBackdrop").classList.toggle("hidden");
             }
 
-            // ==========================================
-            // LOGIKA AUDIO WAVESURFER
-            // ==========================================
-            let isAutoPlaying = false; // Flag untuk mencegah Voice Assistant ngomong saat audio putar otomatis
+            let isAutoPlaying = false; 
 
             const wavesurfers = {};
             function initWaveSurfer(containerId, audioUrl, isMe) {
@@ -368,7 +359,6 @@
                 wavesurfers[containerId] = ws;
                 ws.on('finish', () => { 
                     document.getElementById('btn-' + containerId).innerHTML = '▶'; 
-                    // Jika selesai autoplay, VA tanya mau dibalas apa
                     if(isAutoPlaying) {
                         isAutoPlaying = false;
                         setTimeout(() => { bicara("Audio selesai. Apakah ingin membalas? Sebutkan satu untuk ketik, atau tiga untuk suara.", () => { mulaiMendengar(); }); }, 800);
@@ -390,9 +380,6 @@
                     initWaveSurfer(el.id, el.getAttribute('data-audio'), el.parentElement.classList.contains('border-white/30'));
                 });
 
-                // ==========================================
-                // REAL-TIME (LARAVEL ECHO)
-                // ==========================================
                 if(window.Echo && isActiveChat) {
                     window.Echo.private(`chat.mahasiswa.${mahasiswaId}`)
                         .listen('.message.sent', (e) => {
@@ -413,7 +400,6 @@
                             chatBox.insertAdjacentHTML('beforeend', html);
                             scrollBottom();
 
-                            // JIKA PESAN BARU ADALAH VOICE NOTE, LANGSUNG PUTAR OTOMATIS
                             if (e.message.voice_path) {
                                 setTimeout(() => {
                                     initWaveSurfer(uniqueWaveId, `/storage/${e.message.voice_path}`, false);
@@ -429,9 +415,6 @@
                         });
                 }
 
-                // ==========================================
-                // LOGIKA PENCARIAN DOSEN
-                // ==========================================
                 let searchInput = document.getElementById("searchInput");
                 let contactList = document.getElementById("contactList");
                 let originalContactHTML = contactList ? contactList.innerHTML : '';
@@ -450,12 +433,12 @@
                             bicara(`Tidak ditemukan dosen bernama ${keyword}.`); return; 
                         }
                         
-                        let html = ''; let searchVoiceId = 30; // Hasil cari mulai dari 30
+                        let html = ''; let searchVoiceId = 30; 
                         data.forEach(dsn => {
                             html += `
                             <a href="{{ url('/messages') }}/${dsn.id}" data-voice-id="${searchVoiceId}" class="block safe-fade-in relative mt-2">
                                 <div class="p-3 hover:bg-slate-50 border border-transparent hover:border-slate-100 rounded-xl flex gap-3 cursor-pointer transition-all">
-                                    <div class="absolute -left-1 -top-1 bg-slate-900 text-white text-[10px] font-black px-1.5 py-0.5 rounded-md shadow-sm z-10">${searchVoiceId}</div>
+                                    <div class="absolute -left-1 -top-1 bg-black text-white text-[10px] font-black px-1.5 py-0.5 rounded-md shadow-sm z-10">${searchVoiceId}</div>
                                     <div class="w-10 h-10 rounded-xl bg-slate-200 shrink-0 overflow-hidden border border-slate-100 flex items-center justify-center ml-1">
                                         <img src="https://ui-avatars.com/api/?name=${encodeURIComponent(dsn.nama)}&background=0D8ABC&color=fff" class="w-full h-full object-cover" />
                                     </div>
@@ -474,9 +457,6 @@
 
                 if(searchInput) searchInput.addEventListener("input", function() { window.lakukanPencarian(this.value.trim()); });
 
-                // ==========================================
-                // INPUT GAMBAR & VOICE NOTE
-                // ==========================================
                 let imageInput = document.getElementById("imageInput");
                 let messageInput = document.getElementById("messageInput");
                 let voiceInput = document.getElementById("voiceInput");
@@ -551,9 +531,6 @@
                     });
                 }
 
-                // ==========================================
-                // SUBMIT AJAX
-                // ==========================================
                 let form = document.getElementById("chatForm");
                 if(form) {
                     form.addEventListener("submit", async function(e){
@@ -591,7 +568,6 @@
                                 chatBox.insertAdjacentHTML('beforeend', html); scrollBottom();
                                 if(data.message.voice_path) setTimeout(() => initWaveSurfer(uniqueWaveId, `/storage/${data.message.voice_path}`, true), 100);
                                 
-                                // ARAHAN SETELAH KIRIM
                                 bicara("Pesan berhasil terkirim. Apa selanjutnya? Sebutkan satu untuk membalas lagi, atau lima untuk kembali ke beranda.");
                             } else { alert("Gagal mengirim pesan."); }
                         } catch (err) { alert("Terjadi kesalahan sistem."); } finally {
@@ -601,9 +577,6 @@
                 }
             });
 
-            // ==========================================
-            // LOGIKA VOICE ASSISTANT CERDAS & KONFIRMASI KETIK
-            // ==========================================
             const statusDesc = document.getElementById("status-desc");
             const waveBars = document.querySelectorAll(".wave-bar");
             const synth = window.speechSynthesis;
@@ -651,7 +624,6 @@
                 else if (nomor === 9) { tujuan = "{{ url('/bantuan') }}"; teks = "Membuka Bantuan."; }
                 else if (nomor === 0) { tujuan = "{{ url('/logout') }}"; teks = "Keluar."; }
                 
-                // Fitur Chat
                 else if (nomor === 1) {
                     modeKetikSuara = true;
                     menungguKonfirmasiKirim = false;
@@ -765,7 +737,6 @@
 
             window.onload = () => {
                 let sapaanAkhir = "Sebutkan satu untuk mengetik pesan, dua untuk gambar, atau tiga untuk suara.";
-                
                 document.body.addEventListener("click", () => {}, { once: true });
 
                 setTimeout(() => {
@@ -780,9 +751,8 @@
                     } else {
                         const isLastMsgVoice = {{ $hasVoice }};
                         
-                        // JIKA PESAN TERAKHIR ADALAH VOICE NOTE
                         if (isLastMsgVoice) {
-                            isAutoPlaying = true; // Set flag agar VA nunggu audio selesai
+                            isAutoPlaying = true; 
                             let sapaan = `Obrolan dengan ${currentDosenName}. Pesan terakhir adalah suara. Memutar pesan.`;
                             bicara(sapaan, () => {
                                 const waveId = "{{ $lastWaveId }}";
@@ -791,7 +761,6 @@
                                     if (playPromise !== undefined) {
                                         playPromise.then(_ => {
                                             document.getElementById('btn-' + waveId).innerHTML = '⏸';
-                                            // Pertanyaan lanjut akan ditangani di event 'finish' wavesurfer
                                         }).catch(error => {
                                             isAutoPlaying = false;
                                             bicara("Browser memblokir pemutaran otomatis. Silakan ketuk layar sekali.", () => { mulaiMendengar(); });

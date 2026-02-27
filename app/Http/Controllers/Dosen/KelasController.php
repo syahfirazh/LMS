@@ -5,13 +5,21 @@ namespace App\Http\Controllers\Dosen;
 use App\Http\Controllers\Controller;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Auth;
-use Illuminate\Support\Facades\Storage; // <--- WAJIB TAMBAHKAN INI
+use Illuminate\Support\Facades\Storage;
 use App\Models\Kelas;
 use App\Models\MataKuliah;
-use Illuminate\Support\Str;
 
 class KelasController extends Controller
 {
+    // =========================================================
+    // FALLBACK INDEX (PENGAMAN JIKA NYASAR)
+    // =========================================================
+    public function index()
+    {
+        // Mengarahkan kembali ke halaman daftar Mata Kuliah
+        return redirect()->route('dosen.courses');
+    }
+
     // =========================================================
     // STORE KELAS BARU
     // =========================================================
@@ -24,8 +32,8 @@ class KelasController extends Controller
             'hari'             => 'required|string',
             'jam_mulai'        => 'required',
             'jam_selesai'      => 'required',
-            'ruangan'          => 'nullable|string', // Ubah ke nullable
-            'sampul'           => 'nullable|image|mimes:jpeg,png,jpg,webp|max:2048', // VALIDASI FOTO
+            'ruangan'          => 'nullable|string', 
+            'sampul'           => 'nullable|image|mimes:jpeg,png,jpg,webp|max:2048', 
         ]);
 
         $dosenId = Auth::guard('dosen')->id();
@@ -42,11 +50,6 @@ class KelasController extends Controller
             ]
         );
 
-        // GENERATE KODE AKSES UNIK
-        do {
-            $kodeAkses = strtoupper(Str::random(3)) . '-' . rand(10, 99);
-        } while (Kelas::where('kode_akses', $kodeAkses)->exists());
-
         // PROSES UPLOAD FOTO SAMPUL
         $sampulPath = null;
         if ($request->hasFile('sampul')) {
@@ -57,13 +60,13 @@ class KelasController extends Controller
         Kelas::create([
             'dosen_id'       => $dosenId,
             'mata_kuliah_id' => $mataKuliah->id,
-            'kode_kelas'     => $request->kode_kelas,
-            'kode_akses'     => $kodeAkses,
+            'kode_kelas'     => strtoupper($request->kode_kelas),
+            'kode_akses'     => strtoupper($request->kode_kelas), // Kunci: Disamakan dengan kode kelas
             'hari'           => $request->hari,
             'jam_mulai'      => $request->jam_mulai,
             'jam_selesai'    => $request->jam_selesai,
             'ruangan'        => $request->ruangan ?? '-',
-            'sampul'         => $sampulPath, // SIMPAN PATH FOTO
+            'sampul'         => $sampulPath,
         ]);
 
         return back()->with('success', 'Kelas berhasil dibuat');
@@ -108,7 +111,8 @@ class KelasController extends Controller
         }
 
         // Update data lainnya
-        $kelas->kode_kelas  = $request->kode_kelas;
+        $kelas->kode_kelas  = strtoupper($request->kode_kelas);
+        $kelas->kode_akses  = strtoupper($request->kode_kelas); // Update juga kode akses jika kode kelas berubah
         $kelas->hari        = $request->hari;
         $kelas->jam_mulai   = $request->jam_mulai;
         $kelas->jam_selesai = $request->jam_selesai;

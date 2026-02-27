@@ -1,5 +1,5 @@
 <!DOCTYPE html>
-<html lang="id" class="h-full">
+<html lang="id">
     <head>
         <meta charset="UTF-8" />
         <meta
@@ -33,7 +33,7 @@
     </head>
 
     <body
-        class="m-0 font-['Plus_Jakarta_Sans'] bg-[#f8fafc] min-h-full flex flex-col lg:flex-row overflow-hidden border-box text-slate-800"
+        class="m-0 font-['Plus_Jakarta_Sans'] bg-[#f8fafc] min-h-screen flex flex-col lg:flex-row border-box text-slate-800"
     >
     @php
     if (!isset($mahasiswa)) {
@@ -112,7 +112,7 @@
                         <span>Beranda</span>
                     </div>
                     <span
-                        class="text-[10px] bg-slate-100 text-slate-500 px-2 py-1 rounded-lg font-black"
+                        class="text-[10px] bg-black text-white px-2 py-1 rounded-lg font-black shadow-sm"
                         >5</span
                     >
                 </a>
@@ -139,7 +139,7 @@
                         <span>Profil Saya</span>
                     </div>
                     <span
-                        class="text-[10px] bg-blue-200 text-blue-800 px-2 py-1 rounded-lg font-black"
+                        class="text-[10px] bg-black text-white px-2 py-1 rounded-lg font-black shadow-sm"
                         >6</span
                     >
                 </a>
@@ -166,7 +166,7 @@
                         <span>Pemberitahuan</span>
                     </div>
                     <span
-                        class="text-[10px] bg-slate-100 text-slate-500 px-2 py-1 rounded-lg font-black"
+                        class="text-[10px] bg-black text-white px-2 py-1 rounded-lg font-black shadow-sm"
                         >7</span
                     >
                 </a>
@@ -193,7 +193,7 @@
                         <span>Pesan</span>
                     </div>
                     <span
-                        class="text-[10px] bg-slate-100 text-slate-500 px-2 py-1 rounded-lg font-black"
+                        class="text-[10px] bg-black text-white px-2 py-1 rounded-lg font-black shadow-sm"
                         >8</span
                     >
                 </a>
@@ -220,7 +220,7 @@
                         <span>Bantuan</span>
                     </div>
                     <span
-                        class="text-[10px] bg-slate-100 text-slate-500 px-2 py-1 rounded-lg font-black"
+                        class="text-[10px] bg-black text-white px-2 py-1 rounded-lg font-black shadow-sm"
                         >9</span
                     >
                 </a>
@@ -248,7 +248,7 @@
                         <span>Keluar</span>
                     </div>
                     <span
-                        class="text-[10px] bg-red-200 text-red-800 px-2 py-1 rounded-lg font-black"
+                        class="text-[10px] bg-black text-white px-2 py-1 rounded-lg font-black shadow-sm"
                         >0</span
                     >
                 </button>
@@ -256,7 +256,7 @@
         </aside>
 
         <main
-            class="flex-1 h-screen overflow-y-auto flex flex-col relative lg:ml-80 transition-all duration-300 custom-scrollbar"
+            class="flex-1 min-h-screen flex flex-col relative lg:ml-80 transition-all duration-300 custom-scrollbar"
         >
             <div
                 class="absolute top-0 left-0 w-full h-80 bg-gradient-to-b from-blue-50 to-transparent -z-10"

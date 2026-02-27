@@ -1,5 +1,5 @@
 <!DOCTYPE html>
-<html lang="id" class="h-full">
+<html lang="id">
     <head>
         <meta charset="UTF-8" />
         <meta
@@ -32,7 +32,7 @@
         </style>
     </head>
     <body
-        class="m-0 font-['Plus_Jakarta_Sans'] bg-[#f8fafc] min-h-full flex flex-col lg:flex-row overflow-hidden border-box text-slate-800"
+        class="m-0 font-['Plus_Jakarta_Sans'] bg-[#f8fafc] min-h-screen flex flex-col lg:flex-row border-box text-slate-800 custom-scrollbar"
     >
         <div
             id="mobileBackdrop"
@@ -99,14 +99,14 @@
                             <path
                                 stroke-linecap="round"
                                 stroke-linejoin="round"
-                                stroke-width="2.5"
-                                d="M3 12l2-2m0 0l7-7m9 9l-2-2m0 0l-7-7m7 7v10a1 1 0 01-1 1h-3m-6 0a1 1 0 001-1v-4a1 1 0 011-1h2a1 1 0 011 1v4a1 1 0 001 1m-6 0h6"
+                                stroke-width="2"
+                                d="M4 6a2 2 0 012-2h2a2 2 0 012 2v2a2 2 0 01-2 2H6a2 2 0 01-2-2V6zM14 6a2 2 0 012-2h2a2 2 0 012 2v2a2 2 0 01-2 2h-2a2 2 0 01-2-2V6zM4 16a2 2 0 012-2h2a2 2 0 012 2v2a2 2 0 01-2 2H6a2 2 0 01-2-2v-2zM14 16a2 2 0 012-2h2a2 2 0 012 2v2a2 2 0 01-2 2h-2a2 2 0 01-2-2v-2z"
                             ></path>
                         </svg>
                         <span>Beranda</span>
                     </div>
                     <span
-                        class="text-[10px] bg-slate-100 text-slate-500 px-2 py-1 rounded-lg font-black"
+                        class="text-[10px] bg-black text-white px-2 py-1 rounded-lg font-black shadow-sm"
                         >5</span
                     >
                 </a>
@@ -126,14 +126,14 @@
                             <path
                                 stroke-linecap="round"
                                 stroke-linejoin="round"
-                                stroke-width="2.5"
+                                stroke-width="2"
                                 d="M16 7a4 4 0 11-8 0 4 4 0 018 0zM12 14a7 7 0 00-7 7h14a7 7 0 00-7-7z"
                             ></path>
                         </svg>
                         <span>Profil Saya</span>
                     </div>
                     <span
-                        class="text-[10px] bg-slate-100 text-slate-500 px-2 py-1 rounded-lg font-black"
+                        class="text-[10px] bg-black text-white px-2 py-1 rounded-lg font-black shadow-sm"
                         >6</span
                     >
                 </a>
@@ -153,14 +153,14 @@
                             <path
                                 stroke-linecap="round"
                                 stroke-linejoin="round"
-                                stroke-width="2.5"
+                                stroke-width="2"
                                 d="M15 17h5l-1.405-1.405A2.032 2.032 0 0118 14.158V11a6.002 6.002 0 00-4-5.659V5a2 2 0 10-4 0v.341C7.67 6.165 6 8.388 6 11v3.159c0 .538-.214 1.055-.595 1.436L4 17h5m6 0v1a3 3 0 11-6 0v-1m6 0H9"
                             ></path>
                         </svg>
                         <span>Pemberitahuan</span>
                     </div>
                     <span
-                        class="text-[10px] bg-slate-100 text-slate-500 px-2 py-1 rounded-lg font-black"
+                        class="text-[10px] bg-black text-white px-2 py-1 rounded-lg font-black shadow-sm"
                         >7</span
                     >
                 </a>
@@ -180,14 +180,14 @@
                             <path
                                 stroke-linecap="round"
                                 stroke-linejoin="round"
-                                stroke-width="2.5"
+                                stroke-width="2"
                                 d="M8 10h.01M12 10h.01M16 10h.01M9 16H5a2 2 0 01-2-2V6a2 2 0 012-2h14a2 2 0 012 2v8a2 2 0 01-2 2h-5l-5 5v-5z"
                             ></path>
                         </svg>
                         <span>Pesan</span>
                     </div>
                     <span
-                        class="text-[10px] bg-slate-100 text-slate-500 px-2 py-1 rounded-lg font-black"
+                        class="text-[10px] bg-black text-white px-2 py-1 rounded-lg font-black shadow-sm"
                         >8</span
                     >
                 </a>
@@ -214,7 +214,7 @@
                         <span>Bantuan</span>
                     </div>
                     <span
-                        class="text-[10px] bg-blue-200 text-blue-800 px-2 py-1 rounded-lg font-black"
+                        class="text-[10px] bg-black text-white px-2 py-1 rounded-lg font-black shadow-sm"
                         >9</span
                     >
                 </a>
@@ -242,7 +242,7 @@
                         <span>Keluar</span>
                     </div>
                     <span
-                        class="text-[10px] bg-red-200 text-red-800 px-2 py-1 rounded-lg font-black"
+                        class="text-[10px] bg-black text-white px-2 py-1 rounded-lg font-black shadow-sm"
                         >0</span
                     >
                 </button>
@@ -250,7 +250,7 @@
         </aside>
 
         <main
-            class="flex-1 h-screen overflow-y-auto flex flex-col relative bg-slate-50 transition-all duration-300"
+            class="flex-1 min-h-screen flex flex-col relative bg-slate-50 transition-all duration-300 custom-scrollbar"
         >
             <div
                 class="absolute top-0 left-0 w-full h-80 bg-gradient-to-b from-blue-50 to-transparent -z-10"
@@ -333,13 +333,12 @@
                                     <path
                                         stroke-linecap="round"
                                         stroke-linejoin="round"
-                                        stroke-width="2"
+                                        stroke-width="2.5"
                                         d="M8.228 9c.549-1.165 2.03-2 3.772-2 2.21 0 4 1.343 4 3 0 1.4-1.278 2.575-3.006 2.907-.542.104-.994.54-.994 1.093m0 3h.01M21 12a9 9 0 11-18 0 9 9 0 0118 0z"
                                     ></path>
                                 </svg>
                             </button>
                         </div>
-
                         <div class="hidden md:flex items-center gap-3 pl-4">
                             <div
                                 id="wave-container"
@@ -387,15 +386,13 @@
                                 angka menu untuk berpindah halaman secara
                                 instan.
                             </p>
-
                             <div class="grid grid-cols-4 gap-4">
                                 <div
                                     class="bg-white/10 p-3 rounded-2xl border border-white/20 text-center backdrop-blur-md"
                                 >
                                     <span class="block text-2xl font-black"
                                         >5</span
-                                    >
-                                    <span
+                                    ><span
                                         class="text-[9px] font-bold uppercase tracking-widest opacity-80"
                                         >Beranda</span
                                     >
@@ -405,8 +402,7 @@
                                 >
                                     <span class="block text-2xl font-black"
                                         >6</span
-                                    >
-                                    <span
+                                    ><span
                                         class="text-[9px] font-bold uppercase tracking-widest opacity-80"
                                         >Profil</span
                                     >
@@ -416,8 +412,7 @@
                                 >
                                     <span class="block text-2xl font-black"
                                         >7</span
-                                    >
-                                    <span
+                                    ><span
                                         class="text-[9px] font-bold uppercase tracking-widest opacity-80"
                                         >Notif</span
                                     >
@@ -427,15 +422,13 @@
                                 >
                                     <span class="block text-2xl font-black"
                                         >0</span
-                                    >
-                                    <span
+                                    ><span
                                         class="text-[9px] font-bold uppercase tracking-widest opacity-80"
                                         >Keluar</span
                                     >
                                 </div>
                             </div>
                         </div>
-
                         <div class="hidden lg:flex justify-center">
                             <div
                                 class="w-64 h-64 bg-white/10 rounded-full flex items-center justify-center border-4 border-white/20 relative"
@@ -608,12 +601,9 @@
         </main>
 
         <script src="https://unpkg.com/aos@2.3.1/dist/aos.js"></script>
-
         <script>
-            // INIT ANIMASI AOS
             AOS.init({ once: true, easing: "ease-out-cubic" });
 
-            // FUNGSI TOGGLE SIDEBAR MOBILE
             function toggleSidebar() {
                 const sidebar = document.getElementById("sidebar");
                 const backdrop = document.getElementById("mobileBackdrop");
@@ -621,13 +611,9 @@
                 backdrop.classList.toggle("hidden");
             }
 
-            // ==========================================
-            // LOGIKA VOICE ASSISTANT
-            // ==========================================
             const statusDesc = document.getElementById("status-desc");
             const waveBars = document.querySelectorAll(".wave-bar");
             const synth = window.speechSynthesis;
-
             const SpeechRec =
                 window.webkitSpeechRecognition || window.SpeechRecognition;
             let rec = null;
@@ -651,15 +637,10 @@
             }
 
             let interval;
-
-            // FUNGSI BICARA DENGAN PENGATURAN KECEPATAN DARI LOCAL STORAGE
             function bicara(teks, callback) {
                 synth.cancel();
-
                 const utter = new SpeechSynthesisUtterance(teks);
                 utter.lang = "id-ID";
-
-                // Ambil kecepatan suara dari pengaturan
                 const savedRate = localStorage.getItem("speechRate");
                 utter.rate = savedRate ? parseFloat(savedRate) : 1.0;
 
@@ -678,7 +659,6 @@
                 synth.speak(utter);
             }
 
-            // FUNGSI NAVIGASI VOICE
             function navigasiKe(nomor) {
                 let tujuan = "";
                 let teks = "";
@@ -765,16 +745,13 @@
                 }
             }
 
-            // AUTO-START KETIKA HALAMAN DIMUAT
             window.onload = () => {
-                // Teks Penjelasan Detail digabung menjadi instruksi panjang yang natural
                 const orientasi =
                     "Halo Ridwan, ini adalah Pusat Bantuan. Anda dapat membaca panduan atau melihat solusi dari masalah umum. Silakan sebutkan angka berikut untuk memilih menu di samping: lima untuk Beranda, enam untuk Profil, tujuh untuk Pemberitahuan, delapan untuk Pesan, dan nol untuk Keluar. Menu apa yang ingin Anda buka?";
 
                 document.body.addEventListener("click", () => {}, {
                     once: true,
                 });
-
                 setTimeout(() => {
                     bicara(orientasi, () => {
                         mulaiMendengar();

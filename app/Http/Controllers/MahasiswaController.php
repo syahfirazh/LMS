@@ -4,14 +4,15 @@ namespace App\Http\Controllers;
 
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Auth;
+use Illuminate\Support\Facades\Log;
 use App\Models\Kelas;
 use App\Models\CourseSession;
 use App\Models\Discussion; 
-use App\Models\Message;
 use App\Models\Dosen;
 use App\Models\Submission; 
 use App\Models\SubmissionMessage; 
 use App\Models\Notification;
+use App\Models\DosenNotification;
 use App\Models\Assignment;
 
 class MahasiswaController extends Controller
@@ -21,6 +22,7 @@ class MahasiswaController extends Controller
     // ============================
     public function index()
     {
+        /** @var \App\Models\Mahasiswa $mahasiswa */
         $mahasiswa = Auth::guard('mahasiswa')->user();
 
         if (!$mahasiswa) {
@@ -76,11 +78,12 @@ class MahasiswaController extends Controller
             if (method_exists($sesi, 'materis') && $sesi->materis()->exists()) {
                 $completedSession++;
             } else {
-                break;
+                break; 
             }
         }
 
         $progress = $totalSession > 0 ? round(($completedSession / $totalSession) * 100) : 0;
+        
         $session = $kelas->courseSessions->first();
 
         return view('course_detail', compact('kelas', 'progress', 'completedSession', 'totalSession', 'session'));
@@ -151,105 +154,140 @@ class MahasiswaController extends Controller
     // CHAT DISKUSI PRIVAT TUGAS 
     // ============================
     public function sendMessage(Request $request, $kelasId, $assignmentId)
-{
-    $request->validate([
-        'message' => 'nullable|string',
-        'image'   => 'nullable|image|max:2048',
-        'voice'   => 'nullable|file|max:5120',
-    ]);
+    {
+        try {
+            $request->validate([
+                'message' => 'nullable|string',
+                'image'   => 'nullable|image|max:2048',
+                'voice'   => 'nullable|file|max:5120',
+            ]);
 
-    $mahasiswaId = auth()->guard('mahasiswa')->id();
+            /** @var \App\Models\Mahasiswa $mahasiswa */
+            $mahasiswa = Auth::guard('mahasiswa')->user();
+            $mahasiswaId = $mahasiswa->id;
 
-    $assignment = \App\Models\Assignment::with('session.kelas')
-        ->findOrFail($assignmentId);
+            $kelasData = Kelas::findOrFail($kelasId);
+            $dosenId = $kelasData->dosen_id;
 
-    $kelas   = $assignment->session->kelas;
-    $dosenId = $kelas->dosen_id;
+            $submission = Submission::firstOrCreate([
+                'assignment_id' => $assignmentId,
+                'mahasiswa_id'  => $mahasiswaId
+            ]);
 
-    $submission = \App\Models\Submission::firstOrCreate([
-        'assignment_id' => $assignmentId,
-        'mahasiswa_id'  => $mahasiswaId
-    ]);
+            $pathImage = $request->hasFile('image')
+                ? $request->file('image')->store('diskusi_tugas/images', 'public')
+                : null;
 
-    $pathImage = $request->hasFile('image')
-        ? $request->file('image')->store('diskusi_tugas/images', 'public')
-        : null;
+            $pathVoice = $request->hasFile('voice')
+                ? $request->file('voice')->store('diskusi_tugas/voices', 'public')
+                : null;
 
-    $pathVoice = $request->hasFile('voice')
-        ? $request->file('voice')->store('diskusi_tugas/voices', 'public')
-        : null;
+            if (!$request->message && !$pathImage && !$pathVoice) {
+                if ($request->ajax() || $request->wantsJson()) {
+                    return response()->json(['success' => false, 'error' => 'Pesan tidak boleh kosong.']);
+                }
+                return back()->with('error', 'Pesan tidak boleh kosong.');
+            }
 
-    if (!$request->message && !$pathImage && !$pathVoice) {
-        return back()->with('error', 'Pesan tidak boleh kosong.');
+            $submissionMessage = SubmissionMessage::create([
+                'submission_id' => $submission->id,
+                'from'          => 'mahasiswa',
+                'body'          => $request->message,
+                'image'         => $pathImage,
+                'voice'         => $pathVoice,
+            ]);
+
+            // NOTIF KE DOSEN (Teks Sederhana)
+            try {
+                DosenNotification::create([
+                    'dosen_id' => $dosenId,
+                    'type'     => 'info',
+                    'title'    => 'Diskusi Tugas',
+                    'message'  => 'Ada 1 pesan diskusi tugas.',
+                    'url'      => route('dosen.assignment.grade', ['kelas' => $kelasId, 'assignment' => $assignmentId, 'mahasiswa' => $mahasiswaId]),
+                    'is_read'  => false,
+                ]);
+            } catch (\Exception $notifErr) {
+                Log::error("Gagal kirim Notif Chat Tugas: " . $notifErr->getMessage());
+            }
+
+            if ($request->ajax() || $request->wantsJson()) {
+                $fotoPath = $mahasiswa->foto_profil ?? $mahasiswa->foto ?? null;
+                $avatarUrl = $fotoPath ? asset('storage/' . $fotoPath) : null;
+
+                return response()->json([
+                    'success' => true,
+                    'diskusi' => [
+                        'id'            => $submissionMessage->id,
+                        'message'       => $submissionMessage->body,
+                        'image'         => $submissionMessage->image ? asset('storage/' . $submissionMessage->image) : null,
+                        'voice'         => $submissionMessage->voice ? asset('storage/' . $submissionMessage->voice) : null,
+                        'time'          => $submissionMessage->created_at->format('H:i'),
+                        'from'          => 'mahasiswa',
+                        'sender_avatar' => $avatarUrl, 
+                    ]
+                ]);
+            }
+
+            return back()->with('success', 'Pesan berhasil dikirim.');
+
+        } catch (\Exception $e) {
+            Log::error("Chat Tugas Error: " . $e->getMessage());
+            if ($request->ajax() || $request->wantsJson()) {
+                return response()->json(['success' => false, 'error' => 'System Error: ' . $e->getMessage()], 500);
+            }
+            return back()->with('error', 'Terjadi kesalahan sistem.');
+        }
     }
 
-    \App\Models\SubmissionMessage::create([
-        'submission_id' => $submission->id,
-        'from'          => 'mahasiswa',
-        'body'          => $request->message,
-        'image'         => $pathImage,
-        'voice'         => $pathVoice,
-    ]);
-
-    // 🔔 NOTIF KE DOSEN
-    \App\Models\Notification::create([
-        'user_id'   => $dosenId,
-        'user_type' => 'dosen',
-        'type'      => 'info',
-        'title'     => 'Pesan Diskusi Tugas',
-        'message'   => 'Mahasiswa <b>' . auth()->guard('mahasiswa')->user()->name . '</b> mengirim pesan pada diskusi tugas.',
-        'url'       => route('dosen.assignment.recap', $kelas->id),
-        'is_read'   => false,
-    ]);
-
-    return back()->with('success', 'Pesan berhasil dikirim.');
-}
-
+    // ============================
+    // KUMPULKAN TUGAS
+    // ============================
     public function submitAssignment(Request $request, $kelas, $assignment)
-{
-    $request->validate([
-        'file' => 'nullable|file|mimes:pdf,doc,docx,zip|max:10240',
-        'text_submission' => 'nullable|string',
-        'voice_submission' => 'nullable|file|mimes:webm|max:10240',
-    ]);
+    {
+        $request->validate([
+            'file' => 'nullable|file|mimes:pdf,doc,docx,zip|max:10240',
+            'text_submission' => 'nullable|string',
+            'voice_submission' => 'nullable|file|mimes:webm|max:10240',
+        ]);
 
-    $assignmentData = \App\Models\Assignment::with('kelas')->findOrFail($assignment);
+        $assignmentData = Assignment::with('kelas')->findOrFail($assignment);
+        $kelasData = $assignmentData->kelas;
+        $dosenId   = $kelasData->dosen_id;
 
-    $kelasData = $assignmentData->kelas;
-    $dosenId   = $kelasData->dosen_id;
+        $filePath = null;
+        if ($request->hasFile('file')) {
+            $filePath = $request->file('file')->store('submissions/files', 'public');
+        }
 
-    // Upload file jika ada
-    $filePath = null;
-    if ($request->hasFile('file')) {
-        $filePath = $request->file('file')->store('submissions/files', 'public');
+        $voicePath = null;
+        if ($request->hasFile('voice_submission')) {
+            $voicePath = $request->file('voice_submission')->store('submissions/voices', 'public');
+        }
+
+        Submission::create([
+            'assignment_id'   => $assignmentData->id,
+            'mahasiswa_id'    => auth()->guard('mahasiswa')->id(),
+            'file_path'       => $filePath,
+            'text_submission' => $request->text_submission,
+            'voice_path'      => $voicePath,
+            'status'          => 'submitted',
+        ]);
+
+        // NOTIF KE DOSEN (Teks Sederhana)
+        try {
+            DosenNotification::create([
+                'dosen_id' => $dosenId,
+                'type'     => 'success',
+                'title'    => 'Tugas',
+                'message'  => 'Ada 1 tugas dikumpulkan.',
+                'url'      => route('dosen.assignment.grade', ['kelas' => $kelasData->id, 'assignment' => $assignmentData->id, 'mahasiswa' => auth()->guard('mahasiswa')->id()]),
+                'is_read'  => false,
+            ]);
+        } catch (\Exception $e) {
+            Log::error("Notif Submit Tugas Error: " . $e->getMessage());
+        }
+
+        return back()->with('success', 'Tugas berhasil dikumpulkan.');
     }
-
-    // Upload voice jika ada
-    $voicePath = null;
-    if ($request->hasFile('voice_submission')) {
-        $voicePath = $request->file('voice_submission')->store('submissions/voices', 'public');
-    }
-
-    // Simpan submission
-    \App\Models\Submission::create([
-        'assignment_id'   => $assignmentData->id,
-        'mahasiswa_id'    => auth()->guard('mahasiswa')->id(),
-        'file_path'       => $filePath,
-        'text_submission' => $request->text_submission,
-        'voice_path'      => $voicePath,
-        'status'          => 'submitted',
-    ]);
-
-    // Kirim notifikasi ke dosen
-    \App\Models\DosenNotification::create([
-        'dosen_id' => $dosenId,
-        'type'     => 'info',
-        'title'    => 'Tugas Baru Dikumpulkan',
-        'message'  => 'Mahasiswa <b>' . auth()->guard('mahasiswa')->user()->nama . '</b> telah mengumpulkan tugas.',
-        'url'      => route('dosen.assignment.recap', $kelasData->id),
-        'is_read'  => false,
-    ]);
-
-    return back()->with('success', 'Tugas berhasil dikumpulkan.');
-}
 }

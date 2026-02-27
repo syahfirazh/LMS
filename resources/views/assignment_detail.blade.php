@@ -71,8 +71,7 @@
 
             <div class="max-w-7xl mx-auto w-full px-4 md:px-8 py-6 md:py-8 space-y-6 md:space-y-8 pb-20">
                 @php
-                    // CEK STATUS PENGUMPULAN
-                    $isSubmittedStatus = $submission && ($submission->file_path || $submission->text_submission || $submission->voice_submission);
+                    $isSubmittedStatus = isset($submission) && ($submission->file_path || $submission->text_submission || $submission->voice_submission);
                 @endphp
 
                 @if(session('success'))
@@ -119,7 +118,7 @@
                         </div>
                         <div>
                             <h3 class="text-sm font-black text-slate-400 uppercase tracking-wide">Nilai Dosen</h3>
-                            <p class="text-lg font-bold text-slate-800">{{ $submission && $submission->nilai !== null ? $submission->nilai : '--' }} / {{ $assignment->poin }}</p>
+                            <p class="text-lg font-bold text-slate-800">{{ isset($submission) && $submission->nilai !== null ? $submission->nilai : '--' }} / {{ $assignment->poin }}</p>
                         </div>
                     </div>
                 </div>
@@ -162,7 +161,7 @@
                         </div>
 
                         <div class="space-y-4">
-                            @if($submission && $submission->file_path)
+                            @if(isset($submission) && $submission->file_path)
                             <div>
                                 <label class="text-[10px] font-bold text-emerald-700 uppercase tracking-widest mb-2 block flex items-center gap-2"><span class="bg-emerald-200 text-emerald-800 w-4 h-4 rounded flex items-center justify-center">2</span> File Lampiran Jawaban</label>
                                 <div onclick="navigasiKe(2)" class="flex items-center gap-4 p-4 rounded-2xl border border-emerald-200 bg-white hover:border-emerald-400 hover:shadow-md transition-all cursor-pointer group active:scale-[0.99]">
@@ -172,14 +171,14 @@
                             </div>
                             @endif
 
-                            @if($submission && $submission->text_submission)
+                            @if(isset($submission) && $submission->text_submission)
                             <div>
                                 <label class="text-[10px] font-bold text-emerald-700 uppercase tracking-widest mb-2 block">Teks Jawaban Anda</label>
                                 <div class="w-full bg-white border border-emerald-200 rounded-2xl p-5 text-sm font-medium text-slate-700 whitespace-pre-wrap leading-relaxed">{{ $submission->text_submission }}</div>
                             </div>
                             @endif
 
-                            @if($submission && isset($submission->voice_submission) && $submission->voice_submission)
+                            @if(isset($submission) && $submission->voice_submission)
                             <div>
                                 <label class="text-[10px] font-bold text-emerald-700 uppercase tracking-widest mb-2 block">Voice Note Jawaban Anda</label>
                                 <div class="w-full bg-white border border-emerald-200 rounded-2xl p-4 flex items-center">
@@ -188,7 +187,7 @@
                             </div>
                             @endif
 
-                            @if($submission && $submission->feedback)
+                            @if(isset($submission) && $submission->feedback)
                             <div class="mt-6">
                                 <label class="text-[10px] font-bold text-orange-600 uppercase tracking-widest mb-2 block">Catatan / Feedback Dosen</label>
                                 <div class="w-full bg-orange-50 border border-orange-200 rounded-2xl p-5 text-sm font-medium text-slate-800 leading-relaxed">{{ $submission->feedback }}</div>
@@ -264,13 +263,13 @@
                     <div class="p-5 sm:p-6 md:px-8 border-b border-slate-100 flex justify-between items-center bg-slate-50/50 z-10">
                         <div>
                             <h3 class="text-base sm:text-lg font-black text-slate-900 uppercase tracking-tight">Diskusi Tugas Privat</h3>
-                            <p class="text-[9px] sm:text-[10px] font-bold text-slate-400 uppercase tracking-widest mt-0.5">Tanya jawab terkait tugas ini langsung dengan Dosen (Kapan saja)</p>
+                            <p class="text-[9px] sm:text-[10px] font-bold text-slate-400 uppercase tracking-widest mt-0.5">Tanya jawab terkait tugas ini langsung dengan Dosen</p>
                         </div>
                     </div>
 
                     <div id="chatContainer" class="flex-1 p-4 sm:p-6 flex flex-col gap-6 overflow-y-auto custom-scrollbar bg-slate-50/30">
                         @php
-                            $pesanTugas = ($submission && method_exists($submission, 'messages')) ? $submission->messages()->orderBy('created_at', 'asc')->get() : collect();
+                            $pesanTugas = (isset($submission) && method_exists($submission, 'messages')) ? $submission->messages()->orderBy('created_at', 'asc')->get() : collect();
                         @endphp
                         
                         @forelse($pesanTugas as $diskusi)
@@ -279,14 +278,12 @@
                                 $isMe = ($diskusi->from === 'mahasiswa' || strtolower($diskusi->sender_type ?? '') === 'mahasiswa');
                                 $isDosen = ($diskusi->from === 'dosen' || strtolower($diskusi->sender_type ?? '') === 'dosen');
                                 
-                                // AMBIL NAMA DAN FOTO DARI DATABASE RELASI KELAS (DOSEN) & AUTH (MAHASISWA)
                                 $namaDosen = $kelas->dosen->nama ?? 'Dosen';
                                 $fotoDosenRaw = $kelas->dosen->foto ?? null; 
                                 
                                 $namaMahasiswa = Auth::guard('mahasiswa')->user()->nama ?? 'Anda';
-                                $fotoMahasiswaRaw = Auth::guard('mahasiswa')->user()->foto ?? null; 
+                                $fotoMahasiswaRaw = Auth::guard('mahasiswa')->user()->foto_profil ?? Auth::guard('mahasiswa')->user()->foto ?? null; 
 
-                                $namaPengirim = $isMe ? $namaMahasiswa : $namaDosen;
                                 $labelTeks = $isMe ? 'Anda' : $namaDosen;
                                 
                                 if ($isMe) {
@@ -342,10 +339,7 @@
                             <button type="button" onclick="cancelImage()" class="absolute -top-2 -right-2 bg-red-500 text-white rounded-full w-6 h-6 flex items-center justify-center font-bold text-xs shadow-lg hover:bg-red-600 hover:scale-110 transition-transform">✕</button>
                         </div>
 
-                        <form id="chatForm" action="{{ route('mahasiswa.assignment.message.store', [
-    'kelas' => $kelas->id,
-    'assignment' => $assignment->id
-]) }}" method="POST" enctype="multipart/form-data">
+                        <form id="chatForm" action="{{ route('mahasiswa.assignment.message.store', [ 'kelas' => $kelas->id, 'assignment' => $assignment->id ]) }}" method="POST" enctype="multipart/form-data">
                             @csrf
                             <input type="file" name="image" id="imageInput" accept="image/*" class="hidden" onchange="previewImage(this)">
                             <input type="file" name="voice" id="voiceInput" accept="audio/webm" class="hidden">
@@ -402,13 +396,15 @@
             const SpeechRec = window.webkitSpeechRecognition || window.SpeechRecognition;
 
             let rec = null; let dikteChatRec = null; let dikteTugasRec = null;
-            let isDictatingChat = false; let isDictatingTugas = false; let isSubmitted = {{ $isSubmittedStatus ? 'true' : 'false' }};
+            let isDictatingChat = false; let isDictatingTugas = false; 
+            let isSubmitted = {{ $isSubmittedStatus ? 'true' : 'false' }};
             let interval; let jedaKetikTimer = null; let menungguKonfirmasiKirim = false;
 
             // DEFINE FOTO PROFIL UNTUK AJAX JAVASCRIPT
-            const dbFotoMahasiswa = "{{ Auth::guard('mahasiswa')->user()->foto ?? '' }}";
+            const dbFotoMahasiswa = "{{ Auth::guard('mahasiswa')->user()->foto_profil ?? Auth::guard('mahasiswa')->user()->foto ?? '' }}";
             const myRealName = "{{ Auth::guard('mahasiswa')->user()->nama ?? 'Anda' }}";
-            const myAvatarAJAX = dbFotoMahasiswa ? `/storage/${dbFotoMahasiswa}` : `https://ui-avatars.com/api/?name=${encodeURIComponent(myRealName)}&background=2563eb&color=fff`;
+            const fallbackAvatar = `https://ui-avatars.com/api/?name=${encodeURIComponent(myRealName)}&background=2563eb&color=fff`;
+            const myAvatarAJAX = dbFotoMahasiswa ? `/storage/${dbFotoMahasiswa}` : fallbackAvatar;
 
             if (SpeechRec) {
                 rec = new SpeechRec(); rec.lang = "id-ID"; rec.continuous = true;
@@ -508,7 +504,6 @@
                 document.getElementById("submission-form").classList.remove("hidden");
                 document.getElementById("status-text").innerText = "Belum Dikirim";
                 
-                // Ubah status card
                 const stCard = document.getElementById("status-card");
                 const stIcon = document.getElementById("status-icon");
                 const stTitle = document.getElementById("status-title");
@@ -879,14 +874,17 @@
                             recordBtn.classList.remove('hidden', 'text-red-500', 'bg-red-50');
                             recordBtn.classList.add('text-slate-400', 'bg-transparent');
 
-                            // RENDER UI CHAT LANGSUNG DENGAN AVATAR ASLI
+                            // RENDER UI CHAT LANGSUNG DENGAN AVATAR ASLI (DARI CONTROLLER)
                             const d = data.diskusi; 
                             if(d) {
                                 let media = ''; const uid = 'wave-' + Date.now();
                                 if(d.image) media += `<img src="${d.image}" class="mt-2 rounded-xl max-w-full border border-white/20">`;
                                 if(d.voice) media += `<div class="mt-2 flex items-center gap-2 bg-white/20 border-white/30 p-1.5 rounded-xl border w-[160px]"><button type="button" onclick="togglePlay('${uid}')" id="btn-${uid}" class="w-6 h-6 shrink-0 flex items-center justify-center rounded-full bg-white text-blue-600 shadow text-[9px]">▶</button><div id="${uid}" class="flex-1 h-4" data-audio="${d.voice}"></div></div>`;
                                 
-                                const html = `<div class="flex justify-end chat-bubble-new chat-bubble"><div class="flex gap-2 md:gap-3 items-end max-w-[90%] md:max-w-[70%] flex-row-reverse"><img src="${myAvatarAJAX}" class="w-8 h-8 rounded-full shrink-0 shadow-sm border border-slate-100 object-cover"><div class="flex flex-col items-end"><p class="text-[8px] md:text-[9px] font-bold mb-1 px-1 text-slate-400 sender-name">Anda</p><div class="p-3 rounded-2xl shadow-sm text-xs sm:text-[13px] bg-blue-600 text-white rounded-tr-none border border-blue-700">${d.message ? `<p class="whitespace-pre-wrap break-words leading-relaxed message-text">${d.message}</p>` : ''}${media}</div><p class="text-[8px] mt-1.5 px-1 font-bold text-slate-400">${d.time}</p></div></div></div>`;
+                                // GANTI LOGIKA AVATAR, PAKAI DATA DARI BACKEND
+                                const realAvatarUrl = d.sender_avatar ? d.sender_avatar : fallbackAvatar;
+
+                                const html = `<div class="flex justify-end chat-bubble-new chat-bubble"><div class="flex gap-2 md:gap-3 items-end max-w-[90%] md:max-w-[70%] flex-row-reverse"><img src="${realAvatarUrl}" onerror="this.src='${fallbackAvatar}'" class="w-8 h-8 rounded-full shrink-0 shadow-sm border border-slate-100 object-cover"><div class="flex flex-col items-end"><p class="text-[8px] md:text-[9px] font-bold mb-1 px-1 text-slate-400 sender-name">Anda</p><div class="p-3 rounded-2xl shadow-sm text-xs sm:text-[13px] bg-blue-600 text-white rounded-tr-none border border-blue-700">${d.message ? `<p class="whitespace-pre-wrap break-words leading-relaxed message-text">${d.message}</p>` : ''}${media}</div><p class="text-[8px] mt-1.5 px-1 font-bold text-slate-400">${d.time}</p></div></div></div>`;
                                 
                                 const box = document.getElementById('chatContainer');
                                 const empty = document.getElementById('emptyChat');
@@ -912,7 +910,7 @@
                 });
 
                 // ECHO LISTENER MAHASISWA 
-                @if($submission)
+                @if(isset($submission) && $submission)
                     const submissionId = {{ $submission->id }};
                     if (window.Echo) {
                         window.Echo.private(`submission.${submissionId}`)
@@ -925,9 +923,10 @@
                                 const isDosen = d.from === 'dosen' || d.sender_type === 'dosen' || d.sender_type === 'App\\Models\\Dosen';
                                 const senderName = isDosen ? 'Dosen' : d.sender_name;
                                 
-                                // AMBIL FOTO DOSEN LEWAT BLADE PHP
+                                // AMBIL FOTO DOSEN LEWAT BLADE PHP UNTUK REALTIME PUSHER
                                 const fotoDosenRaw = "{{ $kelas->dosen->foto ?? '' }}";
-                                const avatarDosen = fotoDosenRaw ? `/storage/${fotoDosenRaw}` : `https://ui-avatars.com/api/?name=${encodeURIComponent(senderName)}&background=f59e0b&color=fff`;
+                                const fallbackDosen = `https://ui-avatars.com/api/?name=${encodeURIComponent(senderName)}&background=f59e0b&color=fff`;
+                                const avatarDosen = fotoDosenRaw ? `/storage/${fotoDosenRaw}` : fallbackDosen;
 
                                 const labelColor = isDosen ? 'text-orange-500' : 'text-slate-400';
                                 
@@ -935,7 +934,7 @@
                                 if(d.image) media += `<img src="${d.image}" class="mt-2 rounded-xl max-w-full border border-slate-200">`;
                                 if(d.voice) media += `<div class="mt-2 flex items-center gap-2 bg-white border-slate-200 p-1.5 rounded-xl border w-[160px]"><button type="button" onclick="togglePlay('${uid}')" id="btn-${uid}" class="w-6 h-6 shrink-0 flex items-center justify-center rounded-full bg-blue-600 text-white shadow text-[9px]">▶</button><div id="${uid}" class="flex-1 h-4" data-audio="${d.voice}"></div></div>`;
                                 
-                                const html = `<div class="flex justify-start chat-bubble-new chat-bubble"><div class="flex gap-2 md:gap-3 items-end max-w-[90%] md:max-w-[70%]"><img src="${avatarDosen}" class="w-8 h-8 rounded-full shrink-0 shadow-sm border border-slate-100 object-cover"><div class="flex flex-col items-start"><p class="text-[8px] md:text-[9px] font-bold mb-1 px-1 ${labelColor} sender-name">${senderName}</p><div class="p-3 rounded-2xl shadow-sm text-xs sm:text-[13px] bg-white text-slate-800 rounded-tl-none border border-slate-200">${d.message ? `<p class="whitespace-pre-wrap break-words leading-relaxed message-text">${d.message}</p>` : ''}${media}</div><p class="text-[8px] mt-1.5 px-1 font-bold text-slate-400">${d.time}</p></div></div></div>`;
+                                const html = `<div class="flex justify-start chat-bubble-new chat-bubble"><div class="flex gap-2 md:gap-3 items-end max-w-[90%]"><img src="${avatarDosen}" onerror="this.src='${fallbackDosen}'" class="w-8 h-8 rounded-full shrink-0 shadow-sm border border-slate-100 object-cover"><div class="flex flex-col items-start"><p class="text-[8px] md:text-[9px] font-bold mb-1 px-1 ${labelColor} sender-name">${senderName}</p><div class="p-3 rounded-2xl shadow-sm text-xs sm:text-[13px] bg-white text-slate-800 rounded-tl-none border border-slate-200">${d.message ? `<p class="whitespace-pre-wrap break-words leading-relaxed message-text">${d.message}</p>` : ''}${media}</div><p class="text-[8px] mt-1.5 px-1 font-bold text-slate-400">${d.time}</p></div></div></div>`;
                                 
                                 const box = document.getElementById('chatContainer');
                                 const empty = document.getElementById('emptyChat');

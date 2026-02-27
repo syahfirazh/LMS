@@ -12,6 +12,19 @@
             href="https://fonts.googleapis.com/css2?family=Plus+Jakarta+Sans:wght@400;500;600;700;800&display=swap"
             rel="stylesheet"
         />
+
+        <style>
+            .custom-scrollbar::-webkit-scrollbar {
+                width: 5px;
+            }
+            .custom-scrollbar::-webkit-scrollbar-track {
+                background: transparent;
+            }
+            .custom-scrollbar::-webkit-scrollbar-thumb {
+                background-color: #cbd5e1;
+                border-radius: 20px;
+            }
+        </style>
     </head>
     <body
         class="m-0 font-['Plus_Jakarta_Sans'] bg-[#f8fafc] min-h-full flex flex-col border-box overflow-x-hidden text-slate-800"
@@ -27,20 +40,25 @@
             ></div>
         </div>
 
-        <main class="flex-1 flex flex-col h-screen overflow-y-auto">
+        <main
+            class="flex-1 flex flex-col h-screen overflow-y-auto custom-scrollbar relative"
+        >
+            {{-- NAVBAR SEPERTI DAFTAR MATA KULIAH --}}
             <div
-                class="bg-white/80 backdrop-blur-md border-b border-slate-200/60 sticky top-0 z-30 px-6 py-4"
+                class="bg-white/90 backdrop-blur-2xl border-b border-slate-200/60 sticky top-0 z-40 px-4 md:px-8 py-4 shadow-sm transition-all w-full"
             >
                 <div
-                    class="max-w-6xl mx-auto flex items-center justify-between"
+                    class="max-w-7xl mx-auto flex items-center justify-between relative"
                 >
-                    <div class="flex items-center gap-4">
+                    <div
+                        class="flex items-center gap-4 relative z-10 md:w-auto w-full justify-start"
+                    >
                         <button
-                            onclick="navigasiKe(4)"
-                            class="w-10 h-10 rounded-full bg-slate-50 hover:bg-blue-50 text-slate-400 hover:text-blue-600 flex items-center justify-center transition-all border border-slate-200 shrink-0"
+                            onclick="navigasiKe(0)"
+                            class="w-11 h-11 md:w-12 md:h-12 rounded-full bg-slate-100 hover:bg-blue-600 text-slate-500 hover:text-white flex items-center justify-center transition-all duration-300 shadow-sm shrink-0 group border border-slate-200 hover:border-blue-600 relative cursor-pointer"
                         >
                             <svg
-                                class="w-5 h-5"
+                                class="w-5 h-5 md:w-6 md:h-6 transform group-hover:-translate-x-1 transition-transform"
                                 fill="none"
                                 stroke="currentColor"
                                 viewBox="0 0 24 24"
@@ -52,52 +70,74 @@
                                     d="M15 19l-7-7 7-7"
                                 ></path>
                             </svg>
+                            <span
+                                class="absolute -bottom-1 -right-1 bg-slate-800 text-white text-[9px] font-black px-1.5 py-0.5 rounded-md border border-white"
+                                >0</span
+                            >
                         </button>
+                        <div
+                            class="hidden sm:block text-left cursor-pointer group"
+                            onclick="navigasiKe(0)"
+                        >
+                            <span
+                                class="block text-[9px] font-bold text-slate-400 uppercase tracking-widest"
+                                >Navigasi Suara</span
+                            >
+                            <span
+                                class="block text-xs font-black text-slate-700 group-hover:text-blue-600 transition-colors"
+                                >0 - Kembali</span
+                            >
+                        </div>
                     </div>
 
                     <div
-                        class="text-center absolute left-1/2 transform -translate-x-1/2"
+                        class="text-center absolute left-1/2 transform -translate-x-1/2 w-full max-w-[60%] md:max-w-md mt-2 md:mt-0"
                     >
                         <h1
-                            class="text-lg md:text-xl font-extrabold text-slate-900 tracking-tight leading-none"
+                            class="text-lg md:text-2xl font-black text-slate-900 tracking-tight leading-tight truncate"
                         >
                             Gabung Kelas Baru
                         </h1>
-                        <p
-                            class="text-[10px] font-bold text-blue-600 uppercase tracking-widest mt-1"
+                        <div
+                            class="flex items-center justify-center gap-2 mt-1"
                         >
-                            Mahasiswa
-                        </p>
+                            <span
+                                class="text-[9px] md:text-[10px] font-bold text-blue-600 uppercase tracking-widest bg-blue-100 px-2 py-0.5 rounded-md"
+                            >
+                                Mahasiswa
+                            </span>
+                        </div>
                     </div>
 
                     <div
-                        class="flex items-center gap-3 pl-6 border-l border-slate-200"
+                        class="flex items-center gap-3 pl-6 border-l border-slate-200 relative z-10 justify-end"
                     >
                         <div
-                            id="wave-container"
                             class="flex items-center gap-[2px] h-4 w-10 justify-center"
+                            id="wave-container"
                         >
                             <div
-                                class="wave-bar w-[2px] bg-blue-500 rounded-full h-1"
+                                class="wave-bar w-[2px] bg-blue-500 rounded-full h-1 transition-all"
                             ></div>
                             <div
-                                class="wave-bar w-[2px] bg-blue-400 rounded-full h-1"
+                                class="wave-bar w-[2px] bg-blue-400 rounded-full h-1 transition-all"
                             ></div>
                             <div
-                                class="wave-bar w-[2px] bg-blue-600 rounded-full h-1"
+                                class="wave-bar w-[2px] bg-blue-600 rounded-full h-1 transition-all"
                             ></div>
                         </div>
                         <span
                             id="status-desc"
                             class="hidden md:block text-[9px] font-black text-slate-400 uppercase tracking-widest"
-                            >Listening</span
+                            >Siap</span
                         >
                     </div>
                 </div>
             </div>
 
+            {{-- KONTEN UTAMA --}}
             <div
-                class="max-w-4xl mx-auto w-full p-6 flex flex-col items-center justify-center min-h-[80vh]"
+                class="max-w-4xl mx-auto w-full p-6 flex flex-col items-center justify-center min-h-[80vh] pb-20"
             >
                 <div
                     class="bg-white rounded-[3rem] shadow-xl shadow-slate-100 border border-slate-200 p-8 md:p-12 w-full relative overflow-hidden"
@@ -107,10 +147,6 @@
                     ></div>
 
                     <div class="relative z-10 text-center space-y-8">
-                        <div
-                            class="flex items-center justify-center mx-auto shadow-inner mb-6"
-                        ></div>
-
                         <div class="space-y-2">
                             <h2
                                 class="text-3xl font-black text-slate-900 tracking-tight"
@@ -150,7 +186,10 @@
 
                             <button
                                 type="submit"
-                                onclick="navigasiKe(2)"
+                                onclick="
+                                    navigasiKe(2);
+                                    return false;
+                                "
                                 class="w-full bg-slate-900 text-white py-4 rounded-2xl font-bold text-sm uppercase tracking-widest hover:bg-emerald-600 hover:shadow-lg hover:shadow-emerald-200 transition-all transform hover:-translate-y-1 flex items-center justify-center gap-3"
                             >
                                 <span>Gabung Sekarang (2)</span>
@@ -198,33 +237,49 @@
             const synth = window.speechSynthesis;
             const SpeechRec =
                 window.webkitSpeechRecognition || window.SpeechRecognition;
-            const rec = new SpeechRec();
-            rec.lang = "id-ID";
-            rec.continuous = true;
+            let rec = null;
+            let interval;
 
-            function setWave(active) {
-                waveBars.forEach((bar) => {
-                    bar.style.height = active
-                        ? `${Math.floor(Math.random() * 12) + 4}px`
-                        : "4px";
-                });
+            // Variabel untuk melacak status konfirmasi
+            let isConfirming = false;
+
+            if (SpeechRec) {
+                rec = new SpeechRec();
+                rec.lang = "id-ID";
+                rec.continuous = true;
+            } else {
+                console.warn("Browser tidak mendukung Web Speech API");
             }
 
-            let interval;
+            function setWave(active) {
+                if (waveBars.length > 0) {
+                    waveBars.forEach((bar) => {
+                        bar.style.height = active
+                            ? `${Math.floor(Math.random() * 12) + 4}px`
+                            : "4px";
+                    });
+                }
+            }
+
             function bicara(teks, callback) {
                 synth.cancel();
                 const utter = new SpeechSynthesisUtterance(teks);
                 utter.lang = "id-ID";
+                const savedRate = localStorage.getItem("speechRate");
+                utter.rate = savedRate ? parseFloat(savedRate) : 1.0;
+
                 utter.onstart = () => {
-                    if (statusDesc) statusDesc.innerText = "Speaking";
+                    if (statusDesc) statusDesc.innerText = "BERBICARA...";
                     interval = setInterval(() => setWave(true), 150);
                 };
+
                 utter.onend = () => {
-                    if (statusDesc) statusDesc.innerText = "Listening";
+                    if (statusDesc) statusDesc.innerText = "MENDENGARKAN...";
                     clearInterval(interval);
                     setWave(false);
                     if (callback) callback();
                 };
+
                 synth.speak(utter);
             }
 
@@ -232,77 +287,160 @@
                 let tujuan = "";
                 let teks = "";
 
-                if (nomor === 4) {
+                if (nomor === 0) {
                     tujuan = "{{ route('dashboard') }}";
                     teks = "Kembali ke Beranda.";
                 } else if (nomor === 1) {
-                    // Fokus ke Input
+                    // Reset input & status konfirmasi
+                    isConfirming = false;
+                    document.getElementById("class-code").value = "";
                     document.getElementById("class-code").focus();
-                    teks = "Silahkan ketik kode kelas.";
-               } else if (nomor === 2) {
-    const code = document.getElementById("class-code").value;
-    if (code.length < 3) {
-        teks = "Kode kelas terlalu pendek.";
-    } else {
-        teks = "Memproses kode kelas " + code;
-        bicara(teks, () => {
-            document.getElementById("join-form").submit();
-        });
-        return;
-    }
-}
+                    teks = "Silakan sebutkan ulang kode kelas Anda.";
+                } else if (nomor === 2) {
+                    const code = document
+                        .getElementById("class-code")
+                        .value.trim();
+                    if (code.length < 3) {
+                        isConfirming = false;
+                        teks =
+                            "Kode kelas kosong atau terlalu pendek. Silakan sebutkan ulang kode kelas Anda.";
+                    } else {
+                        teks = "Memproses kode kelas. Mohon tunggu.";
+                        bicara(teks, () => {
+                            document.getElementById("join-form").submit();
+                        });
+                        return;
+                    }
+                }
 
                 if (teks !== "") {
-                    bicara(teks);
-                    if (tujuan !== "") {
-                        setTimeout(() => {
-                            window.location.href = tujuan;
-                        }, 1500);
-                    }
+                    bicara(teks, () => {
+                        if (tujuan !== "") {
+                            setTimeout(() => {
+                                window.location.href = tujuan;
+                            }, 1000);
+                        } else {
+                            if (rec) rec.start();
+                        }
+                    });
+                }
+            }
+
+            function prosesKode(transcript) {
+                // Hilangkan spasi dan jadikan kapital semua
+                let kode = transcript.replace(/\s+/g, "").toUpperCase();
+
+                // Hapus kata-kata perintah navigasi jika tidak sengaja terbawa
+                kode = kode.replace(/(SATU|DUA|NOL|KEMBALI|GABUNG|ULANG)/g, "");
+
+                if (kode.length > 0) {
+                    // Masukkan ke input teks
+                    document.getElementById("class-code").value = kode;
+                    isConfirming = true; // Set mode konfirmasi aktif
+
+                    // Buat ejaan dengan spasi agar diucapkan pelan dan jelas oleh sistem
+                    let ejaan = kode.split("").join(" ");
+
+                    let teksConfirm = `Kode yang Anda sebutkan adalah, ${ejaan}. Sebut dua untuk gabung, atau sebut satu untuk mengulang.`;
+
+                    bicara(teksConfirm, () => {
+                        rec.start();
+                    });
+                } else {
+                    bicara(
+                        "Suara tidak terdengar jelas. Silakan sebutkan ulang kode kelas Anda.",
+                        () => {
+                            rec.start();
+                        },
+                    );
                 }
             }
 
             function mulaiMendengar() {
+                if (!rec) return;
                 try {
                     rec.start();
                     rec.onresult = (event) => {
-                        const hasil =
-                            event.results[
-                                event.results.length - 1
-                            ][0].transcript.toLowerCase();
-                        const angka = hasil.match(/\d+/);
+                        const hasil = event.results[
+                            event.results.length - 1
+                        ][0].transcript
+                            .toLowerCase()
+                            .trim();
 
-                        if (angka) {
-                            navigasiKe(parseInt(angka[0]));
-                        } else if (
-                            hasil.includes("satu") ||
-                            hasil.includes("kode")
-                        ) {
-                            navigasiKe(1);
-                        } else if (
-                            hasil.includes("dua") ||
-                            hasil.includes("gabung")
-                        ) {
-                            navigasiKe(2);
-                        } else if (
-                            hasil.includes("empat") ||
-                            hasil.includes("kembali")
-                        ) {
-                            navigasiKe(4);
+                        // JIKA SEDANG DALAM MODE KONFIRMASI (Sistem nunggu jawaban 1 atau 2)
+                        if (isConfirming) {
+                            if (
+                                hasil.includes("dua") ||
+                                hasil.includes("gabung")
+                            ) {
+                                rec.stop();
+                                navigasiKe(2);
+                            } else if (
+                                hasil.includes("satu") ||
+                                hasil.includes("ulang")
+                            ) {
+                                rec.stop();
+                                navigasiKe(1);
+                            } else if (
+                                hasil.includes("nol") ||
+                                hasil.includes("kembali")
+                            ) {
+                                rec.stop();
+                                navigasiKe(0);
+                            } else {
+                                rec.stop();
+                                bicara(
+                                    "Maaf, perintah tidak dikenali. Sebut dua untuk gabung, atau satu untuk mengulang.",
+                                    () => {
+                                        rec.start();
+                                    },
+                                );
+                            }
+                        }
+                        // JIKA SEDANG MODE MENDENGARKAN KODE (Awal)
+                        else {
+                            if (
+                                hasil === "nol" ||
+                                hasil === "kembali" ||
+                                hasil === "beranda"
+                            ) {
+                                rec.stop();
+                                navigasiKe(0);
+                            } else if (hasil === "satu" || hasil === "ulang") {
+                                rec.stop();
+                                navigasiKe(1);
+                            } else if (hasil === "dua" || hasil === "gabung") {
+                                rec.stop();
+                                navigasiKe(2);
+                            } else {
+                                // Asumsikan yang diucapkan adalah kode kelas
+                                rec.stop();
+                                prosesKode(hasil);
+                            }
                         }
                     };
-                } catch (e) {}
+
+                    rec.onend = () => {
+                        rec.start();
+                    };
+                } catch (e) {
+                    console.error("Error recognition:", e);
+                }
             }
 
             window.onload = () => {
                 const orientasi =
-                    "Halaman Gabung Kelas. Sebutkan Satu untuk isi kode, Dua untuk gabung, atau Empat untuk kembali.";
+                    "Halaman Gabung Kelas. Silakan sebutkan kode kelas Anda secara perlahan. Atau sebutkan nol untuk kembali.";
+
+                document.body.addEventListener("click", () => {}, {
+                    once: true,
+                });
 
                 setTimeout(() => {
                     bicara(orientasi, () => {
                         mulaiMendengar();
                     });
-                }, 1000);
+                }, 800);
             };
         </script>
     </body>

@@ -181,13 +181,18 @@
                                 $labelTeks = $isMe ? 'Anda' : ($isDosen ? ($sender->nama ?? 'Dosen') : $namaAsli);
                                 $avatarName = $isMe ? $namaAsli : $labelTeks;
                                 $avatarBg = $isMe ? '2563eb' : ($isDosen ? 'f59e0b' : '64748b'); 
+                                
+                                // LOGIKA PENGAMBILAN FOTO DARI DATABASE
+                                $fotoProfil = $sender->foto_profil ?? $sender->foto ?? null;
+                                $fallbackAvatar = "https://ui-avatars.com/api/?name=" . urlencode($avatarName) . "&background=" . $avatarBg . "&color=fff";
+                                $avatarUrl = $fotoProfil ? asset('storage/' . $fotoProfil) : $fallbackAvatar;
                             @endphp
                             
                             <div id="msg-{{ $diskusi->id }}" class="flex {{ $isMe ? 'justify-end' : 'justify-start' }} safe-fade-in chat-bubble-new">
                                 <div class="flex gap-2 md:gap-3 items-end max-w-[90%] md:max-w-[70%] {{ $isMe ? 'flex-row-reverse' : '' }}">
-                                    <img src="https://ui-avatars.com/api/?name={{ urlencode($avatarName) }}&background={{ $avatarBg }}&color=fff" class="w-8 h-8 md:w-9 md:h-9 rounded-full shrink-0 shadow-sm object-cover border border-slate-100" />
+                                    <img src="{{ $avatarUrl }}" onerror="this.src='{{ $fallbackAvatar }}'" class="w-8 h-8 md:w-9 md:h-9 rounded-full shrink-0 shadow-sm object-cover border border-slate-100" />
+                                    
                                     <div class="flex flex-col {{ $isMe ? 'items-end' : 'items-start' }}">
-                                        
                                         <p class="text-[9px] md:text-[10px] font-bold mb-1 px-1 {{ $isDosen ? 'text-orange-500' : 'text-slate-400' }}">
                                             {{ $labelTeks }} 
                                             @if($isDosen)
@@ -315,7 +320,6 @@
 
             let rec = null; let interval; let modeKetikSuara = false; let menungguKonfirmasiKirim = false; let jedaKetikTimer = null;
 
-            // Variabel Panduan Utama (Ditambah Menu 9)
             const teksPanduanLengkap = "Sebutkan 1 untuk Pesan Dosen, 2 baca PDF, 3 putar Video, 4 putar Audio. Untuk diskusi, sebutkan 5 ketik pesan, 6 lampiran, 7 rekam suara, 8 kirim, atau 9 untuk baca diskusi kelas. Nol untuk kembali.";
 
             if (SpeechRec) { rec = new SpeechRec(); rec.lang = "id-ID"; rec.continuous = true; }
@@ -369,7 +373,6 @@
                 const container = document.getElementById('videoPlayerContainer');
                 container.innerHTML = '';
 
-                // Perbaikan deteksi URL Youtube
                 if (isYoutube === 'true' || isYoutube === true || url.includes('youtu')) {
                     let videoId = '';
                     const regExp = /^.*(youtu\.be\/|v\/|u\/\w\/|embed\/|watch\?v=|\&v=|shorts\/)([^#\&\?]*).*/;
@@ -479,7 +482,6 @@
                             
                             if(recordBtnContainer) recordBtnContainer.classList.add('hidden');
                             
-                            // UI Tampilan Sesudah Merekam Suara (Ada tombol Batal)
                             messageInput.placeholder = "▶ ılıılı Voice Note siap dikirim...";
                             messageInput.disabled = true; 
                             messageInput.classList.add('font-bold', 'text-blue-600', 'bg-blue-100/50', 'rounded-xl', 'px-4');
@@ -505,7 +507,6 @@
                     arahkanSingkat("Perekaman suara dibatalkan"); 
                 });
 
-                // TOMBOL BATAL X MERAH (UNTUK VOICE NOTE YANG SUDAH JADI)
                 cancelVoiceBtn.addEventListener('click', () => {
                     voiceInput.value = ''; 
                     
@@ -606,7 +607,6 @@
                         document.getElementById("sendChatBtn").click(); return; 
                     } else { teks = "Maaf, pesan masih kosong."; }
                 } else if (nomor === 9) {
-                    // LOGIKA BACA PESAN DISKUSI
                     let chats = document.querySelectorAll('#chatContainer .chat-bubble-new');
                     if(chats.length === 0) {
                         teks = "Belum ada diskusi di ruang ini.";
@@ -791,7 +791,11 @@
                         // Render Chat Langsung
                         const d = responseData.diskusi;
                         const myRealName = "{{ Auth::guard('mahasiswa')->user()->nama ?? 'Mahasiswa' }}";
-                        const myAvatar = `https://ui-avatars.com/api/?name=${encodeURIComponent(myRealName)}&background=2563eb&color=fff`;
+                        
+                        // LOGIKA PENGAMBILAN FOTO DARI DATABASE UNTUK AJAX
+                        const myDbFoto = "{{ Auth::guard('mahasiswa')->user()->foto_profil ?? Auth::guard('mahasiswa')->user()->foto ?? '' }}";
+                        const fallbackAvatar = `https://ui-avatars.com/api/?name=${encodeURIComponent(myRealName)}&background=2563eb&color=fff`;
+                        const myAvatar = myDbFoto ? `/storage/${myDbFoto}` : fallbackAvatar;
                         
                         const uniqueWaveId = 'wave-new-' + Date.now();
                         let mediaHtml = '';
@@ -812,7 +816,7 @@
                         const chatHtml = `
                         <div class="flex justify-end chat-bubble-new safe-fade-in">
                             <div class="flex gap-2 md:gap-3 items-end max-w-[90%] md:max-w-[70%] flex-row-reverse">
-                                <img src="${myAvatar}" class="w-8 h-8 md:w-9 md:h-9 rounded-full shrink-0 shadow-sm object-cover border border-slate-100" />
+                                <img src="${myAvatar}" onerror="this.src='${fallbackAvatar}'" class="w-8 h-8 md:w-9 md:h-9 rounded-full shrink-0 shadow-sm object-cover border border-slate-100" />
                                 <div class="flex flex-col items-end">
                                     <p class="text-[9px] md:text-[10px] font-bold mb-1 px-1 text-slate-400">Anda</p>
                                     <div class="p-3 md:p-4 rounded-2xl shadow-sm border bg-blue-600 text-white rounded-tr-none border-blue-700">
@@ -832,7 +836,6 @@
 
                         if(d.voice) { setTimeout(() => initWaveSurfer(uniqueWaveId, d.voice, true), 100); }
                         
-                        // SETELAH PESAN TERKIRIM, ARAHKAN KEMBALI
                         arahkanSingkat("Pesan berhasil terkirim ke ruang diskusi");
                         
                     } else {
@@ -866,22 +869,26 @@
 
                         const isDosen = (d.sender_type === 'dosen' || d.sender_type === 'App\\Models\\Dosen');
                         
-                        const senderNameLengkap = d.sender.nama ?? 'Mahasiswa';
-                        const labelName = isDosen ? (d.sender.nama ?? 'Dosen') : senderNameLengkap;
+                        const senderNameLengkap = d.sender_name ?? 'Seseorang';
+                        const labelName = isDosen ? (d.sender_name ?? 'Dosen') : senderNameLengkap;
                         const avatarBg = isDosen ? 'f59e0b' : '64748b'; 
                         
+                        // LOGIKA PENGAMBILAN FOTO UNTUK PESAN MASUK REALTIME
+                        const fallbackAvatarIn = `https://ui-avatars.com/api/?name=${encodeURIComponent(senderNameLengkap)}&background=${avatarBg}&color=fff`;
+                        const senderAvatarUrl = d.sender_avatar ? d.sender_avatar : fallbackAvatarIn;
+
                         const labelColor = isDosen ? 'text-orange-500' : 'text-slate-400';
                         const badgeHtml = isDosen ? `<span class="bg-orange-100 text-orange-600 px-1.5 py-0.5 rounded ml-1 text-[8px] uppercase">Dosen</span>` : '';
 
                         let media = '';
                         const uniqueWaveId = 'wave-new-' + Date.now();
                         
-                        if (d.image) { media += `<img src="/storage/${d.image}" class="rounded-lg mt-2 max-w-xs shadow">`; }
+                        if (d.image) { media += `<img src="${d.image}" class="rounded-lg mt-2 max-w-xs shadow">`; }
                         if (d.voice) { 
                             media += `
                             <div class="mt-2 flex items-center gap-3 bg-white/20 p-2 rounded-xl backdrop-blur-sm border border-slate-300 w-[200px] sm:w-[240px]">
                                 <button type="button" onclick="togglePlay('${uniqueWaveId}')" id="btn-${uniqueWaveId}" class="w-7 h-7 sm:w-8 sm:h-8 shrink-0 flex items-center justify-center rounded-full bg-blue-600 text-white shadow hover:scale-105 transition-transform text-[10px] sm:text-xs">▶</button>
-                                <div id="${uniqueWaveId}" class="flex-1" data-audio="/storage/${d.voice}"></div>
+                                <div id="${uniqueWaveId}" class="flex-1" data-audio="${d.voice}"></div>
                             </div>`; 
                         }
 
@@ -890,7 +897,7 @@
                         const html = `
                             <div class="flex justify-start chat-bubble-new safe-fade-in">
                                 <div class="flex gap-2 md:gap-3 items-end max-w-[90%] md:max-w-[70%]">
-                                    <img src="https://ui-avatars.com/api/?name=${encodeURIComponent(senderNameLengkap)}&background=${avatarBg}&color=fff" class="w-8 h-8 md:w-9 md:h-9 rounded-full shadow object-cover border border-slate-100" />
+                                    <img src="${senderAvatarUrl}" onerror="this.src='${fallbackAvatarIn}'" class="w-8 h-8 md:w-9 md:h-9 rounded-full shadow object-cover border border-slate-100" />
                                     <div class="flex flex-col items-start">
                                         <p class="text-[9px] md:text-[10px] font-bold mb-1 px-1 ${labelColor}">
                                             ${labelName} ${badgeHtml}
@@ -911,7 +918,7 @@
                         chatContainer.insertAdjacentHTML("beforeend", html);
                         scrollBottom();
 
-                        if(d.voice) { setTimeout(() => initWaveSurfer(uniqueWaveId, `/storage/${d.voice}`, false), 100); }
+                        if(d.voice) { setTimeout(() => initWaveSurfer(uniqueWaveId, d.voice, false), 100); }
                     });
             });
         </script>

@@ -140,7 +140,7 @@
                     <div data-aos="fade-up" data-aos-duration="600" data-aos-delay="200" class="bg-white p-6 rounded-[2rem] border border-slate-200 shadow-sm h-fit">
                         <div class="flex items-center justify-between mb-6">
                             <h3 class="text-sm font-black text-slate-900 uppercase tracking-widest">Alur Belajar</h3>
-                            <span class="text-[9px] font-bold text-slate-400 bg-slate-100 px-2 py-1 rounded-md">{{ $totalSession }} Topik</span>
+                            <span class="text-[9px] font-bold text-slate-400 bg-slate-100 px-2 py-1 rounded-md">{{ $totalSession }} Pertemuan</span>
                         </div>
 
                         <div class="relative space-y-0 pl-2">
@@ -251,15 +251,15 @@
             }
 
             function bukaSession(sessionId) {
-    const url = "{{ route('topic.detail', ['kelas' => $kelas->id, 'session' => 'SESSION_ID']) }}";
-    window.location.href = url.replace('SESSION_ID', sessionId);
-}
+                const url = "{{ route('topic.detail', ['kelas' => $kelas->id, 'session' => 'SESSION_ID']) }}";
+                window.location.href = url.replace('SESSION_ID', sessionId);
+            }
 
-            // DEFINE ROUTE SECARA AMAN DARI BLADE KE JS
+            // PERBAIKAN: DEFINE ROUTE SECARA AMAN DARI BLADE KE JS
             const urlPembelajaran = "{{ route('course.detail', ['kelas' => $kelas->id]) }}";
-            const urlPresensi = "{{ (isset($session) && $session) ? route('course.attendance', ['kelas' => $kelas->id, 'session' => $session->id]) : '#' }}";
-           const urlPenugasan = "{{ route('course.assignments', ['kelas' => $kelas->id, 'session' => $session->id]) }}";
+            const urlPenugasan = "{{ route('course.assignments', ['kelas' => $kelas->id]) }}";
             const urlAnggota = "{{ route('course.members', ['kelas' => $kelas->id]) }}";
+            const urlPresensi = "{{ $session ? route('course.attendance', ['session' => $session->id]) : '#' }}";
 
             function navigasiKe(nomor) {
                 let tujuan = "";
@@ -272,7 +272,7 @@
                     teks = "Anda sudah berada di halaman Pembelajaran.";
                 } else if (nomor === 2) {
                     tujuan = urlPresensi;
-                    teks = tujuan === '#' ? "Halaman presensi belum tersedia di kelas ini." : "Membuka halaman Presensi.";
+                    teks = tujuan === '#' ? "Halaman presensi belum tersedia di kelas ini karena belum ada pertemuan." : "Membuka halaman Presensi.";
                 } else if (nomor === 3) {
                     tujuan = urlPenugasan;
                     teks = "Membuka halaman Penugasan.";
@@ -286,10 +286,11 @@
                             teks = `Maaf, materi ${sesiTujuan.judul} saat ini masih terkunci. Silakan selesaikan materi sebelumnya.`;
                         } else {
                             teks = `Membuka materi ${sesiTujuan.judul}.`;
-                            const baseUrl = "{{ route('topic.detail', ['kelas' => $kelas->id, 'session' => 'SESSION_ID']) }}"; tujuan = baseUrl.replace('SESSION_ID', sesiTujuan.id);
+                            const baseUrl = "{{ route('topic.detail', ['kelas' => $kelas->id, 'session' => 'SESSION_ID']) }}"; 
+                            tujuan = baseUrl.replace('SESSION_ID', sesiTujuan.id);
                         }
                     } else {
-                        teks = "Nomor topik tidak ditemukan.";
+                        teks = "Nomor pertemuan tidak ditemukan.";
                     }
                 }
 
@@ -297,6 +298,8 @@
                     bicara(teks);
                     if (tujuan !== "" && tujuan !== "#") {
                         setTimeout(() => { window.location.href = tujuan; }, 1500);
+                    } else {
+                        setTimeout(() => { if (rec) rec.start(); }, 1500);
                     }
                 }
             }
@@ -341,7 +344,13 @@
 
             window.onload = () => {
                 const namaMatkul = "{{ $kelas->mataKuliah->nama }}";
-                const orientasi = `Anda berada di kelas ${namaMatkul}. Sebutkan angka satu untuk Pembelajaran, dua untuk Presensi, tiga untuk Penugasan. Untuk memilih topik materi, sebutkan angka sebelas ke atas. Atau sebutkan angka nol untuk kembali.`;
+                let orientasi = "";
+                
+                @if($kelas->courseSessions->count() > 0)
+                    orientasi = `Anda berada di kelas ${namaMatkul}. Sebutkan angka satu untuk Pembelajaran, dua untuk Presensi, tiga untuk Penugasan. Untuk memilih materi pertemuan, sebutkan angka sebelas ke atas. Atau sebutkan angka nol untuk kembali.`;
+                @else
+                    orientasi = `Anda berada di kelas ${namaMatkul}. Sebutkan angka satu untuk Pembelajaran, dua untuk Presensi, tiga untuk Penugasan. Saat ini belum ada materi pertemuan yang dibuat oleh dosen. Atau sebutkan angka nol untuk kembali.`;
+                @endif
                 
                 document.body.addEventListener("click", () => {}, { once: true });
                 

@@ -9,6 +9,8 @@ use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Storage;
 use App\Models\Submission;
 use Illuminate\Support\Facades\Auth;
+use Illuminate\Support\Facades\Log;
+use App\Models\Notification;
 
 class AssignmentController extends Controller
 {
@@ -19,33 +21,42 @@ class AssignmentController extends Controller
         }
     }
 
-   public function index(Kelas $kelas)
-{
-    $this->authorizeKelas($kelas);
+    public function index(Kelas $kelas)
+    {
+        $this->authorizeKelas($kelas);
 
-    $assignments = $kelas->assignments()->latest()->get();
+        $kelas->loadCount('mahasiswa');
 
-    return view('dosen_course_assignments', compact('kelas', 'assignments'));
-}
+        $assignments = $kelas->assignments()
+            ->withCount(['submissions' => function ($query) {
+                $query->whereNotNull('file_path')
+                      ->orWhereNotNull('text_submission')
+                      ->orWhereNotNull('voice_submission');
+            }])
+            ->latest()
+            ->get();
 
-     public function show($kelasId, $assignmentId)
-{
-    $kelas = Kelas::findOrFail($kelasId);
+        return view('dosen_course_assignments', compact('kelas', 'assignments'));
+    }
 
-    $assignment = Assignment::where('kelas_id', $kelasId)
-        ->findOrFail($assignmentId);
+    public function show($kelasId, $assignmentId)
+    {
+        $kelas = Kelas::findOrFail($kelasId);
 
-    $mahasiswaId = Auth::guard('mahasiswa')->id();
+        $assignment = Assignment::where('kelas_id', $kelasId)
+            ->findOrFail($assignmentId);
 
-    $submission = Submission::with(['messages' => function($q) {
-        $q->orderBy('created_at', 'asc');
-    }])
-    ->where('assignment_id', $assignmentId)
-    ->where('mahasiswa_id', $mahasiswaId)
-    ->first();
+        $mahasiswaId = Auth::guard('mahasiswa')->id();
 
-    return view('assignment_detail', compact('kelas', 'assignment', 'submission'));
-}
+        $submission = Submission::with(['messages' => function($q) {
+            $q->orderBy('created_at', 'asc');
+        }])
+        ->where('assignment_id', $assignmentId)
+        ->where('mahasiswa_id', $mahasiswaId)
+        ->first();
+
+        return view('assignment_detail', compact('kelas', 'assignment', 'submission'));
+    }
 
     public function create(Kelas $kelas)
     {
@@ -84,23 +95,24 @@ class AssignmentController extends Controller
             'status' => $request->action === 'publish' ? 'published' : 'draft',
         ]);
 
-       $dosenNama      = $kelas->dosen->nama;
-$mataKuliahNama = $kelas->mataKuliah->nama;
+        // MENGIRIM NOTIFIKASI SECARA AMAN (Menggantikan error notifyMahasiswa)
+        try {
+            $dosenNama      = $kelas->dosen->nama ?? 'Dosen';
+            $mataKuliahNama = $kelas->mataKuliah->nama ?? 'Kelas';
 
-// AMBIL SESSION ID DARI ASSIGNMENT
-
-foreach ($kelas->mahasiswa as $mhs) {
-    notifyMahasiswa(
-    $mhs->id,
-    'assignment',
-    'Tugas Baru Tersedia',
-    "Dosen {$dosenNama} menambahkan tugas baru pada mata kuliah {$mataKuliahNama}: {$assignment->judul}",
-    route('mahasiswa.assignment.detail', [
-        'kelas' => $kelas->id,
-        'assignment' => $assignment->id
-    ])
-);
-}
+            foreach ($kelas->mahasiswa as $mhs) {
+                Notification::create([
+                    'user_id'   => $mhs->id,
+                    'user_type' => 'mahasiswa',
+                    'type'      => 'info',
+                    'title'     => 'Tugas Baru Tersedia',
+                    'message'   => "Dosen {$dosenNama} menambahkan tugas baru pada mata kuliah {$mataKuliahNama}: {$assignment->judul}",
+                    'is_read'   => false,
+                ]);
+            }
+        } catch (\Exception $e) {
+            Log::error("Gagal mengirim notif tugas baru: " . $e->getMessage());
+        }
 
         return redirect()
             ->route('dosen.course.assignments', $kelas->id)
@@ -110,7 +122,6 @@ foreach ($kelas->mahasiswa as $mhs) {
     public function edit(Kelas $kelas, $assignmentId)
     {
         $this->authorizeKelas($kelas);
-
         $assignment = $kelas->assignments()->findOrFail($assignmentId);
         return view('dosen_edit_assignment', compact('kelas', 'assignment'));
     }
@@ -131,12 +142,19 @@ foreach ($kelas->mahasiswa as $mhs) {
             'file' => 'nullable|file|max:10240',
         ]);
 
+        // Tentukan status berdasarkan tombol yang diklik (Publish atau Draft)
+        $status = $assignment->status; 
+        if ($request->has('action')) {
+            $status = $request->action === 'publish' ? 'published' : 'draft';
+        }
+
         $assignment->update([
             'judul' => $request->judul,
             'deskripsi' => $request->deskripsi,
             'deadline' => $request->deadline_tanggal . ' ' . $request->deadline_jam,
             'poin' => $request->poin,
             'tipe_pengumpulan' => $request->tipe_pengumpulan,
+            'status' => $status,
         ]);
 
         if ($request->hasFile('file')) {
@@ -144,10 +162,7 @@ foreach ($kelas->mahasiswa as $mhs) {
                 Storage::disk('public')->delete($assignment->file_path);
             }
 
-            $assignment->file_path = $request->file('file')->store(
-                'assignments',
-                'public'
-            );
+            $assignment->file_path = $request->file('file')->store('assignments', 'public');
             $assignment->save();
         }
 
@@ -163,14 +178,19 @@ foreach ($kelas->mahasiswa as $mhs) {
         $assignment = $kelas->assignments()->findOrFail($assignmentId);
         $assignment->update(['status' => 'published']);
 
-        foreach ($kelas->mahasiswa as $mhs) {
-            notifyMahasiswa(
-                $mhs->id,
-                'assignment',
-                'Tugas Baru Tersedia',
-                "Dosen menambahkan tugas baru: {$assignment->judul}",
-                route('mahasiswa.assignment.detail', ['kelas' => $kelas->id,'assignment' => $assignment->id])
-            );
+        try {
+            foreach ($kelas->mahasiswa as $mhs) {
+                Notification::create([
+                    'user_id'   => $mhs->id,
+                    'user_type' => 'mahasiswa',
+                    'type'      => 'info',
+                    'title'     => 'Tugas Baru Tersedia',
+                    'message'   => "Dosen menambahkan tugas baru: {$assignment->judul}",
+                    'is_read'   => false,
+                ]);
+            }
+        } catch (\Exception $e) {
+            Log::error("Gagal mengirim notif tugas dipublish: " . $e->getMessage());
         }
 
         return redirect()

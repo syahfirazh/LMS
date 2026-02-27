@@ -3,7 +3,7 @@
 <head>
     <meta charset="UTF-8" />
     <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no" />
-    <title>Kelola Detail Sesi | Portal Dosen</title>
+    <title>Kelola Detail Pertemuan | Portal Dosen</title>
     
     <link href="https://unpkg.com/aos@2.3.1/dist/aos.css" rel="stylesheet">
     @vite(['resources/css/app.css', 'resources/js/app.js'])
@@ -64,11 +64,11 @@
                 
                 <div class="text-center absolute left-1/2 transform -translate-x-1/2 w-full max-w-[60%] md:max-w-md mt-2 md:mt-0">
                     <h1 class="text-lg md:text-2xl font-black text-slate-900 tracking-tight leading-tight truncate">
-                        Kelola Isi Sesi
+                        Kelola Isi Pertemuan
                     </h1>
                     <div class="flex items-center justify-center gap-2 mt-1">
                         <span class="text-[9px] md:text-[10px] font-bold text-blue-600 uppercase tracking-widest bg-blue-100 px-2 py-0.5 rounded-md">
-                            Sesi {{ $session->pertemuan }}
+                            Pertemuan {{ $session->pertemuan_ke ?? $session->urutan ?? '' }}
                         </span>
                         <span class="text-[10px] md:text-[11px] font-bold text-slate-400 uppercase tracking-wider truncate">
                             {{ $session->judul }}
@@ -108,7 +108,7 @@
             </div>
 
             <div class="bg-white rounded-[2rem] sm:rounded-[2.5rem] p-6 sm:p-8 md:p-10 border border-slate-200 shadow-sm" data-aos="fade-up" data-aos-duration="800" data-aos-delay="100">
-                <h3 class="text-base sm:text-lg font-black text-slate-900 uppercase tracking-tight mb-6">Materi Sesi</h3>
+                <h3 class="text-base sm:text-lg font-black text-slate-900 uppercase tracking-tight mb-6">Materi Pertemuan</h3>
 
                 <div class="grid grid-cols-1 sm:grid-cols-3 gap-3 sm:gap-4 mb-8">
                     <button type="button" onclick="openModal('materiModal')" class="p-4 sm:p-5 bg-slate-50 border-2 border-dashed border-slate-200 rounded-2xl flex flex-col items-center gap-2 hover:bg-blue-50 hover:border-blue-400 transition-all group text-center cursor-pointer">
@@ -199,7 +199,7 @@
                 <div class="p-5 sm:p-6 md:px-8 border-b border-slate-100 flex justify-between items-center bg-slate-50/50 z-10">
                     <div>
                         <h3 class="text-base sm:text-lg font-black text-slate-900 uppercase tracking-tight">Ruang Diskusi</h3>
-                        <p class="text-[9px] sm:text-[10px] font-bold text-slate-400 uppercase tracking-widest mt-0.5">Tanya jawab sesi ini</p>
+                        <p class="text-[9px] sm:text-[10px] font-bold text-slate-400 uppercase tracking-widest mt-0.5">Tanya jawab pertemuan ini</p>
                     </div>
                     <span class="text-[9px] sm:text-[10px] font-bold bg-green-100 text-green-700 px-3 py-1.5 rounded-full flex items-center gap-1.5">
                         <span class="w-2 h-2 bg-green-500 rounded-full animate-pulse"></span>

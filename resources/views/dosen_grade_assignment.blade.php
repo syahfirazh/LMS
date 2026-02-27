@@ -122,8 +122,20 @@
 
                 {{-- KOLOM 2: PREVIEW TUGAS --}}
                 <div class="lg:col-span-6 bg-slate-900 rounded-[2rem] shadow-xl flex flex-col overflow-hidden relative border border-slate-800 h-[700px]">
-                    <div class="flex-1 flex flex-col items-center justify-center p-4 overflow-y-auto custom-scrollbar space-y-4">
-                        
+                    
+                    {{-- Header Preview --}}
+                    <div class="p-5 border-b border-slate-800 bg-slate-900/90 z-10 flex justify-between items-center shrink-0">
+                        <div>
+                            <h3 class="text-white font-black text-sm uppercase tracking-widest">Lembar Jawaban</h3>
+                            <p class="text-slate-400 text-[10px] font-bold mt-1">{{ $activeMahasiswa->nama ?? 'Mahasiswa' }}</p>
+                        </div>
+                        @if($submission && ($submission->file_path || $submission->text_online || $submission->text_submission || $submission->voice_url || $submission->voice_submission))
+                            <span class="bg-emerald-500/20 text-emerald-400 border border-emerald-500/30 px-3 py-1 rounded-full text-[10px] font-bold uppercase tracking-wider">Terkumpul</span>
+                        @endif
+                    </div>
+
+                    {{-- Konten Preview --}}
+                    <div class="flex-1 flex flex-col p-4 md:p-6 overflow-y-auto custom-scrollbar space-y-5 bg-[#0f172a]">
                         @php
                             $teks = $submission ? ($submission->text_online ?? $submission->text_submission) : null;
                             $voice = $submission ? ($submission->voice_url ?? $submission->voice_submission) : null;
@@ -132,57 +144,78 @@
 
                         @if ($submission && ($file || $teks || $voice))
                             
-                            {{-- TAMPILAN TEXT --}}
+                            {{-- 1. UI KHUSUS JAWABAN TEKS --}}
                             @if($teks)
-                            <div class="w-full bg-white rounded-xl p-6 overflow-y-auto text-slate-800 shadow-inner max-h-[300px] custom-scrollbar shrink-0">
-                                <h3 class="text-sm font-black border-b pb-2 mb-2 text-slate-900 uppercase">Jawaban Teks</h3>
-                                <div class="whitespace-pre-wrap leading-relaxed text-sm font-medium">{{ $teks }}</div>
+                            <div class="bg-slate-800 border border-slate-700 rounded-2xl p-5 shrink-0 shadow-lg">
+                                <div class="flex items-center gap-2 mb-3 border-b border-slate-700 pb-3">
+                                    <div class="w-8 h-8 rounded-lg bg-blue-500/20 text-blue-400 flex items-center justify-center">
+                                        <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M4 6h16M4 12h16M4 18h7"></path></svg>
+                                    </div>
+                                    <h3 class="text-xs font-black text-slate-300 uppercase tracking-widest">Teks Jawaban</h3>
+                                </div>
+                                <div class="text-sm font-medium text-slate-200 leading-relaxed whitespace-pre-wrap">{{ $teks }}</div>
                             </div>
                             @endif
 
-                            {{-- TAMPILAN VOICE NOTE --}}
+                            {{-- 2. UI KHUSUS JAWABAN VOICE NOTE --}}
                             @if($voice)
-                            <div class="bg-slate-800 p-6 rounded-3xl border border-slate-700 w-full max-w-sm shrink-0">
-                                <div class="w-16 h-16 bg-blue-500/20 text-blue-400 rounded-full flex items-center justify-center mx-auto mb-3">
-                                    <svg class="w-8 h-8" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 11a7 7 0 01-7 7m0 0a7 7 0 01-7-7m7 7v4m0 0H8m4 0h4m-4-8a3 3 0 01-3-3V5a3 3 0 116 0v6a3 3 0 01-3 3z"></path></svg>
+                            <div class="bg-slate-800 border border-slate-700 rounded-2xl p-5 shrink-0 w-full sm:w-[350px] shadow-lg">
+                                <div class="flex items-center gap-2 mb-3 border-b border-slate-700 pb-3">
+                                    <div class="w-8 h-8 rounded-lg bg-emerald-500/20 text-emerald-400 flex items-center justify-center">
+                                        <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 11a7 7 0 01-7 7m0 0a7 7 0 01-7-7m7 7v4m0 0H8m4 0h4m-4-8a3 3 0 01-3-3V5a3 3 0 116 0v6a3 3 0 01-3 3z"></path></svg>
+                                    </div>
+                                    <h3 class="text-xs font-black text-slate-300 uppercase tracking-widest">Voice Note</h3>
                                 </div>
-                                <h3 class="text-white font-bold text-sm text-center mb-3">Jawaban Voice Note</h3>
-                                <div class="flex items-center gap-3 bg-slate-900 p-3 rounded-2xl border border-slate-700">
+                                <div class="flex items-center gap-3 bg-slate-900 p-2.5 rounded-xl border border-slate-700">
                                     <button type="button" onclick="togglePlay('main-voice')" id="btn-main-voice" class="w-10 h-10 shrink-0 rounded-full bg-blue-600 text-white flex items-center justify-center shadow hover:scale-105 transition-transform">▶</button>
                                     <div id="main-voice" class="flex-1" data-audio="{{ asset('storage/'.$voice) }}"></div>
                                 </div>
                             </div>
                             @endif
 
-                            {{-- TAMPILAN FILE --}}
+                            {{-- 3. UI KHUSUS JAWABAN FILE --}}
                             @if($file)
                                 @php $ext = strtolower(pathinfo($file, PATHINFO_EXTENSION)); @endphp
-                                @if ($ext === 'pdf')
-                                    <iframe src="{{ asset('storage/' . $file) }}" class="w-full flex-1 bg-white rounded-xl min-h-[400px]"></iframe>
-                                @elseif (in_array($ext, ['jpg', 'jpeg', 'png', 'gif', 'webp']))
-                                    <div class="w-full flex-1 flex items-center justify-center bg-slate-800 rounded-xl p-4">
-                                        <img src="{{ asset('storage/' . $file) }}" class="max-w-full max-h-full object-contain rounded-lg shadow-lg">
-                                    </div>
-                                @else
-                                    <div class="text-center p-8 bg-slate-800 rounded-2xl border border-slate-700 w-full max-w-md shrink-0">
-                                        <div class="w-16 h-16 bg-slate-700 rounded-full flex items-center justify-center mx-auto mb-4 border border-slate-600">
-                                            <svg class="w-8 h-8 text-slate-400" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M4 16v1a3 3 0 003 3h10a3 3 0 003-3v-1m-4-4l-4 4m0 0l-4-4m4 4V4"></path></svg>
+                                <div class="bg-slate-800 border border-slate-700 rounded-2xl flex flex-col flex-1 min-h-[400px] overflow-hidden shadow-lg">
+                                    <div class="flex items-center justify-between p-3 border-b border-slate-700 bg-slate-800 shrink-0">
+                                        <div class="flex items-center gap-2">
+                                            <div class="w-8 h-8 rounded-lg bg-red-500/20 text-red-400 flex items-center justify-center">
+                                                <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M7 21h10a2 2 0 002-2V9.414a1 1 0 00-.293-.707l-5.414-5.414A1 1 0 0012.586 3H7a2 2 0 00-2 2v14a2 2 0 002 2z"></path></svg>
+                                            </div>
+                                            <h3 class="text-xs font-black text-slate-300 uppercase tracking-widest">File Terlampir ({{ strtoupper($ext) }})</h3>
                                         </div>
-                                        <h3 class="text-white text-lg font-bold mb-1">File Terlampir</h3>
-                                        <p class="text-slate-400 text-xs mb-4">Format {{ strtoupper($ext) }} tidak dapat dipreview.</p>
-                                        <a href="{{ asset('storage/' . $file) }}" download class="block w-full py-3 bg-emerald-600 hover:bg-emerald-500 text-white rounded-xl font-bold transition-colors text-center">
-                                            Download File
+                                        <a href="{{ asset('storage/' . $file) }}" target="_blank" download class="text-[10px] font-bold bg-slate-700 hover:bg-slate-600 text-white px-3 py-1.5 rounded-lg transition-colors flex items-center gap-1">
+                                            <svg class="w-3 h-3" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M4 16v1a3 3 0 003 3h10a3 3 0 003-3v-1m-4-4l-4 4m0 0l-4-4m4 4V4"></path></svg>
+                                            Download
                                         </a>
                                     </div>
-                                @endif
-                            @endif
-                        @else
-                            <div class="text-center p-8">
-                                <div class="w-20 h-20 bg-slate-800 rounded-full flex items-center justify-center mx-auto mb-4 border border-slate-700 shadow-inner">
-                                    <svg class="w-10 h-10 text-slate-500" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 8v4m0 4h.01M21 12a9 9 0 11-18 0 9 9 0 0118 0z"></path></svg>
+                                    
+                                    <div class="flex-1 w-full bg-slate-900 flex items-center justify-center relative">
+                                        @if ($ext === 'pdf')
+                                            <iframe src="{{ asset('storage/' . $file) }}" class="absolute inset-0 w-full h-full border-0 bg-white"></iframe>
+                                        @elseif (in_array($ext, ['jpg', 'jpeg', 'png', 'gif', 'webp']))
+                                            <img src="{{ asset('storage/' . $file) }}" class="max-w-full max-h-full object-contain p-2">
+                                        @else
+                                            <div class="text-center p-8">
+                                                <div class="w-16 h-16 bg-slate-800 rounded-full flex items-center justify-center mx-auto mb-4 border border-slate-700">
+                                                    <svg class="w-8 h-8 text-slate-500" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 10v2m0 4h.01m-6.938 4h13.856c1.54 0 2.502-1.667 1.732-3L13.732 4c-.77-1.333-2.694-1.333-3.464 0L3.34 16c-.77 1.333.192 3 1.732 3z"></path></svg>
+                                                </div>
+                                                <p class="text-slate-400 text-sm font-medium">Format file tidak dapat dipreview.</p>
+                                                <p class="text-slate-500 text-xs mt-1">Silakan klik tombol download di atas.</p>
+                                            </div>
+                                        @endif
+                                    </div>
                                 </div>
-                                <h3 class="text-white text-lg font-black tracking-wide">Belum Mengumpulkan</h3>
-                                <p class="text-slate-400 text-sm mt-1 max-w-xs mx-auto">Mahasiswa belum mengirimkan tugas.</p>
+                            @endif
+
+                        @else
+                            {{-- UI KETIKA BELUM MENGUMPULKAN SAMA SEKALI --}}
+                            <div class="h-full flex flex-col items-center justify-center text-center p-8 opacity-60">
+                                <div class="w-24 h-24 bg-slate-800 rounded-full flex items-center justify-center mb-6 border border-slate-700 shadow-inner">
+                                    <svg class="w-12 h-12 text-slate-500" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="1.5" d="M12 8v4m0 4h.01M21 12a9 9 0 11-18 0 9 9 0 0118 0z"></path></svg>
+                                </div>
+                                <h3 class="text-white text-xl font-black tracking-wider uppercase mb-2">Belum Mengumpulkan</h3>
+                                <p class="text-slate-400 text-sm font-medium max-w-xs mx-auto leading-relaxed">Mahasiswa ini belum mengunggah file, teks, ataupun rekaman suara.</p>
                             </div>
                         @endif
                     </div>
@@ -231,12 +264,10 @@
                                     
                                     $namaLabel = $isMe ? 'Anda' : $namaMahasiswa;
                                     
-                                    // LOGIKA FOTO ASLI (Blade)
                                     $fotoProfil = $isMe 
                                         ? (auth('dosen')->user()->foto ? asset('storage/'.auth('dosen')->user()->foto) : 'https://ui-avatars.com/api/?name=' . urlencode($namaDosen) . '&background=2563eb&color=fff') 
                                         : ($activeMahasiswa->foto ? asset('storage/'.$activeMahasiswa->foto) : 'https://ui-avatars.com/api/?name=' . urlencode($namaMahasiswa) . '&background=64748b&color=fff');
                                     
-                                    // TEMA WARNA BUBBLE CHAT
                                     $bgChat = $isMe ? 'bg-blue-600 text-white rounded-tr-none border-blue-700' : 'bg-white text-slate-800 rounded-tl-none border-slate-200';
                                     $labelTeksWarna = $isMe ? 'text-blue-500' : 'text-slate-400';
                                     
@@ -281,19 +312,20 @@
                                 <button type="button" onclick="cancelImage()" class="absolute -top-2 -right-2 bg-red-500 text-white rounded-full w-5 h-5 flex items-center justify-center font-bold text-xs shadow-lg hover:bg-red-600">✕</button>
                             </div>
 
-                            <form id="chatForm" method="POST" action="{{ route('dosen.assignment.message.store', ['assignment' => $assignment->id, 'mahasiswa' => $activeMahasiswaId]) }}" enctype="multipart/form-data">
+                            {{-- TAG FORM MENDAPATKAN TAMBAHAN id="chatForm" & VARIABLE $activeMahasiswaId --}}
+                          <form id="chatForm" action="{{ route('dosen.assignment.message.store', ['assignment' => $assignment->id, 'mahasiswa' => $activeMahasiswaId ?? 0]) }}" method="POST" enctype="multipart/form-data">
                                 @csrf
                                 <input type="file" name="image" id="imageInput" accept="image/*" class="hidden" onchange="previewImage(this)">
                                 <input type="file" name="voice" id="voiceInput" accept="audio/webm" class="hidden">
                                 
-                                <div class="relative flex items-center bg-slate-50 border border-slate-200 rounded-full p-1.5 pr-2 focus-within:ring-2 focus-within:ring-blue-100 transition-all shadow-sm w-full">
+                                <div class="relative flex items-center bg-slate-50 border border-slate-200 rounded-full p-1.5 pr-2 focus-within:ring-2 focus-within:ring-blue-100 focus-within:border-blue-400 transition-all shadow-sm w-full">
                                     
                                     <button type="button" onclick="document.getElementById('imageInput').click()" id="btnUploadImage" class="relative w-10 h-10 rounded-full flex items-center justify-center text-slate-400 hover:text-blue-600 hover:bg-slate-50 transition-all shrink-0">
                                         <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="1.8" d="M4 16l4.586-4.586a2 2 0 012.828 0L16 16m-2-2l1.586-1.586a2 2 0 012.828 0L20 14m-6-6h.01M6 20h12a2 2 0 002-2V6a2 2 0 00-2-2H6a2 2 0 00-2 2v12a2 2 0 002 2z"></path></svg>
                                     </button>
 
                                     <div id="normalInputWrapper" class="flex-1 relative flex items-center min-w-0 px-2 border-l border-slate-200 ml-1 pl-3">
-                                        <input type="text" name="message" id="messageInput" placeholder="Tulis pesan balasan..." autocomplete="off" class="w-full bg-transparent border-none focus:ring-0 text-xs text-slate-700 py-2" />
+                                        <input type="text" name="message" id="messageInput" placeholder="Tulis pesan balasan..." autocomplete="off" class="w-full bg-transparent border-none focus:outline-none focus:ring-0 text-xs text-slate-700 py-2 placeholder-slate-400" />
                                     </div>
 
                                     <div id="recordingWrapper" class="hidden flex-1 items-center justify-between px-3 bg-red-50/80 rounded-full h-10 mx-1 border border-red-100">
@@ -363,7 +395,7 @@
                 wavesurfers[id] = WaveSurfer.create({
                     container: '#' + id,
                     waveColor: isMe ? 'rgba(255,255,255,0.4)' : '#cbd5e1',
-                    progressColor: isMe ? '#fff' : '#2563eb', // Progress color (Putih jika biru, Biru jika putih)
+                    progressColor: isMe ? '#fff' : '#2563eb',
                     height: 16, barWidth: 2, barGap: 2, cursorWidth: 0, url: url
                 });
                 wavesurfers[id].on('finish', () => document.getElementById('btn-'+id).innerHTML = '▶');

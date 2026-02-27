@@ -9,26 +9,35 @@ use Illuminate\Support\Facades\Auth;
 class MahasiswaNotificationController extends Controller
 {
     public function index()
-{
-    $mahasiswaId = auth()->guard('mahasiswa')->id();
+    {
+        $mahasiswaId = Auth::guard('mahasiswa')->id();
 
-    $notifications = Notification::where('mahasiswa_id', $mahasiswaId)
-        ->latest()
-        ->get();
+        // Mengambil data yang cocok dengan mahasiswa_id ATAU kombinasi user_id & user_type
+        $notifications = Notification::where('mahasiswa_id', $mahasiswaId)
+                                     ->orWhere(function($query) use ($mahasiswaId) {
+                                         $query->where('user_id', $mahasiswaId)
+                                               ->where('user_type', 'mahasiswa');
+                                     })
+                                     ->orderBy('created_at', 'DESC')
+                                     ->get();
 
-    $unreadCount = $notifications->where('is_read', false)->count();
+        $unreadCount = $notifications->where('is_read', false)->count();
 
-    return view('notifications', compact('notifications', 'unreadCount'));
-}
+        return view('notifications', compact('notifications', 'unreadCount'));
+    }
 
     public function markAllRead()
     {
-        $mahasiswa = Auth::guard('mahasiswa')->user();
+        $mahasiswaId = Auth::guard('mahasiswa')->id();
 
-        Notification::where('user_type', 'mahasiswa')
-            ->where('user_id', $mahasiswa->id)
-            ->update(['is_read' => true]);
+        // Menandai pesan terbaca untuk mahasiswa_id ATAU kombinasi user_id & user_type
+        Notification::where('mahasiswa_id', $mahasiswaId)
+                    ->orWhere(function($query) use ($mahasiswaId) {
+                        $query->where('user_id', $mahasiswaId)
+                              ->where('user_type', 'mahasiswa');
+                    })
+                    ->update(['is_read' => true]);
 
-        return back();
+        return back()->with('success', 'Semua notifikasi ditandai telah dibaca.');
     }
 }

@@ -86,14 +86,13 @@
             $jumlahSelesai = 0;
             $jumlahBelum = 0;
 
-            // Hitung manual status tugas mahasiswa ini
             foreach($assignments as $tugas) {
-                // Cek apakah mahasiswa punya record pengumpulan di tugas ini yang terisi (bukan sekedar record kosong karena buka chat)
                 $sub = \App\Models\Submission::where('assignment_id', $tugas->id)
                             ->where('mahasiswa_id', $mahasiswaId)
                             ->first();
 
-                $isBenarSelesai = $sub && ($sub->file_path || $sub->text_submission || $sub->text_online || $sub->voice_submission || $sub->voice_url);
+                // Cek apakah mahasiswa punya record pengumpulan di tugas ini yang terisi
+                $isBenarSelesai = $sub && ($sub->file_path || $sub->text_submission || $sub->voice_submission || $sub->voice_url || $sub->text_online);
 
                 if ($isBenarSelesai) {
                     $jumlahSelesai++;
@@ -136,12 +135,10 @@
                         
                         @forelse($assignments as $index => $tugas)
                             @php
-                                // Ambil ulang data submission khusus mahasiswa untuk list
                                 $subData = \App\Models\Submission::where('assignment_id', $tugas->id)
                                     ->where('mahasiswa_id', Auth::guard('mahasiswa')->id())
                                     ->first();
 
-                                // Cek apa dia benar2 sudah submit jawaban (Bukan sekedar chat dosen kosong)
                                 $isSelesai = $subData && ($subData->file_path || $subData->text_submission || $subData->text_online || $subData->voice_submission || $subData->voice_url);
                                 
                                 $borderClass = $isSelesai ? 'border-emerald-200 hover:bg-emerald-50 bg-emerald-50/20' : 'border-slate-100 hover:border-orange-200 hover:bg-orange-50/30';
@@ -153,7 +150,8 @@
                                 <div class="absolute left-0 top-0 bottom-0 w-1 {{ $lineClass }} rounded-l-2xl"></div>
                                 <div class="flex items-center gap-4 flex-1">
                                     <div class="w-12 h-12 rounded-xl {{ $iconBg }} flex items-center justify-center shrink-0 font-black text-sm shadow-sm group-hover:scale-105 transition-transform">
-                                        {{ $index + 5 }} </div>
+                                        {{ $index + 5 }} 
+                                    </div>
                                     <div>
                                         <h4 class="text-sm font-bold text-slate-800">{{ $tugas->judul }}</h4>
                                         <div class="flex items-center gap-2 mt-1 text-xs font-medium {{ $isSelesai ? 'text-emerald-600' : 'text-orange-600' }}">
@@ -197,7 +195,7 @@
             @foreach($assignments as $index => $tugas)
                 {
                     id: {{ $tugas->id }},
-                    judul: "{{ $tugas->judul }}",
+                    judul: "{{ addslashes($tugas->judul) }}",
                     voiceId: {{ $index + 5 }}
                 },
             @endforeach
@@ -245,35 +243,37 @@
             synth.speak(utter);
         }
 
-        const urlPembelajaran = "{{ route('course.detail', ['kelas' => $kelas->id]) }}";
-        const urlPresensi = "{{ (isset($session) && $session) ? route('course.attendance', ['kelas' => $kelas->id, 'session' => $session->id]) : '#' }}";
-        const urlPenugasan = "{{ route('course.assignments', ['kelas' => $kelas->id, 'session' => $session->id]) }}";
-        const urlAnggota = "{{ route('course.members', ['kelas' => $kelas->id]) }}";
-
         function navigasiKe(nomor) {
             let tujuan = "";
             let teks = "";
 
-            if (nomor === 0) {
+            if (nomor === 0 || nomor === 1) {
                 tujuan = "{{ route('course.detail', $kelas->id) }}";
-                teks = "Kembali ke Beranda Kelas.";
-            } else if (nomor === 1) {
-                tujuan = urlPembelajaran;
-                teks = "Membuka halaman Pembelajaran.";
-            } else if (nomor === 2) {
-                tujuan = urlPresensi;
-                teks = tujuan === '#' ? "Halaman presensi belum tersedia di kelas ini." : "Membuka halaman Presensi.";
-            } else if (nomor === 3) {
-                teks = "Anda sudah di halaman Penugasan.";
-            } else if (nomor === 4) {
-                tujuan = urlAnggota;
-                teks = "Membuka daftar Anggota.";
-            } else if (nomor >= 5) {
-                // Buka Tugas
+                teks = nomor === 0 ? "Kembali ke Beranda Kelas." : "Membuka halaman Pembelajaran.";
+            } 
+            else if (nomor === 2) {
+                @if(isset($session) && $session)
+                    tujuan = "{{ route('course.attendance', $session->id) }}";
+                    teks = "Membuka halaman Presensi.";
+                @else
+                    tujuan = "#";
+                    teks = "Halaman presensi belum tersedia di kelas ini karena belum ada sesi yang dibuat dosen.";
+                @endif
+            } 
+            else if (nomor === 3) {
+                tujuan = "#";
+                teks = "Anda sudah berada di halaman Penugasan.";
+            } 
+            else if (nomor === 4) {
+                tujuan = "{{ route('course.members', $kelas->id) }}";
+                teks = "Membuka daftar Anggota kelas.";
+            } 
+            else if (nomor >= 5) {
                 let tugasTujuan = tugasList.find(t => t.voiceId === nomor);
                 if(tugasTujuan) {
-                    tujuan = "{{ route('mahasiswa.assignment.detail', ['kelas' => $kelas->id,'assignment' => '__ID__']) }}".replace('__ID__', tugasTujuan.id);
-                    teks = `Membuka Tugas ${tugasTujuan.judul}.`;
+                    // Penulisan aman link tugas
+                    tujuan = "{{ url('/mata-kuliah') }}/{{ $kelas->id }}/penugasan/" + tugasTujuan.id;
+                    teks = "Membuka Tugas " + tugasTujuan.judul + ".";
                 } else {
                     teks = "Nomor tugas tidak ditemukan.";
                 }
@@ -281,9 +281,14 @@
 
             if (teks !== "") {
                 bicara(teks);
-                setTimeout(() => {
-                    if (tujuan !== "" && tujuan !== "#") window.location.href = tujuan;
-                }, 1500);
+                if (tujuan !== "" && tujuan !== "#") {
+                    setTimeout(() => {
+                        window.location.href = tujuan;
+                    }, 1500);
+                } else {
+                    // Restart mic jika tujuannya '#'
+                    setTimeout(() => { if(rec) rec.start(); }, 1500);
+                }
             }
         }
 
@@ -311,18 +316,30 @@
                         }
                     }
 
-                    if (terdeteksiAngka !== null) { navigasiKe(terdeteksiAngka); }
+                    if (terdeteksiAngka !== null) { 
+                        navigasiKe(terdeteksiAngka); 
+                    }
                     else if (hasil.includes("kembali") || hasil.includes("beranda")) { navigasiKe(0); }
                     else if (hasil.includes("pembelajaran") || hasil.includes("materi")) { navigasiKe(1); }
-                    else if (hasil.includes("presensi")) { navigasiKe(2); }
-                    else if (hasil.includes("anggota")) { navigasiKe(4); }
+                    else if (hasil.includes("presensi") || hasil.includes("absen")) { navigasiKe(2); }
+                    else if (hasil.includes("penugasan") || hasil.includes("tugas")) { navigasiKe(3); }
+                    else if (hasil.includes("anggota") || hasil.includes("peserta")) { navigasiKe(4); }
                 };
+                
                 rec.onend = () => { rec.start(); };
             } catch (e) { console.error("Error recognition:", e); }
         }
 
         window.onload = () => {
-            const orientasi = "Anda berada di Halaman Daftar Tugas. Sebutkan angka lima ke atas untuk membuka tugas spesifik, atau sebutkan angka nol untuk kembali.";
+            let totalTugas = {{ $assignments->count() }};
+            let orientasi = "";
+            
+            if (totalTugas > 0) {
+                orientasi = "Anda berada di Halaman Daftar Tugas. Sebutkan angka lima ke atas untuk membuka tugas spesifik, atau sebutkan angka nol untuk kembali ke beranda kelas.";
+            } else {
+                orientasi = "Anda berada di Halaman Daftar Tugas. Saat ini belum ada tugas yang diberikan oleh dosen. Sebutkan angka nol untuk kembali.";
+            }
+
             document.body.addEventListener("click", () => {}, { once: true });
             setTimeout(() => { bicara(orientasi, () => { mulaiMendengar(); }); }, 800);
         };

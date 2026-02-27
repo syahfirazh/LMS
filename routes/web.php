@@ -19,6 +19,8 @@ use App\Http\Controllers\MahasiswaJoinKelasController;
 use App\Http\Controllers\Mahasiswa\AttendanceController as MahasiswaAttendanceController;
 use App\Http\Controllers\DiscussionController;
 use App\Http\Controllers\Mahasiswa\MahasiswaNotificationController;
+use App\Http\Controllers\Mahasiswa\MahasiswaMessageController; 
+use App\Http\Controllers\Mahasiswa\ExamController as MahasiswaExamController;
 
 // Dosen
 use App\Http\Controllers\Dosen\DashboardController;
@@ -60,7 +62,6 @@ Route::get('/logout', function () {
     return redirect()->route('login');
 })->name('logout');
 
-
 // --- Login & Logout Dosen ---
 Route::get('/login-dosen', function () { return view('dosen_login'); })->name('login.dosen');
 Route::post('/login/dosen', [DosenAuthController::class, 'login'])->name('login.dosen.post');
@@ -85,84 +86,62 @@ Route::middleware('auth:mahasiswa')->group(function () {
     // --- Menu Utama ---
     Route::get('/dashboard', [MahasiswaDashboardController::class, 'index'])->name('dashboard');
     Route::get('/mahasiswa/profile', [MahasiswaProfileController::class, 'index'])->name('profile');
-    Route::post(
-    '/mata-kuliah/{kelas}/assignment/{assignment}/message',
-    [MahasiswaController::class, 'sendMessage']
-)->name('mahasiswa.assignment.message.store');
-Route::get(
-    '/mata-kuliah/{kelas}/penugasan',
-    [\App\Http\Controllers\Mahasiswa\AssignmentController::class, 'index']
-)->name('course.assignments');
+    Route::post('/mata-kuliah/{kelas}/assignment/{assignment}/message', [MahasiswaController::class, 'sendMessage'])->name('mahasiswa.assignment.message.store');
+    Route::get('/mata-kuliah/{kelas}/penugasan', [\App\Http\Controllers\Mahasiswa\AssignmentController::class, 'index'])->name('course.assignments');
+    
     Route::controller(MahasiswaController::class)->group(function () {
         Route::get('/mata-kuliah', 'index')->name('courses.index');
         Route::get('/mata-kuliah/{kelas}', 'show')->name('course.detail');
         Route::post('/mahasiswa/join', 'joinByCode')->name('mahasiswa.join.bycode');
+        Route::get('/kelas/{kelas}/anggota/search', 'search')->name('course.members.search');
     });
 
     // --- Fitur Tambahan ---
-   Route::get(
-        '/pemberitahuan',
-        [MahasiswaNotificationController::class, 'index']
-    )->name('notifications');
+    Route::get('/pemberitahuan', [MahasiswaNotificationController::class, 'index'])->name('notifications');
+    Route::post('/pemberitahuan/read-all', [MahasiswaNotificationController::class, 'markAllRead'])->name('notifications.read');
+    Route::get('/mata-kuliah/{kelas}/penugasan/{assignment}', [\App\Http\Controllers\Mahasiswa\AssignmentController::class, 'show'])->name('mahasiswa.assignment.detail');
+    
+    // --- Pesan Inklusi Mahasiswa ---
+    Route::controller(MahasiswaMessageController::class)->group(function () {
+        Route::get('/pesan', 'index')->name('messages');
+        Route::get('/messages/search', 'search')->name('messages.search');
+        Route::post('/messages/send', 'send')->name('messages.send');
+        Route::get('/messages/{dosen}', 'show')->name('messages.show');
+    });
 
-    Route::post(
-        '/pemberitahuan/read-all',
-        [MahasiswaNotificationController::class, 'markAllRead']
-    )->name('notifications.read');
-    Route::get(
-    '/mata-kuliah/{kelas}/penugasan/{assignment}',
-    [\App\Http\Controllers\Mahasiswa\AssignmentController::class, 'show']
-)->name('mahasiswa.assignment.detail');
-    Route::get('/pesan', [DiscussionController::class, 'index'])->name('messages');
-Route::post('/discussion/{session}', [DiscussionController::class, 'store'])->name('discussion.store'); 
+    Route::post('/discussion/{session}', [DiscussionController::class, 'store'])->name('discussion.store'); 
     Route::get('/bantuan', function () { return view('help'); })->name('help');
-    Route::get('/student/chat/{conversation}/messages', 
-        [DiscussionController::class,'messages']);
-
-    Route::post('/student/chat/{conversation}/send', 
-        [DiscussionController::class,'send']);
+    Route::get('/student/chat/{conversation}/messages', [DiscussionController::class,'messages']);
+    Route::post('/student/chat/{conversation}/send', [DiscussionController::class,'send']);
 
     // --- Presensi Mahasiswa ---
     Route::controller(MahasiswaAttendanceController::class)->group(function () {
-        Route::get(
-        '/presensi/{session}',
-        [AttendanceController::class, 'attendance']
-    )->name('mahasiswa.presensi');
-
-    Route::post('/presensi/{id}/{status}', 
-    [MahasiswaAttendanceController::class, 'store']
-)->name('presensi.store');
+        Route::get('/presensi/{session}', [AttendanceController::class, 'attendance'])->name('mahasiswa.presensi');
+        Route::post('/presensi/{id}/{status}', 'store')->name('presensi.store');
     });
     
     // --- Bergabung Kelas ---
     Route::get('/gabung-kelas', function () { return view('join_course'); })->name('courses.join');
     Route::post('/mahasiswa/join-kelas', [MahasiswaJoinKelasController::class, 'join'])->name('mahasiswa.join.kelas');
 
-    // --- Detail Mata Kuliah Spesifik (Prototype) ---
+    // --- Detail Mata Kuliah Spesifik ---
     Route::prefix('mata-kuliah/struktur-data')->group(function () {
         Route::get('/', function () { return view('course_detail'); })->name('course.prototype.detail');
-        Route::get('mata-kuliah/{kelas}/topik/{session}',
-    [MahasiswaController::class, 'topic']
-)->name('topic.detail');
-Route::post(
-    'mata-kuliah/{kelas}/assignment/{assignment}/submit',
-    [MahasiswaController::class, 'submitAssignment']
-)->name('assignment.submit');
-        
+        Route::get('mata-kuliah/{kelas}/topik/{session}', [MahasiswaController::class, 'topic'])->name('topic.detail');
+        Route::post('mata-kuliah/{kelas}/assignment/{assignment}/submit', [MahasiswaController::class, 'submitAssignment'])->name('assignment.submit');
         Route::get('/presensi/{session}', [MahasiswaAttendanceController::class, 'attendance'])->name('course.attendance');
-        Route::get(
-    '/mata-kuliah/{kelas}/anggota',
-    [MahasiswaController::class, 'members']
-)->name('course.members');
+        Route::get('/mata-kuliah/{kelas}/anggota', [MahasiswaController::class, 'members'])->name('course.members');
     });
-    Route::get('/kelas/{kelas}/anggota/search', [MahasiswaController::class, 'search'])
-    ->name('course.members.search');
 
-    // --- Fitur Ujian Online (Prototype) ---
-    Route::prefix('ujian')->group(function () {
-        Route::get('/', function () { return view('exams'); })->name('exams');
-        Route::get('/gabung', function () { return view('join_exam'); })->name('join.exam');
-        Route::get('/mulai', function () { return view('exam_start'); })->name('exam.start'); 
+    // --- Fitur Ujian Online Mahasiswa ---
+    Route::prefix('ujian')->controller(MahasiswaExamController::class)->group(function () {
+        Route::get('/', 'index')->name('exams');
+        Route::get('/gabung', 'join')->name('join.exam');
+        Route::post('/verifikasi', 'verifyToken')->name('exam.verify');
+        Route::get('/{id?}/persiapan', 'preparation')->name('exam.preparation');
+        Route::post('/{id?}/mulai', 'start')->name('exam.start'); 
+        Route::get('/{id?}/kerjakan', 'play')->name('exam.play');
+        Route::post('/{id?}/submit', 'submit')->name('exam.submit');
     });
 });
 
@@ -175,29 +154,26 @@ Route::prefix('dosen')->middleware('auth:dosen')->group(function () {
     // --- DASHBOARD & MENU UTAMA ---
     Route::controller(DashboardController::class)->group(function () {
         Route::get('/', 'index')->name('dosen.dashboard');
-       Route::get(
-        '/pemberitahuan',
-        [DosenNotificationController::class, 'index']
-    )->name('dosen.notifications');
-
-    Route::get(
-    '/pemberitahuan/{id}',
-    [DosenNotificationController::class, 'read']
-)->name('dosen.notifications.read.single');
-Route::post(
-    '/pemberitahuan/read-all',
-    [DosenNotificationController::class, 'markAllRead']
-)->name('dosen.notifications.read');
-        
+        Route::get('/pemberitahuan', [DosenNotificationController::class, 'index'])->name('dosen.notifications');
+        Route::get('/pemberitahuan/{id}', [DosenNotificationController::class, 'read'])->name('dosen.notifications.read.single');
+        Route::post('/pemberitahuan/read-all', [DosenNotificationController::class, 'markAllRead'])->name('dosen.notifications.read');
         Route::get('/jadwal', 'schedule')->name('dosen.schedule');
     });
- 
+
     // --- MANAJEMEN UJIAN ---
     Route::controller(ExamController::class)->group(function () {
-        Route::get('/exams', [ExamController::class, 'index'])->name('dosen.exams.index');
-        Route::post('/exams', [ExamController::class, 'store'])->name('dosen.exams.store');
         Route::get('/ujian', 'index')->name('dosen.exams');
         Route::post('/ujian', 'store')->name('dosen.exams.store');
+        Route::post('/ujian/{exam}/publish', 'publish')->name('dosen.exams.publish');
+        Route::get('/ujian/{exam}/soal', 'questions')->name('dosen.exams.questions');
+        Route::post('/ujian/{exam}/soal', 'storeQuestions')->name('dosen.exams.questions.store');
+        
+        // [ROUTE BARU UNTUK PANTAU DAN HASIL]
+        Route::get('/ujian/{exam}/pantau', 'monitor')->name('dosen.exams.monitor');
+        Route::get('/ujian/{exam}/hasil', 'results')->name('dosen.exams.results');
+        
+        Route::post('/ujian/{exam}/stop', 'stop')->name('dosen.exams.stop');
+        Route::delete('/ujian/{exam}', 'destroy')->name('dosen.exams.destroy');
     });
     
     // --- PROFIL DOSEN ---
@@ -233,8 +209,7 @@ Route::post(
     Route::controller(CourseSessionController::class)->group(function () {
         Route::get('/mata-kuliah/{kelas}/session/{session}', 'detail')->name('dosen.course.session.detail');
         Route::post('/session/{id}/diskusi', 'storeDiskusi')->name('session.diskusi.store');
-        Route::post('/discussion/{session}', [DiscussionController::class, 'store'])
-    ->name('discussion.store');
+        Route::post('/discussion/{session}', [DiscussionController::class, 'store'])->name('discussion.store');
     });
 
     Route::get('/session/{id}', [SessionController::class, 'show'])->name('session.show');
@@ -303,4 +278,5 @@ Route::post(
         Route::post('/messages/send', 'send')->name('dosen.messages.send');
         Route::get('/messages/fetch/{mahasiswa}', 'fetch')->name('dosen.messages.fetch');
     });
+
 });

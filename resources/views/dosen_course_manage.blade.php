@@ -105,11 +105,11 @@
                 <div class="flex flex-col sm:flex-row justify-between items-start sm:items-center gap-4 px-2" data-aos="fade-right">
                     <div>
                         <h3 class="text-xl font-black text-slate-900 tracking-tight">Rencana Pertemuan</h3>
-                        <p class="text-xs font-bold text-slate-400 mt-1">Kelola silabus dan sesi pembelajaran kelas.</p>
+                        <p class="text-xs font-bold text-slate-400 mt-1">Kelola silabus dan pertemuan pembelajaran kelas.</p>
                     </div>
                     <button onclick="toggleModal('modalAddSession', true)" class="px-6 py-3 bg-blue-600 text-white rounded-xl text-[10px] font-black uppercase tracking-widest hover:bg-blue-700 transition-transform transform hover:-translate-y-1 shadow-lg shadow-blue-200 flex items-center gap-2">
                         <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="3" d="M12 4v16m8-8H4"></path></svg>
-                        Tambah Sesi
+                        Tambah Pertemuan
                     </button>
                 </div>
 
@@ -157,9 +157,9 @@
                                 <svg class="w-10 h-10" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="1.5" d="M12 6v6m0 0v6m0-6h6m-6 0H6"></path></svg>
                             </div>
                             <h3 class="font-black text-slate-800 text-lg mb-1">Belum ada pertemuan</h3>
-                            <p class="text-sm font-medium text-slate-400 mb-6">Mulai tambahkan sesi pertemuan pertama untuk kelas ini.</p>
+                            <p class="text-sm font-medium text-slate-400 mb-6">Mulai tambahkan pertemuan pertama untuk kelas ini.</p>
                             <button onclick="toggleModal('modalAddSession', true)" class="px-6 py-2.5 bg-slate-900 text-white rounded-xl text-[10px] font-black uppercase tracking-widest hover:bg-blue-600 transition-all shadow-md inline-flex items-center gap-2">
-                                <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 4v16m8-8H4"></path></svg> Tambah Sesi
+                                <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 4v16m8-8H4"></path></svg> Tambah Pertemuan
                             </button>
                         </div>
                     @endforelse
@@ -176,7 +176,7 @@
                         <div class="w-16 h-16 bg-blue-50 text-blue-600 rounded-full flex items-center justify-center mb-6">
                             <svg class="w-8 h-8" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 6v6m0 0v6m0-6h6m-6 0H6"></path></svg>
                         </div>
-                        <h3 class="text-2xl font-black text-slate-900 mb-2 tracking-tight">Sesi Pembelajaran Baru</h3>
+                        <h3 class="text-2xl font-black text-slate-900 mb-2 tracking-tight">Pertemuan Baru</h3>
                         <p class="text-sm text-slate-500 font-medium mb-8">Tentukan judul atau topik bahasan untuk pertemuan ini.</p>
                         
                         <div class="space-y-6">
@@ -190,7 +190,7 @@
                                     Batal
                                 </button>
                                 <button type="submit" class="flex-1 py-4 bg-blue-600 text-white rounded-2xl font-black text-[10px] uppercase tracking-widest shadow-lg shadow-blue-200 hover:bg-blue-700 transition-transform transform hover:-translate-y-1">
-                                    Simpan Sesi
+                                    Simpan Pertemuan
                                 </button>
                             </div>
                         </div>

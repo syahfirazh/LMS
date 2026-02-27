@@ -9,10 +9,12 @@ use App\Models\Assignment;
 use App\Models\Submission;
 use App\Models\SubmissionMessage;
 use Illuminate\Support\Facades\Auth;
+use Illuminate\Support\Facades\Log;
+use App\Models\Notification;
 
 class AssignmentController extends Controller
 {
-    // 1. FUNGSI INDEX (MENAMPILKAN DAFTAR TUGAS) -> INI YANG BIKIN ERROR DI GAMBAR 7
+    // 1. FUNGSI INDEX (MENAMPILKAN DAFTAR TUGAS)
     public function index($kelasId)
     {
         $kelas = Kelas::findOrFail($kelasId);
@@ -26,38 +28,40 @@ class AssignmentController extends Controller
 
     // 2. FUNGSI SHOW (MENAMPILKAN DETAIL TUGAS)
     public function show($kelasId, $assignmentId)
-{
-    $kelas = Kelas::findOrFail($kelasId);
+    {
+        $kelas = Kelas::findOrFail($kelasId);
 
-    $assignment = Assignment::where('kelas_id', $kelasId)
-    ->findOrFail($assignmentId);
+        $assignment = Assignment::where('kelas_id', $kelasId)
+        ->findOrFail($assignmentId);
 
-    $mahasiswaId = Auth::guard('mahasiswa')->id();
+        $mahasiswaId = Auth::guard('mahasiswa')->id();
 
-    $submission = Submission::with(['messages' => function($q) {
-        $q->orderBy('created_at', 'asc');
-    }])->where('assignment_id', $assignmentId)
-      ->where('mahasiswa_id', $mahasiswaId)
-      ->first();
+        $submission = Submission::with(['messages' => function($q) {
+            $q->orderBy('created_at', 'asc');
+        }])->where('assignment_id', $assignmentId)
+          ->where('mahasiswa_id', $mahasiswaId)
+          ->first();
 
-    $session = $assignment->session;
+        // Bisa jadi tugas ini tidak terikat session spesifik, atau session-nya null
+        $session = $assignment->session ?? $kelas->courseSessions()->orderBy('urutan')->first();
 
-    return view('assignment_detail', compact(
-        'kelas',
-        'assignment',
-        'submission',
-        'session'
-    ));
-}
+        return view('assignment_detail', compact(
+            'kelas',
+            'assignment',
+            'submission',
+            'session'
+        ));
+    }
 
     // 3. FUNGSI STORE (PENGUMPULAN TUGAS)
     public function store(Request $request, $kelasId, $assignmentId)
     {
-        $mahasiswaId = Auth::guard('mahasiswa')->id();
+        /** @var \App\Models\Mahasiswa $mahasiswa */
+        $mahasiswa = Auth::guard('mahasiswa')->user();
         
         $submission = Submission::firstOrCreate([
             'assignment_id' => $assignmentId,
-            'mahasiswa_id'  => $mahasiswaId
+            'mahasiswa_id'  => $mahasiswa->id
         ]);
 
         if ($request->hasFile('file')) {
@@ -72,6 +76,23 @@ class AssignmentController extends Controller
 
         $submission->save();
 
+        // [BARU] NOTIFIKASI KE DOSEN SAAT MAHASISWA KUMPUL TUGAS
+        try {
+            $kelas = Kelas::findOrFail($kelasId);
+            if ($kelas->dosen_id) {
+                Notification::create([
+                    'user_id'   => $kelas->dosen_id,
+                    'user_type' => 'dosen',
+                    'type'      => 'info',
+                    'title'     => 'Tugas Baru Dikumpulkan',
+                    'message'   => 'Mahasiswa <b>' . $mahasiswa->nama . '</b> telah mengumpulkan tugas.',
+                    'is_read'   => false,
+                ]);
+            }
+        } catch (\Exception $e) {
+            Log::error("Gagal mengirim notif kumpul tugas: " . $e->getMessage());
+        }
+
         return back()->with('success', 'Tugas berhasil dikumpulkan!');
     }
 
@@ -85,11 +106,12 @@ class AssignmentController extends Controller
                 'voice'   => 'nullable|file|max:5120',
             ]);
 
-            $mahasiswaId = Auth::guard('mahasiswa')->id();
+            /** @var \App\Models\Mahasiswa $mahasiswa */
+            $mahasiswa = Auth::guard('mahasiswa')->user();
             
             $submission = Submission::firstOrCreate([
                 'assignment_id' => $assignmentId,
-                'mahasiswa_id'  => $mahasiswaId
+                'mahasiswa_id'  => $mahasiswa->id
             ]);
 
             $pathImage = $request->hasFile('image') ? $request->file('image')->store('diskusi_tugas/images', 'public') : null;
@@ -107,15 +129,37 @@ class AssignmentController extends Controller
                 'voice'         => $pathVoice,
             ]);
 
+            // [BARU] NOTIFIKASI KE DOSEN SAAT MAHASISWA CHAT
+            try {
+                $kelas = Kelas::findOrFail($kelasId);
+                if ($kelas->dosen_id) {
+                    Notification::create([
+                        'user_id'   => $kelas->dosen_id,
+                        'user_type' => 'dosen',
+                        'type'      => 'info',
+                        'title'     => 'Pesan Diskusi Tugas Baru',
+                        'message'   => 'Mahasiswa <b>' . $mahasiswa->nama . '</b> mengirim pesan pada diskusi tugas.',
+                        'is_read'   => false,
+                    ]);
+                }
+            } catch (\Exception $e) {
+                Log::error("Gagal mengirim notif chat tugas: " . $e->getMessage());
+            }
+
+            // [BARU] Ambil URL Foto Profil untuk ditampilkan di UI
+            $fotoPath = $mahasiswa->foto_profil ?? $mahasiswa->foto ?? null;
+            $avatarUrl = $fotoPath ? asset('storage/' . $fotoPath) : null;
+
             return response()->json([
                 'success' => true,
                 'diskusi' => [
-                    'id'      => $message->id,
-                    'message' => $message->body, 
-                    'image'   => $message->image ? asset('storage/' . $message->image) : null,
-                    'voice'   => $message->voice ? asset('storage/' . $message->voice) : null,
-                    'time'    => $message->created_at->format('H:i'),
-                    'from'    => 'mahasiswa'
+                    'id'            => $message->id,
+                    'message'       => $message->body, 
+                    'image'         => $message->image ? asset('storage/' . $message->image) : null,
+                    'voice'         => $message->voice ? asset('storage/' . $message->voice) : null,
+                    'time'          => $message->created_at->format('H:i'),
+                    'from'          => 'mahasiswa',
+                    'sender_avatar' => $avatarUrl
                 ]
             ]);
         } catch (\Exception $e) {

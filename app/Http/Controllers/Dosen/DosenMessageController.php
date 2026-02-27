@@ -7,16 +7,13 @@ use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Auth;
 use App\Models\Message;
 use App\Models\Mahasiswa;
-use App\Events\MessageSent; // TAMBAHAN: Import Event Pusher
+use App\Models\Notification;
+use App\Events\MessageSent; 
 
 class DosenMessageController extends Controller
 {
-    /**
-     * Helper: Mengambil daftar kontak di Sidebar (Kiri)
-     */
     private function getConversations($dosenId)
     {
-        // Ambil semua pesan yang melibatkan dosen ini
         $allMessages = Message::where(function($q) use ($dosenId) {
             $q->where('sender_type', 'dosen')->where('sender_id', $dosenId);
         })->orWhere(function($q) use ($dosenId) {
@@ -25,10 +22,8 @@ class DosenMessageController extends Controller
 
         $conversations = [];
         foreach ($allMessages as $msg) {
-            // Tentukan ID lawan bicara (Mahasiswa)
             $mahasiswaId = ($msg->sender_type === 'mahasiswa') ? $msg->sender_id : $msg->receiver_id;
             
-            // Simpan pesan terakhir per mahasiswa
             if (!isset($conversations[$mahasiswaId])) {
                 $conversations[$mahasiswaId] = collect([$msg]);
             }
@@ -36,11 +31,6 @@ class DosenMessageController extends Controller
         return $conversations;
     }
 
-    /*
-    |--------------------------------------------------------------------------
-    | INDEX - Halaman Awal Pesan
-    |--------------------------------------------------------------------------
-    */
     public function index(Request $request)
     {
         $dosen = Auth::guard('dosen')->user();
@@ -49,15 +39,10 @@ class DosenMessageController extends Controller
         return view('dosen_messages', compact('conversations')); 
     }
 
-    /*
-    |--------------------------------------------------------------------------
-    | SHOW - Buka Ruang Chat Spesifik
-    |--------------------------------------------------------------------------
-    */
     public function show(Request $request, $mahasiswa)
     {
         $dosen = Auth::guard('dosen')->user();
-        $conversations = $this->getConversations($dosen->id); // Tarik riwayat sidebar
+        $conversations = $this->getConversations($dosen->id); 
 
         $chatMessages = Message::where(function ($q) use ($dosen, $mahasiswa) {
                 $q->where('sender_type', 'dosen')
@@ -77,11 +62,6 @@ class DosenMessageController extends Controller
         return view('dosen_messages', compact('chatMessages', 'mahasiswa', 'conversations'));
     }
 
-    /*
-    |--------------------------------------------------------------------------
-    | SEND MESSAGE - Kirim Pesan (AJAX)
-    |--------------------------------------------------------------------------
-    */
     public function send(Request $request)
     {
         try {
@@ -113,7 +93,6 @@ class DosenMessageController extends Controller
                 return response()->json(['success' => false, 'error' => 'Pesan tidak boleh kosong.']);
             }
 
-            // 1. Simpan pesan ke Database
             $message = Message::create([
                 'sender_type'   => 'dosen',
                 'sender_id'     => $dosen->id,
@@ -125,9 +104,23 @@ class DosenMessageController extends Controller
                 'is_read'       => 0
             ]);
 
-            // 2. TRIGGER EVENT PUSHER DI SINI
-            // toOthers() memastikan pesan dikirim ke mahasiswa, tapi tidak memantul balik ke layar dosen
             broadcast(new MessageSent($message))->toOthers();
+
+            // NOTIF KE MAHASISWA (Teks Sederhana & Penambahan mahasiswa_id)
+            try {
+                Notification::create([
+                    'user_id'      => $request->receiver_id,
+                    'user_type'    => 'mahasiswa',
+                    'mahasiswa_id' => $request->receiver_id, // <--- Ini kunci agar datanya bisa terbaca oleh mahasiswa
+                    'type'         => 'info',
+                    'title'        => 'Pesan',
+                    'message'      => 'Ada 1 pesan masuk.',
+                    'url'          => route('messages.show', ['dosen' => $dosen->id]),
+                    'is_read'      => false,
+                ]);
+            } catch (\Exception $notifErr) {
+                \Illuminate\Support\Facades\Log::error("Gagal kirim notif chat dosen: " . $notifErr->getMessage());
+            }
 
             return response()->json([
                 'success' => true,
@@ -141,27 +134,11 @@ class DosenMessageController extends Controller
                 ]
             ]);
 
-            notifyMahasiswa(
-    $request->receiver_id,
-    'message',
-    'Pesan Baru dari Dosen',
-    $request->body ?? 'Dosen mengirim pesan.',
-    route('messages')
-);
-
         } catch (\Exception $e) {
             return response()->json(['success' => false, 'error' => 'System Error: ' . $e->getMessage()]);
         }
     }
 
-    /*
-    |--------------------------------------------------------------------------
-    | FETCH CHAT - Smart Polling
-    |--------------------------------------------------------------------------
-    | Catatan: Karena kita sudah pakai Pusher/Websockets (Real-time), 
-    | fungsi polling ini pelan-pelan bisa kamu tinggalkan di sisi Frontend.
-    | Tapi saya biarkan tetap ada agar tidak error jika script JS lama masih berjalan.
-    */
     public function fetch(Request $request, $mahasiswa)
     {
         $dosen = Auth::guard('dosen')->user();
@@ -200,11 +177,6 @@ class DosenMessageController extends Controller
         return response()->json(['messages' => $newMessages]);
     }
 
-    /*
-    |--------------------------------------------------------------------------
-    | SEARCH STUDENTS - Pencarian Mahasiswa
-    |--------------------------------------------------------------------------
-    */
     public function searchStudents(Request $request)
     {
         $keyword = $request->query('q');

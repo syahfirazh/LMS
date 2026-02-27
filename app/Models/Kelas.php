@@ -18,13 +18,14 @@ class Kelas extends Model
         'jam_mulai',
         'jam_selesai',
         'ruangan',
-        'sampul', // <--- TAMBAHKAN INI
+        'sampul', 
+        'warna', // <--- Wajib ditambah agar tidak error saat create kelas
     ];
 
     public function mataKuliah()
-{
-    return $this->belongsTo(MataKuliah::class);
-}
+    {
+        return $this->belongsTo(MataKuliah::class);
+    }
 
     public function dosen()
     {

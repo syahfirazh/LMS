@@ -7,6 +7,8 @@ use App\Models\Kelas;
 use App\Models\GradeWeight;
 use App\Models\Grade;
 use Illuminate\Http\Request;
+use App\Exports\RekapNilaiExport;
+use Maatwebsite\Excel\Facades\Excel;
 
 class RekapNilaiController extends Controller
 {
@@ -223,6 +225,19 @@ class RekapNilaiController extends Controller
         return redirect()->route('dosen.grades.recap', $kelas->id)->with('success', 'Komposisi Bobot Nilai berhasil diperbarui!');
     }
 
+
+    // =========================================================
+    // FUNGSI EXPORT EXCEL
+    // =========================================================
+    public function exportExcel(Kelas $kelas)
+    {
+        if ($kelas->dosen_id !== auth('dosen')->id()) abort(403);
+        
+        $kelas->load('mataKuliah');
+        $namaFile = 'Rekap_Nilai_' . str_replace(' ', '_', $kelas->mataKuliah->nama) . '.xlsx';
+        
+        return Excel::download(new RekapNilaiExport($kelas->id), $namaFile);
+    }
 
     // =========================================================
     // FUNGSI BANTUAN

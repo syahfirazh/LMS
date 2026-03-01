@@ -8,6 +8,7 @@ use App\Models\Kelas;
 use App\Models\Notification; // Import Model Notifikasi
 use App\Models\Message;      // Import Model Message untuk hitung pesan belum dibaca
 use Carbon\Carbon;
+use Barryvdh\DomPDF\Facade\Pdf; // <--- Import DOMPDF di sini
 
 class DashboardController extends Controller
 {
@@ -157,5 +158,49 @@ class DashboardController extends Controller
 
         // 4. Kirim ke View
         return view('dosen_schedule', compact('dosen', 'jadwalPerHari'));
+    }
+
+    /**
+     * =========================================================
+     * FUNGSI CETAK PDF JADWAL MENGAJAR (BARU)
+     * =========================================================
+     */
+    public function exportSchedulePdf()
+    {
+        $dosen = Auth::guard('dosen')->user();
+
+        // Ambil data mentah jadwal
+        $jadwalRaw = Kelas::with('mataKuliah')
+            ->where('dosen_id', $dosen->id)
+            ->orderBy('jam_mulai', 'asc')
+            ->get();
+
+        // Siapkan wadah 7 hari
+        $jadwalPerHari = [
+            'Senin'  => [], 'Selasa' => [], 'Rabu'   => [],
+            'Kamis'  => [], 'Jumat'  => [], 'Sabtu'  => [], 'Minggu' => [],
+        ];
+
+        // Masukkan jadwal
+        foreach ($jadwalRaw as $kelas) {
+            $hariDB = ucfirst(strtolower(trim($kelas->hari))); 
+            if (array_key_exists($hariDB, $jadwalPerHari)) {
+                $jadwalPerHari[$hariDB][] = $kelas;
+            }
+        }
+
+        // Data yang dikirim (Tambahkan saklar is_pdf)
+        $data = [
+            'dosen' => $dosen,
+            'jadwalPerHari' => $jadwalPerHari,
+            'is_pdf' => true // <-- SAKLAR PDF
+        ];
+
+        // Generate PDF dengan posisi kertas Portrait (Berdiri)
+        $pdf = Pdf::loadView('dosen_schedule', $data)->setPaper('a4', 'portrait');
+
+        $namaFile = 'Jadwal_Mengajar_' . str_replace(' ', '_', $dosen->nama) . '.pdf';
+
+        return $pdf->stream($namaFile);
     }
 }

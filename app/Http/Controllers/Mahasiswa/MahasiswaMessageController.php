@@ -77,7 +77,8 @@ class MahasiswaMessageController extends Controller
             $request->validate([
                 'receiver_id' => 'required',
                 'body'        => 'nullable|string',
-                'image'       => 'nullable|image|max:2048',
+                // [PERBAIKAN] Mendukung semua format gambar dan ukuran hingga 5MB
+                'image'       => 'nullable|file|mimes:jpg,jpeg,png,gif,webp,svg,bmp,heic,heif|max:5120',
                 'voice'       => 'nullable|mimes:webm,mp3,wav,ogg|max:5120'
             ]);
 
@@ -107,7 +108,6 @@ class MahasiswaMessageController extends Controller
                 'is_read'       => 0
             ]);
 
-            // NOTIF KE DOSEN (Teks Sederhana)
             try {
                 DosenNotification::create([
                     'dosen_id' => $request->receiver_id,

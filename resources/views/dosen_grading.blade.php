@@ -163,9 +163,12 @@
                             <button type="button" onclick="openModalBobot()" class="cursor-pointer flex-1 sm:flex-none bg-white border border-slate-200 px-3 py-2 sm:px-5 sm:py-2.5 rounded-xl text-[9px] sm:text-[10px] font-black uppercase tracking-widest hover:bg-slate-50 transition-all text-slate-600 shadow-sm flex items-center justify-center gap-1.5 sm:gap-2">
                                 Atur Bobot
                             </button>
-                            <button type="button" class="cursor-pointer flex-1 sm:flex-none bg-white border border-slate-200 px-3 py-2 sm:px-5 sm:py-2.5 rounded-xl text-[9px] sm:text-[10px] font-black uppercase tracking-widest hover:bg-slate-50 transition-all text-slate-600 shadow-sm flex items-center justify-center gap-1.5 sm:gap-2">
-                                Import Excel
-                            </button>
+                            
+                            {{-- TOMBOL EXPORT SUDAH DITAMBAHKAN DI SINI SEBAGAI LINK (A TAG) --}}
+                            <a href="{{ route('dosen.grades.export', $kelas->id) }}" class="cursor-pointer flex-1 sm:flex-none bg-emerald-50 border border-emerald-200 px-3 py-2 sm:px-5 sm:py-2.5 rounded-xl text-[9px] sm:text-[10px] font-black uppercase tracking-widest hover:bg-emerald-100 transition-all text-emerald-600 shadow-sm flex items-center justify-center gap-1.5 sm:gap-2">
+                                Export Excel
+                            </a>
+
                             <button type="submit" class="cursor-pointer w-full sm:w-auto bg-blue-600 text-white px-5 py-2.5 sm:px-7 sm:py-2.5 rounded-xl text-[10px] font-black uppercase tracking-widest hover:bg-blue-700 shadow-lg shadow-blue-200 transition-all flex items-center justify-center gap-2 transform hover:-translate-y-0.5">
                                 Simpan Nilai & Rekap
                             </button>

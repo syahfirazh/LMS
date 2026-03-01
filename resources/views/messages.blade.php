@@ -42,8 +42,14 @@
             .custom-scrollbar::-webkit-scrollbar-track { background: transparent; }
             .custom-scrollbar::-webkit-scrollbar-thumb { background: #cbd5e1; border-radius: 4px; }
             .custom-scrollbar::-webkit-scrollbar-thumb:hover { background: #94a3b8; }
+            
             @keyframes fadeIn { from { opacity: 0; transform: translateY(10px); } to { opacity: 1; transform: translateY(0); } }
+            @keyframes popIn { 0% { opacity: 0; transform: translateY(15px) scale(0.95); } 100% { opacity: 1; transform: translateY(0) scale(1); } }
+            
             .safe-fade-in { animation: fadeIn 0.4s ease-out forwards; opacity: 0; }
+            .chat-bubble-new { animation: popIn 0.3s cubic-bezier(0.175, 0.885, 0.32, 1.275) forwards; }
+            #chatBox { scroll-behavior: smooth; }
+            
             @keyframes wave-bounce { 0%, 100% { height: 4px; } 50% { height: 16px; } }
             .recording-wave .bar { width: 3px; background-color: #ef4444; border-radius: 99px; animation: wave-bounce 1s ease-in-out infinite; }
             .recording-wave .bar:nth-child(1) { animation-delay: 0.0s; height: 8px;}
@@ -228,7 +234,7 @@
                         <div class="flex-1 p-4 sm:p-6 overflow-y-auto space-y-6 custom-scrollbar bg-white" id="chatBox">
                             @forelse($messages as $msg)
                                 @php $isMe = $msg->sender_type === 'mahasiswa'; @endphp
-                                <div id="msg-{{ $msg->id }}" class="flex {{ $isMe ? 'justify-end' : 'justify-start' }} safe-fade-in">
+                                <div id="msg-{{ $msg->id }}" class="flex {{ $isMe ? 'justify-end' : 'justify-start' }} safe-fade-in chat-bubble-new">
                                     <div class="flex flex-col {{ $isMe ? 'items-end' : 'items-start' }} max-w-[85%] md:max-w-[70%]">
                                         <div class="p-3 sm:p-4 rounded-2xl shadow-sm border {{ $isMe ? 'bg-blue-600 text-white rounded-tr-none border-blue-700' : 'bg-slate-50 text-slate-800 rounded-tl-none border-slate-200' }}">
                                             @if($msg->body)<p class="text-xs sm:text-[13px] leading-relaxed font-medium whitespace-pre-wrap break-words">{{ $msg->body }}</p>@endif
@@ -254,7 +260,7 @@
                             @endforelse
                         </div>
 
-                        <div class="p-3 sm:p-4 border-t border-slate-100 bg-white shrink-0 shadow-[0_-4px_10px_rgba(0,0,0,0.02)] relative z-20">
+                        <div class="p-3 md:p-4 border-t border-slate-100 bg-white shrink-0 shadow-[0_-4px_10px_rgba(0,0,0,0.02)] relative z-20">
                             <div id="imagePreviewContainer" class="hidden mb-3 relative p-2 bg-slate-50 border border-slate-200 rounded-2xl w-fit">
                                 <img id="imagePreviewElement" src="" class="h-20 sm:h-24 w-auto object-cover rounded-xl shadow-sm border border-slate-200">
                                 <button type="button" onclick="cancelImage()" class="absolute -top-2 -right-2 bg-red-500 text-white rounded-full w-5 h-5 sm:w-6 sm:h-6 flex items-center justify-center font-bold text-xs shadow-lg hover:bg-red-600 hover:scale-110 transition-transform">✕</button>
@@ -266,18 +272,20 @@
                                 <input type="file" name="image" id="imageInput" accept="image/*" class="hidden" onchange="previewImage(this)">
                                 <input type="file" name="voice" id="voiceInput" accept="audio/webm" class="hidden">
 
-                                <div class="flex items-center gap-2 sm:gap-3">
-                                    <div id="normalInputWrapper" class="flex-1 min-w-0 relative flex items-center bg-slate-50 p-2 sm:p-3 rounded-[1.25rem] sm:rounded-2xl border border-slate-200 transition-all">
-                                        <div class="absolute left-2 text-[10px] font-black text-white bg-black px-1.5 py-0.5 rounded-md shadow-sm">1</div>
-                                        <input type="text" name="body" id="messageInput" placeholder="Sebutkan 1 untuk ketik suara..." autocomplete="off" class="w-full bg-transparent text-xs sm:text-sm font-medium text-slate-700 placeholder-slate-400 focus:outline-none transition-all py-1.5 pl-8" />
-                                        <button type="button" id="cancelVoiceToTextBtn" onclick="batalKetikSuara()" class="hidden absolute right-1 sm:right-2 text-[10px] font-black uppercase text-white bg-red-500 hover:bg-red-600 px-2.5 py-1.5 rounded-lg shadow-sm transition-all cursor-pointer">Batal ✕</button>
+                                <div class="relative flex items-center gap-2 sm:gap-3 bg-slate-50 p-2 sm:p-3 rounded-[1.25rem] sm:rounded-2xl border border-slate-200 focus-within:border-blue-400 focus-within:ring-2 focus-within:ring-blue-100 transition-all shadow-sm w-full">
+                                    
+                                    <div id="uploadImageContainer" class="relative shrink-0 hidden md:block">
+                                        <button type="button" onclick="document.getElementById('imageInput').click()" id="btnUploadImage" class="w-9 h-9 sm:w-10 sm:h-10 rounded-xl flex items-center justify-center text-slate-400 hover:text-blue-600 hover:bg-white transition-all cursor-pointer shadow-sm border border-transparent hover:border-blue-100">
+                                                                                             <svg class="w-5 h-5 sm:w-6 sm:h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M4 16l4.586-4.586a2 2 0 012.828 0L16 16m-2-2l1.586-1.586a2 2 0 012.828 0L20 14m-6-6h.01M6 20h12a2 2 0 002-2V6a2 2 0 00-2-2H6a2 2 0 00-2 2v12a2 2 0 002 2z"></path></svg>
+                                        <span class="absolute -top-1.5 -right-1.5 bg-slate-900 text-white text-[8px] font-black px-1.5 py-0.5 rounded-md shadow-sm border border-white">2</span>
                                     </div>
 
-                                    <div class="relative shrink-0">
-                                        <button type="button" id="btnUploadImage" onclick="document.getElementById('imageInput').click()" class="w-9 h-9 sm:w-10 sm:h-10 rounded-xl flex items-center justify-center text-slate-400 hover:text-blue-600 hover:bg-white transition-all cursor-pointer shadow-sm border border-transparent hover:border-blue-100">
-                                            <svg class="w-5 h-5 sm:w-6 sm:h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M4 16l4.586-4.586a2 2 0 012.828 0L16 16m-2-2l1.586-1.586a2 2 0 012.828 0L20 14m-6-6h.01M6 20h12a2 2 0 002-2V6a2 2 0 00-2-2H6a2 2 0 00-2 2v12a2 2 0 002 2z"></path></svg>
-                                        </button>
-                                        <span class="absolute -top-1.5 -right-1.5 bg-black text-white text-[8px] font-black px-1.5 py-0.5 rounded-md shadow-sm border border-white">2</span>
+                                    <div id="normalInputWrapper" class="flex-1 min-w-0 relative flex items-center">
+                                        <div class="absolute left-2 text-[10px] font-black text-white bg-slate-900 px-1.5 py-0.5 rounded-md shadow-sm hidden md:block z-10">1</div>
+                                        <input type="text" name="body" id="messageInput" placeholder="Sebutkan 1 untuk ketik suara..." autocomplete="off" class="w-full bg-transparent text-xs sm:text-sm font-medium text-slate-700 placeholder-slate-400 focus:outline-none transition-all py-1.5 pl-1 md:pl-8" />
+                                        
+                                        <button type="button" id="cancelVoiceToTextBtn" onclick="batalKetikSuara()" class="hidden absolute right-1 sm:right-2 text-[10px] font-black uppercase text-white bg-red-500 hover:bg-red-600 px-2.5 py-1.5 rounded-lg shadow-sm transition-all cursor-pointer z-20">Batal Dikte ✕</button>
+                                        <button type="button" id="cancelVoiceBtn" class="hidden absolute right-1 sm:right-2 text-[10px] font-black uppercase text-white bg-red-500 hover:bg-red-600 px-2.5 py-1.5 rounded-lg shadow-sm transition-all cursor-pointer z-20">Batal Suara ✕</button>
                                     </div>
 
                                     <div id="recordingWrapper" class="hidden flex-1 items-center justify-between px-2">
@@ -291,11 +299,11 @@
                                         <button type="button" id="cancelRecordBtn" class="text-[9px] sm:text-[10px] font-black uppercase text-slate-400 hover:text-red-500 px-1 sm:px-2 transition-colors cursor-pointer">Batal</button>
                                     </div>
 
-                                    <div class="relative shrink-0">
+                                    <div id="recordBtnContainer" class="relative shrink-0">
                                         <button type="button" id="recordBtn" class="w-9 h-9 sm:w-10 sm:h-10 rounded-xl flex items-center justify-center text-slate-400 hover:text-red-500 hover:bg-red-50 transition-all cursor-pointer border border-transparent hover:border-red-100 shadow-sm">
                                             <svg class="w-4 h-4 sm:w-5 sm:h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 18.75a6 6 0 006-6v-1.5m-6 7.5a6 6 0 01-6-6v-1.5m6 7.5v3.75m-3.75 0h7.5M12 15.75a3 3 0 01-3-3V4.5a3 3 0 116 0v8.25a3 3 0 01-3 3z"></path></svg>
                                         </button>
-                                        <span class="absolute -top-1.5 -right-1.5 bg-black text-white text-[8px] font-black px-1.5 py-0.5 rounded-md shadow-sm border border-white">3</span>
+                                        <span class="absolute -top-1.5 -right-1.5 bg-slate-900 text-white text-[8px] font-black px-1.5 py-0.5 rounded-md shadow-sm border border-white">3</span>
                                     </div>
 
                                     <div class="relative shrink-0">
@@ -303,7 +311,7 @@
                                             <span id="sendIcon"><svg class="w-4 h-4 sm:w-5 sm:h-5 transform rotate-90 ml-0.5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2.5" d="M12 19l9 2-9-18-9 18 9-2zm0 0v-8"></path></svg></span>
                                             <span id="sendLoading" class="hidden"><svg class="w-4 h-4 sm:w-5 sm:h-5 animate-spin text-white" fill="none" viewBox="0 0 24 24"><circle class="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" stroke-width="4"></circle><path class="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8v8H4z"></path></svg></span>
                                         </button>
-                                        <span class="absolute -top-1.5 -right-1.5 bg-black text-white text-[8px] font-black px-1.5 py-0.5 rounded-md shadow-sm border border-white z-10">4</span>
+                                        <span class="absolute -top-1.5 -right-1.5 bg-slate-900 text-white text-[8px] font-black px-1.5 py-0.5 rounded-md shadow-sm border border-white z-10">4</span>
                                     </div>
                                 </div>
                             </form>
@@ -327,17 +335,17 @@
                 @php $vId = 15; @endphp
                 @foreach($listPercakapan as $d_id => $msgs)
                     @php $dsnName = \App\Models\Dosen::find($d_id)->nama ?? 'Dosen'; @endphp
-                    { id: {{ $d_id }}, nama: "{{ $dsnName }}", voiceId: {{ $vId }} },
+                    { id: {{ $d_id }}, nama: "{{ addslashes($dsnName) }}", voiceId: {{ $vId }} },
                     @php $vId++; @endphp
                 @endforeach
             ];
 
             const isActiveChat = {{ $activeDosenId ? 'true' : 'false' }};
-            const currentDosenName = "{{ $displayName ?? '' }}";
+            const currentDosenName = "{{ addslashes($displayName ?? '') }}";
             const mahasiswaId = {{ $mahasiswaId }};
             
             const lastMessageText = "{{ addslashes($lastMsgTextVA) }}";
-            const lastMessageSender = "{{ $senderNameVA }}";
+            const lastMessageSender = "{{ addslashes($senderNameVA) }}";
 
             AOS.init({ once: true, easing: "ease-out-cubic" });
 
@@ -361,7 +369,7 @@
                     document.getElementById('btn-' + containerId).innerHTML = '▶'; 
                     if(isAutoPlaying) {
                         isAutoPlaying = false;
-                        setTimeout(() => { bicara("Audio selesai. Apakah ingin membalas? Sebutkan satu untuk ketik, atau tiga untuk suara.", () => { mulaiMendengar(); }); }, 800);
+                        setTimeout(() => { bicara("Audio selesai. Apakah ingin membalas? Sebutkan satu untuk ketik, dua untuk gambar, atau tiga untuk suara.", () => { mulaiMendengar(); }); }, 800);
                     }
                 });
             }
@@ -384,7 +392,7 @@
                     window.Echo.private(`chat.mahasiswa.${mahasiswaId}`)
                         .listen('.message.sent', (e) => {
                             let mediaHtml = '';
-                            if (e.message.image_path) mediaHtml += `<img src="/storage/${e.message.image_path}" class="mt-2 rounded-lg max-w-xs">`;
+                            if (e.message.image_path) mediaHtml += `<img src="/storage/${e.message.image_path}" class="mt-2 rounded-lg max-w-xs border border-slate-200">`;
                             
                             const uniqueWaveId = 'wave-incoming-' + Date.now();
                             if (e.message.voice_path) {
@@ -393,7 +401,7 @@
                             
                             let msgHtml = e.message.body ? `<p class="text-sm leading-relaxed font-medium whitespace-pre-wrap break-words">${e.message.body}</p>` : '';
                             
-                            let html = `<div class="flex flex-col items-start max-w-[80%] safe-fade-in"><div class="bg-white text-slate-700 rounded-2xl rounded-tl-none border border-slate-100 shadow-sm p-4">${msgHtml}${mediaHtml}</div><span class="text-[9px] font-bold text-slate-400 mt-1 ml-1">${e.message.time}</span></div>`;
+                            let html = `<div class="flex flex-col items-start max-w-[80%] safe-fade-in chat-bubble-new"><div class="bg-slate-50 text-slate-700 rounded-2xl rounded-tl-none border border-slate-200 shadow-sm p-4">${msgHtml}${mediaHtml}</div><span class="text-[9px] font-bold text-slate-400 mt-1 ml-1">${e.message.time}</span></div>`;
 
                             let emptyNotice = document.getElementById('emptyChat');
                             if(emptyNotice) emptyNotice.remove();
@@ -451,7 +459,7 @@
                             searchVoiceId++;
                         });
                         contactList.innerHTML = html;
-                        bicara(`Ditemukan ${data.length} dosen. Sebutkan nomor di layar untuk obrolan.`);
+                        bicara(`Ditemukan ${data.length} dosen. Sebutkan nomor di layar untuk membuka obrolan.`);
                     });
                 };
 
@@ -464,6 +472,9 @@
                 const btnUploadImage = document.getElementById('btnUploadImage');
                 const normalInputWrapper = document.getElementById('normalInputWrapper');
                 const recordingWrapper = document.getElementById('recordingWrapper');
+                const cancelVoiceBtn = document.getElementById('cancelVoiceBtn');
+                const uploadImageContainer = document.getElementById('uploadImageContainer');
+                const recordBtnContainer = document.getElementById('recordBtnContainer');
 
                 window.previewImage = function(input) {
                     if (input.files && input.files[0]) {
@@ -496,8 +507,10 @@
                                 mediaRecorder = new MediaRecorder(stream);
                                 mediaRecorder.start();
                                 
-                                normalInputWrapper.classList.add('hidden'); btnUploadImage.classList.add('hidden');
+                                normalInputWrapper.classList.add('hidden'); 
+                                if(uploadImageContainer) uploadImageContainer.classList.add('hidden');
                                 recordingWrapper.classList.remove('hidden'); recordingWrapper.classList.add('flex');
+                                
                                 recordBtn.classList.remove('text-slate-400');
                                 recordBtn.classList.add('text-white', 'bg-red-500', 'animate-pulse', 'border-red-600');
                                 
@@ -513,9 +526,14 @@
                                 recordingWrapper.classList.add('hidden'); recordingWrapper.classList.remove('flex');
                                 normalInputWrapper.classList.remove('hidden');
                                 
+                                if(recordBtnContainer) recordBtnContainer.classList.add('hidden');
+                                
                                 messageInput.placeholder = "▶ ılıılı Suara siap dikirim...";
                                 messageInput.disabled = true; 
-                                messageInput.classList.add('font-bold', 'text-blue-600');
+                                messageInput.classList.add('font-bold', 'text-blue-600', 'bg-blue-100/50', 'rounded-xl', 'px-4');
+                                messageInput.classList.remove('bg-transparent', 'pl-1', 'md:pl-8');
+                                
+                                cancelVoiceBtn.classList.remove('hidden');
                             };
                             mediaRecorder.stop(); clearInterval(recordInterval);
                         }
@@ -524,9 +542,33 @@
                     document.getElementById('cancelRecordBtn').addEventListener('click', () => {
                         if(mediaRecorder && mediaRecorder.state !== "inactive") mediaRecorder.stop();
                         clearInterval(recordInterval); audioChunks = []; voiceInput.value = '';
+                        
                         recordingWrapper.classList.add('hidden'); recordingWrapper.classList.remove('flex');
-                        normalInputWrapper.classList.remove('hidden'); btnUploadImage.classList.remove('hidden');
+                        normalInputWrapper.classList.remove('hidden'); 
+                        if(uploadImageContainer) uploadImageContainer.classList.remove('hidden');
+                        
                         recordBtn.classList.remove('text-white', 'bg-red-500', 'animate-pulse', 'border-red-600');
+                        recordBtn.classList.add('text-slate-400');
+                        
+                        messageInput.disabled = false;
+                        messageInput.placeholder = "Sebutkan 1 untuk ketik suara...";
+                        messageInput.classList.remove('font-bold', 'text-blue-600', 'bg-blue-100/50', 'rounded-xl', 'px-4');
+                        messageInput.classList.add('bg-transparent', 'pl-1', 'md:pl-8');
+                    });
+
+                    cancelVoiceBtn.addEventListener('click', () => {
+                        voiceInput.value = ''; 
+                        
+                        messageInput.placeholder = "Sebutkan 1 untuk ketik suara...";
+                        messageInput.disabled = false;
+                        messageInput.classList.remove('font-bold', 'text-blue-600', 'bg-blue-100/50', 'rounded-xl', 'px-4');
+                        messageInput.classList.add('bg-transparent', 'pl-1', 'md:pl-8');
+                        
+                        cancelVoiceBtn.classList.add('hidden'); 
+                        if(uploadImageContainer) uploadImageContainer.classList.remove('hidden');
+                        if(recordBtnContainer) recordBtnContainer.classList.remove('hidden');
+                        
+                        recordBtn.classList.remove('hidden', 'text-white', 'bg-red-500', 'animate-pulse', 'border-red-600');
                         recordBtn.classList.add('text-slate-400');
                     });
                 }
@@ -548,35 +590,44 @@
                             if(data.success){
                                 this.reset(); cancelImage();
                                 if(voiceInput) voiceInput.value = '';
+                                
                                 messageInput.placeholder = "Sebutkan 1 untuk ketik suara..."; messageInput.disabled = false;
-                                messageInput.classList.remove('font-bold', 'text-blue-600');
-                                btnUploadImage.classList.remove('hidden');
+                                messageInput.classList.remove('font-bold', 'text-blue-600', 'bg-blue-100/50', 'rounded-xl', 'px-4');
+                                messageInput.classList.add('bg-transparent', 'pl-1', 'md:pl-8');
+                                
+                                cancelVoiceBtn.classList.add('hidden');
+                                if(uploadImageContainer) uploadImageContainer.classList.remove('hidden');
+                                if(recordBtnContainer) recordBtnContainer.classList.remove('hidden');
+                                
                                 recordBtn.classList.remove('text-white', 'bg-red-500', 'animate-pulse', 'border-red-600');
                                 recordBtn.classList.add('text-slate-400');
                                 
                                 let mediaHtml = '';
-                                if (data.message.image_path) mediaHtml += `<img src="/storage/${data.message.image_path}" class="mt-2 rounded-lg max-w-xs">`;
+                                if (data.message.image_path) mediaHtml += `<img src="/storage/${data.message.image_path}" class="mt-2 rounded-xl max-w-xs border border-white/20">`;
                                 const uniqueWaveId = 'wave-new-' + Date.now();
                                 if (data.message.voice_path) {
-                                    mediaHtml += `<div class="mt-2 flex items-center gap-3 bg-white/20 p-2 rounded-xl backdrop-blur-sm border border-white/30 w-[200px] sm:w-[240px]"><button type="button" onclick="togglePlay('${uniqueWaveId}')" id="btn-${uniqueWaveId}" class="w-7 h-7 shrink-0 flex items-center justify-center rounded-full bg-white text-blue-600 shadow hover:scale-105 transition-transform text-xs">▶</button><div id="${uniqueWaveId}" class="flex-1" data-audio="/storage/${data.message.voice_path}"></div></div>`;
+                                    mediaHtml += `<div class="mt-2 flex items-center gap-3 bg-white/20 p-2 rounded-xl backdrop-blur-sm border border-white/30 w-[200px] sm:w-[240px]"><button type="button" onclick="togglePlay('${uniqueWaveId}')" id="btn-${uniqueWaveId}" class="w-7 h-7 shrink-0 flex items-center justify-center rounded-full bg-white text-blue-600 shadow hover:scale-105 transition-transform text-xs">▶</button><div id="${uniqueWaveId}" class="flex-1 h-4" data-audio="/storage/${data.message.voice_path}"></div></div>`;
                                 }
                                 let msgHtml = data.message.body ? `<p class="text-sm leading-relaxed font-medium whitespace-pre-wrap break-words">${data.message.body}</p>` : '';
                                 
-                                let html = `<div class="flex flex-col items-end ml-auto max-w-[80%] safe-fade-in"><div class="bg-blue-600 text-white rounded-2xl rounded-tr-none shadow-md shadow-blue-100 p-4">${msgHtml}${mediaHtml}</div><span class="text-[9px] font-bold text-slate-400 mt-1 mr-1">${data.message.time}</span></div>`;
+                                let html = `<div class="flex flex-col items-end ml-auto max-w-[80%] safe-fade-in chat-bubble-new"><div class="bg-blue-600 text-white rounded-2xl rounded-tr-none border border-blue-700 shadow-sm p-4">${msgHtml}${mediaHtml}</div><span class="text-[9px] font-bold text-slate-400 mt-1 mr-1">${data.message.time}</span></div>`;
 
                                 let emptyNotice = document.getElementById('emptyChat'); if(emptyNotice) emptyNotice.remove();
                                 chatBox.insertAdjacentHTML('beforeend', html); scrollBottom();
                                 if(data.message.voice_path) setTimeout(() => initWaveSurfer(uniqueWaveId, `/storage/${data.message.voice_path}`, true), 100);
                                 
-                                bicara("Pesan berhasil terkirim. Apa selanjutnya? Sebutkan satu untuk membalas lagi, atau lima untuk kembali ke beranda.");
+                                bicara("Pesan berhasil terkirim. Apa selanjutnya? Sebutkan satu untuk membalas lagi, atau delapan untuk kembali ke daftar pesan.", () => { rec.start(); });
                             } else { alert("Gagal mengirim pesan."); }
-                        } catch (err) { alert("Terjadi kesalahan sistem."); } finally {
+                        } catch (err) { alert("Koneksi bermasalah."); } finally {
                             btnSubmit.disabled = false; document.getElementById('sendLoading').classList.add('hidden'); document.getElementById('sendIcon').classList.remove('hidden');
                         }
                     });
                 }
             });
 
+            // ==========================================
+            // VOICE ASSISTANT SYSTEM
+            // ==========================================
             const statusDesc = document.getElementById("status-desc");
             const waveBars = document.querySelectorAll(".wave-bar");
             const synth = window.speechSynthesis;
@@ -604,6 +655,41 @@
                 synth.speak(utter);
             }
 
+            // FUNGSI UTAMA PENENTU TEKS PANDUAN
+            function getPanduanUtama(isUlang = false) {
+                let sapaan = "";
+                if (!isActiveChat) {
+                    sapaan = "Halo, Anda berada di halaman Pesan. ";
+                    if (listDosenVA.length > 0) {
+                        sapaan += "Anda memiliki riwayat obrolan. ";
+                        listDosenVA.forEach(d => { sapaan += `Untuk chat dengan ${d.nama}, sebutkan ${d.voiceId}. `; });
+                        sapaan += "Atau sebutkan 'Cari' diikuti nama dosen untuk mencari. ";
+                    } else {
+                        sapaan += "Belum ada riwayat. Sebutkan 'Cari' diikuti nama dosen untuk memulai obrolan baru. ";
+                    }
+                    sapaan += "Sebutkan lima untuk kembali ke Beranda.";
+                } else {
+                    const isLastMsgVoice = {{ $hasVoice }};
+                    sapaan = `Halaman obrolan dengan Dosen ${currentDosenName}. `;
+                    
+                    if (!isUlang) {
+                        if (isLastMsgVoice) {
+                            sapaan += "Pesan terakhir adalah suara. Memutar pesan sekarang. ";
+                        } else {
+                            if (lastMessageSender !== 'Anda') {
+                                sapaan += `Pesan terakhir dari dosen: ${lastMessageText}. `;
+                            } else {
+                                sapaan += "Pesan terakhir dikirim oleh Anda. ";
+                            }
+                        }
+                    }
+                    
+                    sapaan += "Sebutkan angka satu untuk mengetik pesan, dua untuk upload gambar, atau tiga untuk merekam suara. Empat untuk mengirim. Sebutkan delapan untuk menutup chat dan kembali ke daftar pesan.";
+                }
+                sapaan += " Katakan Ulang, jika Anda butuh bantuan panduan lagi.";
+                return sapaan;
+            }
+
             window.batalKetikSuara = function() {
                 modeKetikSuara = false;
                 menungguKonfirmasiKirim = false;
@@ -620,7 +706,10 @@
                 if (nomor === 5) { tujuan = "{{ url('/dashboard') }}"; teks = "Kembali ke Beranda."; }
                 else if (nomor === 6) { tujuan = "{{ url('/mahasiswa/profile') }}"; teks = "Membuka Profil Saya."; }
                 else if (nomor === 7) { tujuan = "{{ url('/pemberitahuan') }}"; teks = "Membuka Pemberitahuan."; }
-                else if (nomor === 8) { teks = "Halaman Pesan."; }
+                else if (nomor === 8) { 
+                    if(isActiveChat) { tujuan = "{{ url('/pesan') }}"; teks = "Menutup obrolan dan kembali ke daftar pesan."; }
+                    else { teks = "Anda sudah di Halaman Pesan."; }
+                }
                 else if (nomor === 9) { tujuan = "{{ url('/bantuan') }}"; teks = "Membuka Bantuan."; }
                 else if (nomor === 0) { tujuan = "{{ url('/logout') }}"; teks = "Keluar."; }
                 
@@ -669,7 +758,7 @@
                     if (targetLink) { teks = "Membuka obrolan."; tujuan = targetLink.getAttribute("href"); }
                 }
 
-                if (teks !== "") { bicara(teks, () => { if (tujuan !== "" && tujuan !== "#") window.location.href = tujuan; }); }
+                if (teks !== "") { bicara(teks, () => { if (tujuan !== "" && tujuan !== "#") window.location.href = tujuan; else { try { rec.start(); } catch(e){} } }); }
             }
 
             function mulaiMendengar() {
@@ -679,6 +768,12 @@
                     rec.onresult = (event) => {
                         const hasil = event.results[event.results.length - 1][0].transcript.toLowerCase().trim();
                         
+                        // Fitur Ulangi / Panduan
+                        if(hasil.includes("ulang") || hasil.includes("panduan") || hasil.includes("bantuan")) {
+                            bicara(getPanduanUtama(true), () => { mulaiMendengar(); });
+                            return;
+                        }
+
                         if (menungguKonfirmasiKirim) {
                             if (hasil.includes("kirim") || hasil.includes("empat") || hasil.includes("ya")) { navigasiKe(4); return; }
                             if (hasil.includes("batal") || hasil.includes("tidak") || hasil.includes("engga")) { 
@@ -699,7 +794,7 @@
                                 menungguKonfirmasiKirim = true;
                                 document.getElementById('normalInputWrapper').classList.remove('dictating-active');
                                 document.getElementById('normalInputWrapper').classList.add('confirming-active');
-                                bicara(`Pesan Anda adalah: ${inputEl.value}. Mau dikirim atau tidak? Sebutkan kirim, atau batal.`);
+                                bicara(`Pesan Anda adalah: ${inputEl.value}. Mau dikirim atau tidak? Sebutkan kirim, atau batal.`, () => { mulaiMendengar(); });
                             }, 2500); 
                             return; 
                         }
@@ -708,7 +803,7 @@
                         if (recordBtn && recordBtn.classList.contains('text-white')) {
                             if (hasil.includes("selesai")) {
                                 recordBtn.click();
-                                bicara("Suara telah disimpan. Sebutkan empat untuk mengirim pesan suara ini.");
+                                bicara("Suara telah disimpan. Sebutkan empat untuk mengirim pesan suara ini.", () => { mulaiMendengar(); });
                             }
                             return; 
                         }
@@ -724,7 +819,7 @@
                         else if (hasil.includes("enam") || hasil.includes("profil")) navigasiKe(6);
                         else if (hasil.includes("tujuh") || hasil.includes("pemberitahuan")) navigasiKe(7);
                         else if (hasil.includes("delapan") || hasil.includes("pesan")) navigasiKe(8);
-                        else if (hasil.includes("sembilan") || hasil.includes("bantuan")) navigasiKe(9);
+                        else if (hasil.includes("sembilan")) navigasiKe(9);
                         else if (hasil.includes("satu") || hasil.includes("ketik")) navigasiKe(1);
                         else if (hasil.includes("dua") || hasil.includes("gambar")) navigasiKe(2);
                         else if (hasil.includes("tiga") || hasil.includes("suara") || hasil.includes("voice")) navigasiKe(3);
@@ -736,46 +831,31 @@
             }
 
             window.onload = () => {
-                let sapaanAkhir = "Sebutkan satu untuk mengetik pesan, dua untuk gambar, atau tiga untuk suara.";
                 document.body.addEventListener("click", () => {}, { once: true });
 
                 setTimeout(() => {
-                    if (!isActiveChat) {
-                        let sapaan = "Halo, ini halaman Pesan. ";
-                        if (listDosenVA.length > 0) {
-                            sapaan += "Anda memiliki riwayat obrolan. ";
-                            listDosenVA.forEach(d => { sapaan += `Untuk ${d.nama}, sebutkan ${d.voiceId}. `; });
-                            sapaan += "Atau sebutkan 'Cari' diikuti nama untuk mencari dosen.";
-                        } else { sapaan += "Sebutkan 'Cari' diikuti nama dosen untuk memulai."; }
-                        bicara(sapaan, () => { mulaiMendengar(); });
-                    } else {
+                    let teksAwal = getPanduanUtama(false);
+                    
+                    bicara(teksAwal, () => {
                         const isLastMsgVoice = {{ $hasVoice }};
-                        
-                        if (isLastMsgVoice) {
+                        if (isActiveChat && isLastMsgVoice) {
                             isAutoPlaying = true; 
-                            let sapaan = `Obrolan dengan ${currentDosenName}. Pesan terakhir adalah suara. Memutar pesan.`;
-                            bicara(sapaan, () => {
-                                const waveId = "{{ $lastWaveId }}";
-                                if (wavesurfers[waveId]) {
-                                    let playPromise = wavesurfers[waveId].play();
-                                    if (playPromise !== undefined) {
-                                        playPromise.then(_ => {
-                                            document.getElementById('btn-' + waveId).innerHTML = '⏸';
-                                        }).catch(error => {
-                                            isAutoPlaying = false;
-                                            bicara("Browser memblokir pemutaran otomatis. Silakan ketuk layar sekali.", () => { mulaiMendengar(); });
-                                        });
-                                    }
+                            const waveId = "{{ $lastWaveId }}";
+                            if (wavesurfers[waveId]) {
+                                let playPromise = wavesurfers[waveId].play();
+                                if (playPromise !== undefined) {
+                                    playPromise.then(_ => {
+                                        document.getElementById('btn-' + waveId).innerHTML = '⏸';
+                                    }).catch(error => {
+                                        isAutoPlaying = false;
+                                        bicara("Browser memblokir pemutaran otomatis. Silakan ketuk layar sekali.", () => { mulaiMendengar(); });
+                                    });
                                 }
-                            });
+                            } else { mulaiMendengar(); }
                         } else {
-                            if (lastMessageSender !== 'Anda') {
-                                bicara(`Obrolan dengan ${currentDosenName}. Pesan terakhir adalah: ${lastMessageText}. ${sapaanAkhir}`, () => { mulaiMendengar(); });
-                            } else {
-                                bicara(`Obrolan dengan ${currentDosenName} terbuka. ${sapaanAkhir}`, () => { mulaiMendengar(); });
-                            }
+                            mulaiMendengar();
                         }
-                    }
+                    });
                 }, 800);
             };
         </script>

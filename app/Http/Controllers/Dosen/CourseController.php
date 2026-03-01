@@ -53,7 +53,8 @@ class CourseController extends Controller
             'jam_mulai'        => 'required',
             'jam_selesai'      => 'required',
             'ruangan'          => 'required|string',
-            'sampul'           => 'nullable|image|mimes:jpeg,png,jpg|max:2048',
+            // [PERBAIKAN] Mendukung format gambar modern (webp, heic, dll)
+            'sampul'           => 'nullable|file|mimes:jpg,jpeg,png,gif,webp,svg,bmp,heic,heif|max:5120',
         ]);
 
         $matkul = MataKuliah::firstOrCreate(
@@ -76,8 +77,6 @@ class CourseController extends Controller
             'ruangan'        => $request->ruangan,
             'sampul'         => $pathSampul,
             'warna'          => collect(['blue', 'emerald', 'orange', 'purple', 'pink'])->random(),
-            
-            // 👇 Disamakan dengan kode kelas yang dikirim dari browser
             'kode_akses'     => strtoupper($request->kode_kelas), 
         ]);
 
@@ -105,11 +104,11 @@ class CourseController extends Controller
 
         $request->validate([
             'deskripsi' => 'required|string',
-            'sampul'    => 'nullable|image|mimes:jpg,jpeg,png|max:2048',
+            // [PERBAIKAN] Mendukung format gambar modern
+            'sampul'    => 'nullable|file|mimes:jpg,jpeg,png,gif,webp,svg,bmp,heic,heif|max:5120',
         ]);
 
         if ($request->hasFile('sampul')) {
-            // Hapus sampul lama jika ada
             if ($kelas->mataKuliah->sampul && Storage::disk('public')->exists($kelas->mataKuliah->sampul)) {
                 Storage::disk('public')->delete($kelas->mataKuliah->sampul);
             }
@@ -176,7 +175,6 @@ class CourseController extends Controller
 
         $kelas->mahasiswa()->attach($mahasiswa->id);
 
-        // --- NOTIFIKASI KE MAHASISWA ---
         try {
             Notification::create([
                 'user_id'      => $mahasiswa->id,
@@ -197,12 +195,10 @@ class CourseController extends Controller
 
     public function removeStudent(Kelas $kelas, Mahasiswa $mahasiswa)
     {
-        // Pastikan mahasiswa memang ada di kelas
         if (!$kelas->mahasiswa()->where('mahasiswa_id', $mahasiswa->id)->exists()) {
             return back()->withErrors('Mahasiswa tidak ditemukan di kelas ini');
         }
 
-        // Hapus dari pivot
         $kelas->mahasiswa()->detach($mahasiswa->id);
 
         return back()->with('success', 'Mahasiswa berhasil dikeluarkan dari kelas');
@@ -240,10 +236,8 @@ class CourseController extends Controller
 
     public function destroySession(Kelas $kelas, CourseSession $session)
     {
-        // Pastikan kelas ini milik dosen yang login
         $this->authorizeKelas($kelas);
 
-        // Pastikan sesi ini memang milik kelas tersebut
         if ($session->kelas_id !== $kelas->id) {
             abort(404);
         }

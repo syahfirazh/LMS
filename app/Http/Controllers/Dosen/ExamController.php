@@ -8,10 +8,12 @@ use App\Models\Exam;
 use App\Models\Kelas;
 use App\Models\ExamQuestion;
 use App\Models\ExamOption;
-use App\Models\ExamResult; // <-- Pastikan model ini sudah di-import
+use App\Models\ExamResult;
 use Carbon\Carbon;
 use Illuminate\Support\Facades\Auth;
 use Illuminate\Support\Facades\DB;
+use App\Exports\HasilUjianExport;
+use Maatwebsite\Excel\Facades\Excel;
 
 class ExamController extends Controller
 {
@@ -156,5 +158,17 @@ class ExamController extends Controller
         }]);
 
         return view('dosen_exam_results', compact('exam'));
+    }
+
+    // =========================================================
+    // FUNGSI EXPORT EXCEL
+    // =========================================================
+    public function exportHasil(Exam $exam)
+    {
+        if ($exam->dosen_id !== auth('dosen')->id()) abort(403);
+
+        $namaFile = 'Hasil_Ujian_' . str_replace(' ', '_', $exam->judul) . '.xlsx';
+        
+        return Excel::download(new HasilUjianExport($exam->id), $namaFile);
     }
 }

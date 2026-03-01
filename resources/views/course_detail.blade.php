@@ -31,17 +31,17 @@
                 <div class="max-w-7xl mx-auto flex flex-col lg:flex-row lg:items-center justify-between gap-4 lg:gap-6 relative">
                     
                     <div class="flex items-center gap-4 relative z-10 w-full lg:w-auto">
-                        <button onclick="navigasiKe(0)" class="w-11 h-11 md:w-12 md:h-12 rounded-full bg-slate-100 hover:bg-blue-600 text-slate-500 hover:text-white flex items-center justify-center transition-all duration-300 shadow-sm shrink-0 group border border-slate-200 hover:border-blue-600 relative cursor-pointer active:scale-95">
+                        <a href="{{ route('courses.index') }}" class="w-11 h-11 md:w-12 md:h-12 rounded-full bg-slate-100 hover:bg-blue-600 text-slate-500 hover:text-white flex items-center justify-center transition-all duration-300 shadow-sm shrink-0 group border border-slate-200 hover:border-blue-600 relative cursor-pointer active:scale-95">
                             <svg class="w-5 h-5 md:w-6 md:h-6 transform group-hover:-translate-x-1 transition-transform" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                                 <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2.5" d="M15 19l-7-7 7-7"></path>
                             </svg>
                             <span class="absolute -bottom-1 -right-1 bg-slate-800 text-white text-[9px] font-black px-1.5 py-0.5 rounded-md border border-white">0</span>
-                        </button>
+                        </a>
                         
-                        <div class="hidden sm:block text-left cursor-pointer group shrink-0" onclick="navigasiKe(0)">
+                        <a href="{{ route('courses.index') }}" class="hidden sm:block text-left cursor-pointer group shrink-0 decoration-transparent">
                             <span class="block text-[9px] font-bold text-slate-400 uppercase tracking-widest">Navigasi Suara</span>
                             <span class="block text-xs font-black text-slate-700 group-hover:text-blue-600 transition-colors">0 - Kembali</span>
-                        </div>
+                        </a>
                         
                         <div class="hidden sm:block w-px h-10 bg-slate-200 mx-2"></div>
                         
@@ -99,7 +99,7 @@
                                 <h2 class="text-lg font-black text-slate-900 leading-tight">
                                     {{ $kelas->mataKuliah->nama }}
                                 </h2>
-                                <p class="text-sm font-medium text-slate-500 leading-relaxed line-clamp-3">
+                                <p id="deskripsi-matkul" class="text-sm font-medium text-slate-500 leading-relaxed line-clamp-3">
                                     {{ $kelas->mataKuliah->deskripsi }}
                                 </p>
                                 <div class="pt-2 flex gap-2">
@@ -112,19 +112,40 @@
                             <div class="relative z-10 flex flex-col md:flex-row justify-between items-start md:items-end gap-4">
                                 <div>
                                     <p class="text-blue-200 text-[10px] font-bold uppercase tracking-widest mb-1">Progres Belajar Anda</p>
-                                    <h3 class="text-3xl font-black tracking-tight">{{ $progress }}% Selesai</h3>
-                                    <p class="text-[10px] text-blue-200 font-bold">{{ $completedSession }} dari {{ $totalSession }} pertemuan</p>
+                                    
+                                    @php
+                                        // LOGIKA BARU PROGRES 50% & 100%
+                                        $totalSesi = $kelas->courseSessions->count();
+                                        $sesiSelesai = 0;
+                                        
+                                        if($totalSesi > 0) {
+                                            foreach($kelas->courseSessions as $idx => $ss) {
+                                                $adaMateri = $ss->materis && $ss->materis->count() > 0;
+                                                $adaDiskusi = $ss->discussions && $ss->discussions->count() > 0;
+                                                
+                                                if($adaMateri && $adaDiskusi) {
+                                                    $sesiSelesai += 1; // 100% Selesai untuk sesi ini
+                                                } else {
+                                                    $sesiSelesai += 0.5; // 50% Baru terbuka (semua otomatis terbuka)
+                                                }
+                                            }
+                                        }
+                                        $persenProgres = $totalSesi > 0 ? min(100, round(($sesiSelesai / $totalSesi) * 100)) : 0;
+                                    @endphp
+
+                                    <h3 class="text-3xl font-black tracking-tight">{{ $persenProgres }}% Selesai</h3>
+                                    <p class="text-[10px] text-blue-200 font-bold">{{ floor($sesiSelesai) }} dari {{ $totalSesi }} pertemuan penuh</p>
                                 </div>
                                 
                                 @php
                                     $currentSession = $kelas->courseSessions->first(function($s) {
-                                        return true; // Ambil session pertama sebagai default
+                                        return true; 
                                     }) ?? $kelas->courseSessions->last();
                                 @endphp
 
                                 @if ($currentSession)
                                     <button onclick="bukaSession({{ $currentSession->id }})" class="cursor-pointer active:scale-95 bg-white text-blue-600 px-6 py-2.5 rounded-xl text-[10px] font-black uppercase tracking-widest hover:bg-blue-50 transition-all shadow-md w-full md:w-auto">
-                                        Lanjut Materi (Sesi {{ $currentSession->urutan }})
+                                        Lanjut Materi (Pertemuan {{ $currentSession->urutan }})
                                     </button>
                                 @endif
                             </div>
@@ -140,45 +161,45 @@
                     <div data-aos="fade-up" data-aos-duration="600" data-aos-delay="200" class="bg-white p-6 rounded-[2rem] border border-slate-200 shadow-sm h-fit">
                         <div class="flex items-center justify-between mb-6">
                             <h3 class="text-sm font-black text-slate-900 uppercase tracking-widest">Alur Belajar</h3>
-                            <span class="text-[9px] font-bold text-slate-400 bg-slate-100 px-2 py-1 rounded-md">{{ $totalSession }} Pertemuan</span>
+                            <span class="text-[9px] font-bold text-slate-400 bg-slate-100 px-2 py-1 rounded-md">{{ $totalSesi }} Pertemuan</span>
                         </div>
 
                         <div class="relative space-y-0 pl-2">
                             <div class="absolute top-4 left-[19px] bottom-4 w-[2px] bg-slate-100"></div>
 
-                            @php $voiceId = 11; @endphp
+                            @php $voiceId = 5; @endphp 
                             @forelse ($kelas->courseSessions as $index => $sess)
                                 @php
-                                    $hasMateri = $sess->materis && $sess->materis->count() > 0;
-                                    $isSelesai = $hasMateri; 
-                                    $isActive = !$isSelesai && ($index == 0 || (isset($kelas->courseSessions[$index-1]) && $kelas->courseSessions[$index-1]->materis->count() > 0));
-                                    $isLocked = !$isSelesai && !$isActive;
+                                    $adaMateri = $sess->materis && $sess->materis->count() > 0;
+                                    $adaDiskusi = $sess->discussions && $sess->discussions->count() > 0;
+                                    
+                                    $isSelesai = $adaMateri && $adaDiskusi; 
                                 @endphp
 
-                                <div onclick="{{ !$isLocked ? 'bukaSession('.$sess->id.')' : '' }}" class="relative pl-10 py-3 group {{ !$isLocked ? 'cursor-pointer active:scale-[0.98]' : 'opacity-60 cursor-not-allowed' }} transition-transform">
+                                <div onclick="bukaSession({{ $sess->id }})" class="relative pl-10 py-3 group cursor-pointer active:scale-[0.98] transition-transform">
                                     
                                     <div class="absolute left-[10px] top-5 w-5 h-5 rounded-full border-4 border-white shadow-sm z-10 flex items-center justify-center 
-                                        {{ $isSelesai ? 'bg-emerald-500' : ($isActive ? 'bg-blue-600 animate-pulse' : 'bg-slate-200') }}">
+                                        {{ $isSelesai ? 'bg-emerald-500' : 'bg-blue-600 animate-pulse' }}">
                                         
                                         @if ($isSelesai)
                                             <svg class="w-2.5 h-2.5 text-white" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="4" d="M5 13l4 4L19 7" /></svg>
-                                        @elseif ($isLocked)
-                                            <svg class="w-2.5 h-2.5 text-slate-400" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="3" d="M12 15v2m-6 4h12a2 2 0 002-2v-6a2 2 0 00-2-2H6a2 2 0 00-2 2v6a2 2 0 00-2 2zm10-10V7a4 4 0 00-8 0v4h8z" /></svg>
                                         @endif
                                     </div>
 
-                                    <div class="{{ $isActive ? 'bg-white border border-blue-200 shadow-md shadow-blue-100 transform group-hover:scale-[1.02]' : 'bg-slate-50 group-hover:bg-blue-50 border border-transparent group-hover:border-blue-100' }} p-4 rounded-2xl transition-all">
+                                    <div class="bg-white border border-blue-200 shadow-md shadow-blue-100 transform group-hover:scale-[1.02] p-4 rounded-2xl transition-all">
                                         <div class="flex justify-between items-start">
-                                            <span class="text-[9px] font-black uppercase tracking-wider mb-1 block {{ $isSelesai ? 'text-emerald-600' : ($isActive ? 'text-blue-600' : 'text-slate-400') }}">
+                                            <span class="text-[9px] font-black uppercase tracking-wider mb-1 block {{ $isSelesai ? 'text-emerald-600' : 'text-blue-600' }}">
                                                 Pertemuan {{ $sess->urutan }}
                                             </span>
                                             <span class="text-[9px] font-bold text-slate-400 bg-white px-1.5 rounded border border-slate-200 shadow-sm">#{{ $voiceId }}</span>
                                         </div>
-                                        <h4 class="text-xs font-bold uppercase {{ $isLocked ? 'text-slate-600' : 'text-slate-800' }}">
+                                        <h4 class="text-xs font-bold uppercase text-slate-800">
                                             {{ $sess->judul ?? 'Materi Belum Diatur' }}
                                         </h4>
-                                        @if ($isActive)
-                                            <p class="text-[9px] text-blue-500 mt-1 font-bold">Sedang dipelajari</p>
+                                        @if ($isSelesai)
+                                            <p class="text-[9px] text-emerald-500 mt-1 font-bold">Selesai 100%</p>
+                                        @else
+                                            <p class="text-[9px] text-blue-500 mt-1 font-bold">Progres 50%</p>
                                         @endif
                                     </div>
                                 </div>
@@ -196,14 +217,15 @@
         <script>
             AOS.init({ once: true, easing: "ease-out-cubic" });
 
+            // DATA SESI UNTUK VOICE NAVIGATOR
             const sesiList = [
-                @php $vId = 11; @endphp
+                @php $vId = 5; @endphp
                 @foreach($kelas->courseSessions as $sess)
                     {
                         id: {{ $sess->id }},
+                        urutan: "{{ $sess->urutan }}",
                         judul: "{{ $sess->judul ?? 'Pertemuan '.$sess->urutan }}",
-                        voiceId: {{ $vId }},
-                        isLocked: {{ (!($sess->materis && $sess->materis->count() > 0) && ($loop->index != 0 && !(isset($kelas->courseSessions[$loop->index-1]) && $kelas->courseSessions[$loop->index-1]->materis->count() > 0))) ? 'true' : 'false' }}
+                        voiceId: {{ $vId }}
                     },
                     @php $vId++; @endphp
                 @endforeach
@@ -250,12 +272,32 @@
                 synth.speak(utter);
             }
 
+            // Fungsi untuk membuat panduan suara yang dinamis dan terperinci
+            function getPanduanSuara() {
+                const namaMatkul = "{{ $kelas->mataKuliah->nama }}";
+                const deskripsiMatkul = document.getElementById('deskripsi-matkul').innerText.trim();
+                
+                let teks = `Anda berada di kelas mata kuliah ${namaMatkul}. Deskripsi: ${deskripsiMatkul}. `;
+                teks += "Berikut adalah daftar Alur Belajar Anda. ";
+                
+                if (sesiList.length > 0) {
+                    sesiList.forEach(s => {
+                        teks += `Pertemuan ${s.urutan} dengan judul ${s.judul}. Sebutkan angka ${s.voiceId} untuk membuka materi tersebut. `;
+                    });
+                } else {
+                    teks += "Saat ini belum ada materi pertemuan yang diunggah oleh dosen. ";
+                }
+
+                teks += "Untuk navigasi menu lainnya: Sebutkan angka satu untuk tetap di Pembelajaran, dua untuk Presensi, tiga untuk Penugasan, empat untuk Anggota kelas. Atau sebutkan angka nol untuk kembali. Katakan Ulang, jika Anda ingin mendengar panduan ini dari awal.";
+                
+                return teks;
+            }
+
             function bukaSession(sessionId) {
                 const url = "{{ route('topic.detail', ['kelas' => $kelas->id, 'session' => 'SESSION_ID']) }}";
                 window.location.href = url.replace('SESSION_ID', sessionId);
             }
 
-            // PERBAIKAN: DEFINE ROUTE SECARA AMAN DARI BLADE KE JS
             const urlPembelajaran = "{{ route('course.detail', ['kelas' => $kelas->id]) }}";
             const urlPenugasan = "{{ route('course.assignments', ['kelas' => $kelas->id]) }}";
             const urlAnggota = "{{ route('course.members', ['kelas' => $kelas->id]) }}";
@@ -279,16 +321,12 @@
                 } else if (nomor === 4) {
                     tujuan = urlAnggota;
                     teks = "Membuka daftar Anggota kelas.";
-                } else if (nomor >= 11) {
+                } else if (nomor >= 5) {
                     let sesiTujuan = sesiList.find(s => s.voiceId === nomor);
                     if(sesiTujuan) {
-                        if(sesiTujuan.isLocked) {
-                            teks = `Maaf, materi ${sesiTujuan.judul} saat ini masih terkunci. Silakan selesaikan materi sebelumnya.`;
-                        } else {
-                            teks = `Membuka materi ${sesiTujuan.judul}.`;
-                            const baseUrl = "{{ route('topic.detail', ['kelas' => $kelas->id, 'session' => 'SESSION_ID']) }}"; 
-                            tujuan = baseUrl.replace('SESSION_ID', sesiTujuan.id);
-                        }
+                        teks = `Membuka materi ${sesiTujuan.judul}.`;
+                        const baseUrl = "{{ route('topic.detail', ['kelas' => $kelas->id, 'session' => 'SESSION_ID']) }}"; 
+                        tujuan = baseUrl.replace('SESSION_ID', sesiTujuan.id);
                     } else {
                         teks = "Nomor pertemuan tidak ditemukan.";
                     }
@@ -311,6 +349,12 @@
                     rec.onresult = (event) => {
                         const hasil = event.results[event.results.length - 1][0].transcript.toLowerCase().trim();
                         
+                        // FUNGSI PANDUAN / ULANGI
+                        if(hasil.includes("ulang") || hasil.includes("panduan") || hasil.includes("bantuan") || hasil.includes("tolong")) {
+                            bicara(getPanduanSuara(), () => { mulaiMendengar(); });
+                            return;
+                        }
+
                         const kataAngka = {
                             "nol": 0, "satu": 1, "dua": 2, "tiga": 3, "empat": 4, "lima": 5, 
                             "enam": 6, "tujuh": 7, "delapan": 8, "sembilan": 9, "sepuluh": 10,
@@ -343,15 +387,7 @@
             }
 
             window.onload = () => {
-                const namaMatkul = "{{ $kelas->mataKuliah->nama }}";
-                let orientasi = "";
-                
-                @if($kelas->courseSessions->count() > 0)
-                    orientasi = `Anda berada di kelas ${namaMatkul}. Sebutkan angka satu untuk Pembelajaran, dua untuk Presensi, tiga untuk Penugasan. Untuk memilih materi pertemuan, sebutkan angka sebelas ke atas. Atau sebutkan angka nol untuk kembali.`;
-                @else
-                    orientasi = `Anda berada di kelas ${namaMatkul}. Sebutkan angka satu untuk Pembelajaran, dua untuk Presensi, tiga untuk Penugasan. Saat ini belum ada materi pertemuan yang dibuat oleh dosen. Atau sebutkan angka nol untuk kembali.`;
-                @endif
-                
+                let orientasi = getPanduanSuara();
                 document.body.addEventListener("click", () => {}, { once: true });
                 
                 setTimeout(() => {

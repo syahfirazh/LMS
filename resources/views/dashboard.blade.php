@@ -286,7 +286,12 @@
                             <h2
                                 class="text-2xl font-extrabold text-slate-900 tracking-tight"
                             >
-                                 Halo, {{ $mahasiswa->nama }}
+                                {{-- Menampilkan Hanya Kata Pertama dari Nama Lengkap --}}
+                                @php
+                                    $namaArray = explode(' ', $mahasiswa->nama);
+                                    $namaPanggilan = $namaArray[0] ?? $mahasiswa->nama;
+                                @endphp
+                                Halo, {{ $namaPanggilan }}
                             </h2>
                             <p class="text-sm font-medium text-slate-500">
                                 Siap untuk belajar hari ini?
@@ -511,37 +516,36 @@
                     </div>
 
                     <div class="grid grid-cols-1 md:grid-cols-2 gap-6">
-@foreach ($kelas as $index => $k)
-    <div
-        onclick="navigasiKe({{ 11 + $index }})"
-        class="group bg-white p-6 rounded-[2rem] border border-slate-200 shadow-sm hover:shadow-lg transition-all cursor-pointer flex items-center gap-6"
-    >
-        <div
-            class="w-20 h-20 bg-blue-50 text-blue-600 rounded-3xl flex items-center justify-center font-black text-2xl"
-        >
-            {{ 11 + $index }}
-        </div>
+                        @foreach ($kelas as $index => $k)
+                            <div
+                                onclick="navigasiKe({{ 11 + $index }})"
+                                class="group bg-white p-6 rounded-[2rem] border border-slate-200 shadow-sm hover:shadow-lg transition-all cursor-pointer flex items-center gap-6"
+                            >
+                                <div
+                                    class="w-20 h-20 bg-blue-50 text-blue-600 rounded-3xl flex items-center justify-center font-black text-2xl"
+                                >
+                                    {{ 11 + $index }}
+                                </div>
 
-        <div class="flex-1">
-            <h4 class="text-lg font-black text-slate-900">
-                {{ $k->mataKuliah->nama }}
-            </h4>
+                                <div class="flex-1">
+                                    <h4 class="text-lg font-black text-slate-900">
+                                        {{ $k->mataKuliah->nama }}
+                                    </h4>
 
-            <p class="text-xs font-bold text-slate-400 uppercase">
-                {{ $k->dosen->nama }}
-            </p>
+                                    <p class="text-xs font-bold text-slate-400 uppercase">
+                                        {{ $k->dosen->nama }}
+                                    </p>
 
-            <div class="w-full h-1.5 bg-slate-100 rounded-full overflow-hidden mt-2">
-                <div
-                    class="h-full bg-blue-500 rounded-full"
-                    style="width: {{ $k->progress ?? 0 }}%"
-                >
-            </div>
-            </div>
-        </div>
-    </div>
-@endforeach
-</div>
+                                    <div class="w-full h-1.5 bg-slate-100 rounded-full overflow-hidden mt-2">
+                                        <div
+                                            class="h-full bg-blue-500 rounded-full"
+                                            style="width: {{ $k->progress ?? 0 }}%"
+                                        >
+                                        </div>
+                                    </div>
+                                </div>
+                            </div>
+                        @endforeach
                     </div>
                 </div>
             </div>
@@ -549,197 +553,213 @@
 
         <script src="https://unpkg.com/aos@2.3.1/dist/aos.js"></script>
 
-<script>
-/* ==========================================
-   DATA KELAS REAL-TIME DARI DATABASE
-========================================== */
-const kelasData = {!! json_encode(
-    $kelas->values()->map(function ($k, $i) {
-        return [
-            'nomor' => 11 + $i,
-            'nama'  => $k->mataKuliah->nama,
-            'url' => route('course.detail', ['kelas' => $k->id]),
-        ];
-    })->toArray()
-) !!};
+        <script>
+            /* ==========================================
+               DATA KELAS REAL-TIME DARI DATABASE
+            ========================================== */
+            const kelasData = {!! json_encode(
+                $kelas->values()->map(function ($k, $i) {
+                    return [
+                        'nomor' => 11 + $i,
+                        'nama'  => $k->mataKuliah->nama,
+                        'url' => route('course.detail', ['kelas' => $k->id]),
+                    ];
+                })->toArray()
+            ) !!};
 
-/* ==========================================
-   INIT ANIMASI
-========================================== */
-AOS.init({ once: true, easing: "ease-out-cubic" });
+            /* ==========================================
+               INIT ANIMASI
+            ========================================== */
+            AOS.init({ once: true, easing: "ease-out-cubic" });
 
-function toggleSidebar() {
-    document.getElementById("sidebar").classList.toggle("-translate-x-full");
-    document.getElementById("mobileBackdrop").classList.toggle("hidden");
-}
-
-/* ==========================================
-   VOICE ASSISTANT CORE
-========================================== */
-const statusDesc = document.getElementById("status-desc");
-const waveBars = document.querySelectorAll(".wave-bar");
-const synth = window.speechSynthesis;
-
-const SpeechRec =
-    window.webkitSpeechRecognition || window.SpeechRecognition;
-let rec = SpeechRec ? new SpeechRec() : null;
-
-if (rec) {
-    rec.lang = "id-ID";
-    rec.continuous = true;
-}
-
-function setWave(active) {
-    waveBars.forEach(bar => {
-        bar.style.height = active
-            ? `${Math.floor(Math.random() * 12) + 4}px`
-            : "4px";
-    });
-}
-
-let interval;
-
-/* ==========================================
-   FUNGSI BICARA
-========================================== */
-function bicara(teks, callback) {
-    synth.cancel();
-
-    const utter = new SpeechSynthesisUtterance(teks);
-    utter.lang = "id-ID";
-    utter.rate = parseFloat(localStorage.getItem("speechRate")) || 1.0;
-
-    utter.onstart = () => {
-        statusDesc.innerText = "BERBICARA...";
-        interval = setInterval(() => setWave(true), 150);
-    };
-
-    utter.onend = () => {
-        statusDesc.innerText = "MENDENGARKAN...";
-        clearInterval(interval);
-        setWave(false);
-        if (callback) callback();
-    };
-
-    synth.speak(utter);
-}
-
-/* ==========================================
-   NAVIGASI BERDASARKAN ANGKA
-========================================== */
-function navigasiKe(nomor) {
-    let tujuan = "";
-    let teks = "";
-
-    if (nomor === 1) {
-        tujuan = "{{ route('courses.index') }}";
-        teks = "Membuka Daftar Semua Mata Kuliah.";
-    } else if (nomor === 2) {
-        tujuan = "{{ route('courses.join') }}";
-        teks = "Membuka halaman Gabung Mata Kuliah.";
-    } else if (nomor === 3) {
-        tujuan = "{{ route('exams') }}";
-        teks = "Membuka Daftar Ujian.";
-    } else if (nomor === 4) {
-        tujuan = "{{ route('join.exam') }}";
-        teks = "Membuka halaman Gabung Ujian.";
-    } else if (nomor === 5) {
-        teks = "Anda sudah berada di Beranda.";
-    } else if (nomor === 6) {
-        tujuan = "{{ route('profile') }}";
-        teks = "Membuka Profil Saya.";
-    } else if (nomor === 7) {
-        tujuan = "{{ route('notifications') }}";
-        teks = "Membuka Pemberitahuan.";
-    } else if (nomor === 8) {
-        tujuan = "{{ route('messages') }}";
-        teks = "Membuka Pesan.";
-    } else if (nomor === 9) {
-        tujuan = "{{ route('help') }}";
-        teks = "Membuka Bantuan.";
-    } else if (nomor === 0) {
-        tujuan = "{{ route('logout') }}";
-        teks = "Keluar dari aplikasi. Sampai jumpa.";
-    } else {
-        const kelas = kelasData.find(k => k.nomor === nomor);
-        if (kelas) {
-            tujuan = kelas.url;
-            teks = "Membuka mata kuliah " + kelas.nama;
-        }
-    }
-
-    if (teks) {
-        bicara(teks);
-        if (tujuan) {
-            setTimeout(() => window.location.href = tujuan, 2000);
-        }
-    }
-}
-
-/* ==========================================
-   SPEECH RECOGNITION
-========================================== */
-function mulaiMendengar() {
-    if (!rec) return;
-
-    rec.start();
-
-    rec.onresult = (event) => {
-        const hasil = event.results[event.results.length - 1][0]
-            .transcript.toLowerCase().trim();
-
-        const angka = hasil.match(/\d+/);
-        if (angka) {
-            navigasiKe(parseInt(angka[0]));
-            return;
-        }
-
-        const mapKata = {
-            satu: 1, dua: 2, tiga: 3, empat: 4,
-            lima: 5, enam: 6, tujuh: 7,
-            delapan: 8, sembilan: 9, nol: 0
-        };
-
-        for (const kata in mapKata) {
-            if (hasil.includes(kata)) {
-                navigasiKe(mapKata[kata]);
-                return;
+            function toggleSidebar() {
+                document.getElementById("sidebar").classList.toggle("-translate-x-full");
+                document.getElementById("mobileBackdrop").classList.toggle("hidden");
             }
-        }
 
-        // Deteksi nama kelas langsung (DINAMIS)
-        kelasData.forEach(k => {
-            if (hasil.includes(k.nama.toLowerCase())) {
-                navigasiKe(k.nomor);
+            /* ==========================================
+               VOICE ASSISTANT CORE
+            ========================================== */
+            const statusDesc = document.getElementById("status-desc");
+            const waveBars = document.querySelectorAll(".wave-bar");
+            const synth = window.speechSynthesis;
+
+            const SpeechRec = window.webkitSpeechRecognition || window.SpeechRecognition;
+            let rec = SpeechRec ? new SpeechRec() : null;
+
+            if (rec) {
+                rec.lang = "id-ID";
+                rec.continuous = true;
             }
-        });
-    };
 
-    rec.onend = () => rec.start();
-}
+            function setWave(active) {
+                waveBars.forEach(bar => {
+                    bar.style.height = active ? `${Math.floor(Math.random() * 12) + 4}px` : "4px";
+                });
+            }
 
-/* ==========================================
-   AUTO START + ORIENTASI DINAMIS
-========================================== */
-window.onload = () => {
-    const daftarKelasVoice = kelasData
-        .map(k => `${k.nomor} untuk kelas ${k.nama}`)
-        .join(", ");
+            let interval;
 
-    const orientasi =
-        "Halo {{ $mahasiswa->nama }}, selamat datang di Dashboard Mahasiswa. " +
-        "Silakan sebutkan angka berikut: " +
-        "satu untuk Daftar Mata Kuliah, dua untuk Gabung Mata Kuliah, " +
-        "tiga untuk Daftar Ujian, empat untuk Gabung Ujian, " +
-        "enam untuk Profil Saya, tujuh untuk Pemberitahuan, " +
-        "delapan untuk Pesan, sembilan untuk Bantuan, " +
-        daftarKelasVoice +
-        ", dan nol untuk Keluar. Menu apa yang ingin Anda buka?";
+            /* ==========================================
+               FUNGSI BICARA
+            ========================================== */
+            function bicara(teks, callback) {
+                synth.cancel();
 
-    setTimeout(() => {
-        bicara(orientasi, mulaiMendengar);
-    }, 800);
-};
-</script>
+                const utter = new SpeechSynthesisUtterance(teks);
+                utter.lang = "id-ID";
+                utter.rate = parseFloat(localStorage.getItem("speechRate")) || 1.0;
+
+                utter.onstart = () => {
+                    if(statusDesc) statusDesc.innerText = "BERBICARA...";
+                    interval = setInterval(() => setWave(true), 150);
+                };
+
+                utter.onend = () => {
+                    if(statusDesc) statusDesc.innerText = "MENDENGARKAN...";
+                    clearInterval(interval);
+                    setWave(false);
+                    if (callback) callback();
+                };
+
+                synth.speak(utter);
+            }
+
+            /* ==========================================
+               FUNGSI MENDAPATKAN PANDUAN UTAMA
+            ========================================== */
+            function getPanduanUtama() {
+                const daftarKelasVoice = kelasData.map(k => `${k.nomor} untuk kelas ${k.nama}`).join(", ");
+                
+                // Mengambil nama depan saja untuk Voice
+                let namaPanggilanVoice = "{{ $namaPanggilan }}";
+
+                let orientasi = `Halo ${namaPanggilanVoice}, selamat datang di Dashboard Mahasiswa. Silakan sebutkan angka berikut: `;
+                orientasi += "Satu untuk Daftar Semua Mata Kuliah. Dua untuk Gabung Mata Kuliah. Tiga untuk Daftar Ujian. Empat untuk Gabung Ujian. ";
+                orientasi += "Enam untuk Profil Saya. Tujuh untuk Pemberitahuan. Delapan untuk Pesan Privat. Sembilan untuk Bantuan. ";
+                
+                if (kelasData.length > 0) {
+                    orientasi += "Untuk mengakses kelas yang sedang dipelajari, sebutkan: " + daftarKelasVoice + ". ";
+                } else {
+                    orientasi += "Saat ini Anda belum memiliki kelas yang sedang dipelajari. ";
+                }
+                
+                orientasi += "Nol untuk Keluar dari aplikasi. Katakan Ulang, jika Anda butuh bantuan panduan.";
+                return orientasi;
+            }
+
+            /* ==========================================
+               NAVIGASI BERDASARKAN ANGKA
+            ========================================== */
+            function navigasiKe(nomor) {
+                let tujuan = "";
+                let teks = "";
+
+                if (nomor === 1) {
+                    tujuan = "{{ route('courses.index') }}";
+                    teks = "Membuka Daftar Semua Mata Kuliah.";
+                } else if (nomor === 2) {
+                    tujuan = "{{ route('courses.join') }}";
+                    teks = "Membuka halaman Gabung Mata Kuliah.";
+                } else if (nomor === 3) {
+                    tujuan = "{{ route('exams') }}";
+                    teks = "Membuka Daftar Ujian.";
+                } else if (nomor === 4) {
+                    tujuan = "{{ route('join.exam') }}";
+                    teks = "Membuka halaman Gabung Ujian.";
+                } else if (nomor === 5) {
+                    teks = "Anda sudah berada di Beranda.";
+                } else if (nomor === 6) {
+                    tujuan = "{{ route('profile') }}";
+                    teks = "Membuka Profil Saya.";
+                } else if (nomor === 7) {
+                    tujuan = "{{ route('notifications') }}";
+                    teks = "Membuka Pemberitahuan.";
+                } else if (nomor === 8) {
+                    tujuan = "{{ route('messages') }}";
+                    teks = "Membuka Pesan.";
+                } else if (nomor === 9) {
+                    tujuan = "{{ route('help') }}";
+                    teks = "Membuka Bantuan.";
+                } else if (nomor === 0) {
+                    tujuan = "{{ route('logout') }}";
+                    teks = "Keluar dari aplikasi. Sampai jumpa.";
+                } else {
+                    const kelas = kelasData.find(k => k.nomor === nomor);
+                    if (kelas) {
+                        tujuan = kelas.url;
+                        teks = "Membuka mata kuliah " + kelas.nama;
+                    }
+                }
+
+                if (teks) {
+                    bicara(teks, () => {
+                        if (tujuan) window.location.href = tujuan;
+                        else { try { rec.start(); } catch(e) {} }
+                    });
+                }
+            }
+
+            /* ==========================================
+               SPEECH RECOGNITION
+            ========================================== */
+            function mulaiMendengar() {
+                if (!rec) return;
+
+                try {
+                    rec.start();
+                    rec.onresult = (event) => {
+                        const hasil = event.results[event.results.length - 1][0].transcript.toLowerCase().trim();
+
+                        // Fitur Ulangi / Panduan
+                        if (hasil.includes("ulang") || hasil.includes("panduan") || hasil.includes("bantuan")) {
+                            bicara(getPanduanUtama(), () => { mulaiMendengar(); });
+                            return;
+                        }
+
+                        const angka = hasil.match(/\d+/);
+                        if (angka) {
+                            navigasiKe(parseInt(angka[0]));
+                            return;
+                        }
+
+                        const mapKata = {
+                            satu: 1, dua: 2, tiga: 3, empat: 4,
+                            lima: 5, enam: 6, tujuh: 7,
+                            delapan: 8, sembilan: 9, nol: 0
+                        };
+
+                        for (const kata in mapKata) {
+                            if (hasil.includes(kata)) {
+                                navigasiKe(mapKata[kata]);
+                                return;
+                            }
+                        }
+
+                        // Deteksi nama kelas langsung (DINAMIS)
+                        kelasData.forEach(k => {
+                            if (hasil.includes(k.nama.toLowerCase())) {
+                                navigasiKe(k.nomor);
+                            }
+                        });
+                    };
+
+                    rec.onend = () => rec.start();
+                } catch (e) {
+                    console.error("Speech recognition error:", e);
+                }
+            }
+
+            /* ==========================================
+               AUTO START + ORIENTASI DINAMIS
+            ========================================== */
+            window.onload = () => {
+                document.body.addEventListener("click", () => {}, { once: true });
+                
+                setTimeout(() => {
+                    bicara(getPanduanUtama(), mulaiMendengar);
+                }, 800);
+            };
+        </script>
     </body>
 </html>

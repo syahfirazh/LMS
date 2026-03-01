@@ -68,7 +68,8 @@ class DosenMessageController extends Controller
             $request->validate([
                 'receiver_id' => 'required',
                 'body' => 'nullable|string',
-                'image' => 'nullable|image|max:2048',
+                // [PERBAIKAN] Mendukung semua format gambar dan ukuran hingga 5MB
+                'image' => 'nullable|file|mimes:jpg,jpeg,png,gif,webp,svg,bmp,heic,heif|max:5120',
                 'voice' => 'nullable|mimes:webm,mp3,wav,ogg|max:5120'
             ]);
 
@@ -106,12 +107,11 @@ class DosenMessageController extends Controller
 
             broadcast(new MessageSent($message))->toOthers();
 
-            // NOTIF KE MAHASISWA (Teks Sederhana & Penambahan mahasiswa_id)
             try {
                 Notification::create([
                     'user_id'      => $request->receiver_id,
                     'user_type'    => 'mahasiswa',
-                    'mahasiswa_id' => $request->receiver_id, // <--- Ini kunci agar datanya bisa terbaca oleh mahasiswa
+                    'mahasiswa_id' => $request->receiver_id,
                     'type'         => 'info',
                     'title'        => 'Pesan',
                     'message'      => 'Ada 1 pesan masuk.',

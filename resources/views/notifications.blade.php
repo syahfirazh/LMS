@@ -159,19 +159,6 @@
             </div>
         </main>
         
-        @php
-            $voiceText = '';
-            if ($unreadCount > 0) {
-                $voiceText .= "Halo, Anda memiliki {$unreadCount} pemberitahuan baru. ";
-                foreach ($notifications->take(3) as $notif) {
-                    $voiceText .= "Pemberitahuan: {$notif->title}. {$notif->message}. ";
-                }
-            } else {
-                $voiceText .= "Halo, saat ini tidak ada pemberitahuan baru.";
-            }
-            $voiceText .= " Silakan ucapkan angka lima untuk Beranda, enam untuk Profil, tujuh untuk Pemberitahuan, delapan untuk Pesan, sembilan untuk Bantuan, dan nol untuk Keluar.";
-        @endphp
-
         <script src="https://unpkg.com/aos@2.3.1/dist/aos.js"></script>
         <script>
             AOS.init({ once: true, easing: "ease-out-cubic" });
@@ -186,7 +173,6 @@
             const statusDesc = document.getElementById("status-desc");
             const waveBars = document.querySelectorAll(".wave-bar");
             const synth = window.speechSynthesis;
-
             const SpeechRec = window.webkitSpeechRecognition || window.SpeechRecognition;
             let rec = null;
 
@@ -195,7 +181,7 @@
                 rec.lang = "id-ID";
                 rec.continuous = true;
 
-                // PERBAIKAN 2: Cegah Infinite Loop Jika Mikrofon Diblokir
+                // Cegah Infinite Loop Jika Mikrofon Diblokir
                 rec.onerror = (event) => {
                     console.error("Mic Error:", event.error);
                     if (event.error === 'not-allowed' || event.error === 'service-not-allowed') {
@@ -238,7 +224,28 @@
                 synth.speak(utter);
             }
 
-            // PERBAIKAN 1: Pindah halaman SETELAH suara selesai bicara
+            function getPanduanUtama() {
+                const unreadCount = {{ $unreadCount ?? 0 }};
+                let teks = `Anda berada di halaman Pemberitahuan. `;
+
+                if (unreadCount > 0) {
+                    teks += `Anda memiliki ${unreadCount} pemberitahuan baru. `;
+                    @php $counter = 0; @endphp
+                    @foreach ($notifications->take(3) as $notif)
+                        @if($counter < 3)
+                            teks += "Pesan: {{ addslashes($notif->title) }}. {{ addslashes($notif->message) }}. ";
+                        @endif
+                        @php $counter++; @endphp
+                    @endforeach
+                } else {
+                    teks += `Saat ini tidak ada pemberitahuan baru. `;
+                }
+
+                teks += "Silakan ucapkan angka lima untuk Beranda, enam untuk Profil, tujuh tetap di Pemberitahuan, delapan untuk Pesan, sembilan untuk Bantuan, dan nol untuk Keluar. Katakan Ulang, jika butuh bantuan panduan lagi.";
+                
+                return teks;
+            }
+
             function navigasiKe(nomor) {
                 let tujuan = ""; let teks = "";
 
@@ -256,7 +263,7 @@
                             window.location.href = tujuan;
                         });
                     } else {
-                        bicara(teks); // Jika hanya info (seperti no 7)
+                        bicara(teks, () => { try { rec.start(); } catch(e){} }); // Jika hanya info (seperti no 7)
                     }
                 }
             }
@@ -267,6 +274,13 @@
                     rec.start();
                     rec.onresult = (event) => {
                         const hasil = event.results[event.results.length - 1][0].transcript.toLowerCase().trim();
+                        
+                        // Fitur Ulangi Panduan
+                        if(hasil.includes("ulang") || hasil.includes("panduan") || hasil.includes("bantuan")) {
+                            bicara(getPanduanUtama(), () => { mulaiMendengar(); });
+                            return;
+                        }
+
                         const angka = hasil.match(/\d+/);
 
                         if (angka) navigasiKe(parseInt(angka[0]));
@@ -287,21 +301,11 @@
                 }
             }
 
-            // PERBAIKAN 3: Memastikan suara terpicu (User wajib interaksi kalau diblokir Chrome)
             window.onload = () => {
-                const orientasi = @json($voiceText);
-                
-                // Coba bicara otomatis
+                document.body.addEventListener("click", () => {}, { once: true });
                 setTimeout(() => { 
-                    bicara(orientasi, () => { mulaiMendengar(); }); 
+                    bicara(getPanduanUtama(), () => { mulaiMendengar(); }); 
                 }, 800);
-
-                // Cadangan: Jika diblokir oleh browser autoplay policy, klik di mana saja untuk memutar
-                document.body.addEventListener("click", () => {
-                    if(synth.speaking === false && statusDesc.innerText === "Siap") {
-                        bicara(orientasi, () => { mulaiMendengar(); });
-                    }
-                }, { once: true });
             };
         </script>
     </body>

@@ -3,7 +3,7 @@
 <head>
     <meta charset="UTF-8" />
     <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no" />
-    <title>Ujian Online | LMS Inklusi UMMI</title>
+    <title>Daftar Ujian | LMS Inklusi UMMI</title>
     
     @vite(['resources/css/app.css', 'resources/js/app.js'])
     <link href="https://fonts.googleapis.com/css2?family=Plus+Jakarta+Sans:wght@400;500;600;700;800;900&display=swap" rel="stylesheet" />
@@ -79,7 +79,7 @@
             {{-- Pesan Sukses Ujian Selesai --}}
             @if(session('success'))
                 <div class="p-4 bg-emerald-50 border border-emerald-200 text-emerald-700 rounded-2xl font-bold text-sm safe-fade-in flex items-center gap-3 shadow-sm">
-                    <div class="p-1.5 bg-emerald-100 rounded-lg">
+                    <div class="p-1.5 bg-emerald-100 rounded-lg shrink-0">
                         <svg class="w-5 h-5 text-emerald-600" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2.5" d="M5 13l4 4L19 7"></path></svg>
                     </div>
                     {{ session('success') }}
@@ -123,7 +123,6 @@
                         @php
                             $voiceId = $index + 2; 
 
-                            // CEK APAKAH MAHASISWA INI SUDAH MENGERJAKAN?
                             $mahasiswaId = Auth::guard('mahasiswa')->id();
                             $userResult = \App\Models\ExamResult::where('exam_id', $exam->id)
                                             ->where('mahasiswa_id', $mahasiswaId)
@@ -160,10 +159,12 @@
                             // Card Styling
                             $cardClass = $isAktif 
                                 ? "bg-white border-blue-200 shadow-lg shadow-blue-100/50 cursor-pointer hover:-translate-y-1" 
-                                : ($sudahSelesai ? "bg-emerald-50/40 border-emerald-200 shadow-sm cursor-default" : "bg-slate-50 border-slate-200 shadow-sm cursor-not-allowed opacity-80");
+                                : ($sudahSelesai ? "bg-emerald-50/40 border-emerald-200 shadow-sm cursor-pointer hover:-translate-y-1" : "bg-slate-50 border-slate-200 shadow-sm cursor-not-allowed opacity-80");
+                            
+                            $badgeBg = $isAktif ? 'bg-slate-800 text-white' : ($sudahSelesai ? 'bg-emerald-600 text-white' : 'bg-slate-300 text-slate-500');
                         @endphp
 
-                        <div onclick="{{ $isAktif ? 'navigasiKe('.$voiceId.')' : '' }}" class="exam-card group p-5 rounded-[2rem] border-2 transition-all relative overflow-hidden flex flex-col lg:flex-row items-center gap-6 safe-fade-in {{ $cardClass }}" data-kategori="{{ $exam->kategori }}" style="animation-delay: 0.3s">
+                        <div onclick="navigasiKe({{ $voiceId }})" class="exam-card group p-5 rounded-[2rem] border-2 transition-all relative overflow-hidden flex flex-col lg:flex-row items-center gap-6 safe-fade-in {{ $cardClass }}" data-kategori="{{ $exam->kategori }}" style="animation-delay: 0.3s">
                             
                             @if($isAktif)
                                 <div class="absolute top-0 right-0 bg-blue-500 text-white text-[9px] font-black px-4 py-1 rounded-bl-xl uppercase tracking-widest animate-pulse shadow-sm">
@@ -178,11 +179,9 @@
 
                             {{-- Tanggal Box --}}
                             <div class="w-full lg:w-24 h-24 {{ $bgClass }} {{ $dateTextClass }} rounded-[1.5rem] flex flex-col items-center justify-center shrink-0 border {{ $borderClass }} relative">
-                                @if($isAktif)
-                                    <div class="absolute -top-3 -left-3 w-8 h-8 rounded-full bg-slate-800 text-white flex items-center justify-center font-black text-xs border-[3px] border-white shadow-sm z-10">
-                                        {{ $voiceId }}
-                                    </div>
-                                @endif
+                                <div class="absolute -top-3 -left-3 w-8 h-8 rounded-full {{ $badgeBg }} flex items-center justify-center font-black text-xs border-[3px] border-white shadow-sm z-10">
+                                    {{ $voiceId }}
+                                </div>
                                 <span class="text-[10px] font-black bg-white/60 px-2 py-0.5 rounded-md mb-1 shadow-sm mt-2">{{ $exam->kategori }}</span>
                                 <span class="text-3xl font-black leading-none">{{ \Carbon\Carbon::parse($exam->waktu_mulai)->format('d') }}</span>
                             </div>
@@ -292,13 +291,12 @@
         const examList = [
             @foreach($exams as $index => $ex)
                 @php 
-                    // Voice assistant juga perlu tahu kalau sudah dikerjakan
                     $userRes = \App\Models\ExamResult::where('exam_id', $ex->id)->where('mahasiswa_id', Auth::guard('mahasiswa')->id())->first();
                     $isSelesaiJS = $userRes && $userRes->status === 'selesai';
+                    $nilaiJS = $isSelesaiJS ? rtrim(rtrim(number_format($userRes->nilai, 2, '.', ''), '0'), '.') : '0';
 
                     $isPub = $ex->is_published ?? (isset($ex->status) ? $ex->status != 'draft' : true);
                     
-                    // Voice hanya aktif jika terbit, di dalam waktu, DAN belum selesai
                     $isActiveVoice = $isPub && (now() >= $ex->waktu_mulai && now() <= $ex->waktu_selesai) && !$isSelesaiJS; 
                     
                     $alasan = $isSelesaiJS ? "sudah berhasil Anda kerjakan" : "belum dibuka atau sudah berakhir";
@@ -306,8 +304,12 @@
                 {
                     id: {{ $ex->id }},
                     judul: "{{ addslashes($ex->judul) }}",
+                    kategori: "{{ addslashes($ex->kategori) }}",
+                    mataKuliah: "{{ addslashes($ex->kelas->mataKuliah->nama ?? 'Kelas') }}",
                     voiceId: {{ $index + 2 }},
                     isAktif: {{ $isActiveVoice ? 'true' : 'false' }},
+                    isSelesai: {{ $isSelesaiJS ? 'true' : 'false' }},
+                    nilai: "{{ $nilaiJS }}",
                     alasan: "{{ $alasan }}"
                 },
             @endforeach
@@ -354,6 +356,50 @@
             synth.speak(utter);
         }
 
+        // FUNGSI PANDUAN UTAMA
+        function getPanduanUtama(isInitial = false) {
+            let teks = "";
+            
+            if (isInitial && "{{ session('success') }}") {
+                teks += "Terima kasih telah mengikuti ujian. Jawaban Anda telah berhasil disimpan. ";
+            }
+
+            let totalUjian = {{ count($exams) }};
+            teks += "Anda berada di Halaman Daftar Ujian. ";
+            
+            if (totalUjian > 0) {
+                teks += "Sebutkan angka satu untuk memasukkan Token Ujian secara manual. ";
+                
+                let activeExams = examList.filter(e => e.isAktif);
+                let finishedExams = examList.filter(e => e.isSelesai);
+
+                if(activeExams.length > 0) {
+                    teks += "Terdapat ujian yang bisa Anda ikuti: ";
+                    activeExams.forEach(e => {
+                        // Penyebutan Jenis Ujian dengan lebih eksplisit
+                        teks += `Sebutkan angka ${e.voiceId} untuk mengikuti ${e.kategori} mata kuliah ${e.mataKuliah}, dengan judul ${e.judul}. `;
+                    });
+                } else {
+                    teks += "Saat ini tidak ada ujian yang sedang aktif untuk dikerjakan. ";
+                }
+
+                if(finishedExams.length > 0) {
+                    teks += "Berikut adalah ujian yang sudah Anda kerjakan: ";
+                    finishedExams.forEach(e => {
+                        // Penyebutan Jenis Ujian dengan lebih eksplisit
+                        teks += `${e.kategori} mata kuliah ${e.mataKuliah} dengan judul ${e.judul}, nilai Anda adalah ${e.nilai}. `;
+                    });
+                }
+                
+                teks += "Sebutkan nol untuk kembali ke dashboard utama.";
+            } else {
+                teks += "Saat ini belum ada ujian yang diterbitkan oleh dosen. Sebutkan angka satu untuk memasukkan Token Ujian manual, atau sebutkan nol untuk kembali ke dashboard.";
+            }
+            
+            teks += " Katakan Ulang, jika Anda butuh mendengarkan panduan ini lagi.";
+            return teks;
+        }
+
         function navigasiKe(nomor) {
             let tujuan = "";
             let teks = "";
@@ -369,9 +415,12 @@
                 
                 if (examTujuan) {
                     if (examTujuan.isAktif) {
-                        teks = `Membuka persiapan untuk ${examTujuan.judul}.`;
+                        teks = `Membuka persiapan untuk ujian ${examTujuan.kategori} mata kuliah ${examTujuan.mataKuliah}.`;
                         const baseUrl = "{{ route('exam.preparation', 'EXAM_ID') }}";
                         tujuan = baseUrl.replace('EXAM_ID', examTujuan.id);
+                    } else if (examTujuan.isSelesai) {
+                        tujuan = "#";
+                        teks = `Ujian ${examTujuan.judul} sudah Anda kerjakan dengan nilai ${examTujuan.nilai}.`;
                     } else {
                         tujuan = "#";
                         teks = `Maaf, ujian ${examTujuan.judul} ${examTujuan.alasan}.`;
@@ -402,6 +451,13 @@
                 rec.onresult = (event) => {
                     const hasil = event.results[event.results.length - 1][0].transcript.toLowerCase().trim();
                     
+                    // Fitur Ulangi / Panduan
+                    if (hasil.includes("ulang") || hasil.includes("panduan") || hasil.includes("bantuan")) {
+                        rec.stop();
+                        bicara(getPanduanUtama(false), () => { rec.start(); });
+                        return;
+                    }
+
                     const kataAngka = {
                         "nol": 0, "satu": 1, "dua": 2, "tiga": 3, "empat": 4, "lima": 5, 
                         "enam": 6, "tujuh": 7, "delapan": 8, "sembilan": 9, "sepuluh": 10
@@ -436,18 +492,10 @@
         }
 
         window.onload = () => {
-            let totalUjian = {{ count($exams) }};
-            let orientasi = "";
-
-            if (totalUjian > 0) {
-                orientasi = "Anda berada di Halaman Daftar Ujian. Sebutkan angka satu untuk memasukkan Token Ujian manual. Sebutkan angka dua ke atas untuk membuka ujian yang tersedia. Atau sebutkan nol untuk kembali ke dashboard.";
-            } else {
-                orientasi = "Anda berada di Halaman Daftar Ujian. Saat ini belum ada ujian yang tersedia. Sebutkan angka satu untuk memasukkan Token Ujian manual. Atau sebutkan nol untuk kembali.";
-            }
-            
             document.body.addEventListener("click", () => {}, { once: true });
             setTimeout(() => { 
-                bicara(orientasi, () => { 
+                // isInitial = true agar session success terbaca pertama kali
+                bicara(getPanduanUtama(true), () => { 
                     mulaiMendengar(); 
                 }); 
             }, 800);

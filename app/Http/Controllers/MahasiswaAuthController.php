@@ -32,7 +32,18 @@ class MahasiswaAuthController extends Controller
             ], 401);
         }
 
+        // Hapus sesi Dosen jika ada, sebelum Mahasiswa login
+        if (Auth::guard('dosen')->check()) {
+            Auth::guard('dosen')->logout();
+            $request->session()->invalidate();
+            $request->session()->regenerateToken();
+        }
+
+        // KITA KEMBALIKAN KE VERSI TANPA 'true' AGAR DATABASE TIDAK ERROR
         Auth::guard('mahasiswa')->login($mahasiswa);
+        
+        // Memaksa Laravel membuat Session ID baru
+        $request->session()->regenerate();
 
         return response()->json([
             'success' => true,

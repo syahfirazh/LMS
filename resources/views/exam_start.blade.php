@@ -1,5 +1,5 @@
 <!DOCTYPE html>
-<html lang="id">
+<html lang="id" class="h-full">
     <head>
         <meta charset="UTF-8" />
         <meta
@@ -77,8 +77,8 @@
                 <div
                     class="flex items-center gap-4 relative z-10 w-1/3 justify-start shrink-0"
                 >
-                    <button
-                        onclick="navigasiKe(0)"
+                    <a
+                        href="{{ route('exams') }}"
                         class="w-11 h-11 md:w-12 md:h-12 rounded-full bg-slate-100 hover:bg-blue-600 text-slate-500 hover:text-white flex items-center justify-center transition-all duration-300 shadow-sm shrink-0 group border border-slate-200 hover:border-blue-600 relative cursor-pointer active:scale-95"
                     >
                         <svg
@@ -98,10 +98,10 @@
                             class="absolute -bottom-1 -right-1 bg-slate-800 text-white text-[9px] font-black px-1.5 py-0.5 rounded-md border border-white"
                             >0</span
                         >
-                    </button>
-                    <div
-                        class="hidden md:block text-left cursor-pointer group shrink-0"
-                        onclick="navigasiKe(0)"
+                    </a>
+                    <a
+                        href="{{ route('exams') }}"
+                        class="hidden md:block text-left cursor-pointer group shrink-0 decoration-transparent"
                     >
                         <span
                             class="block text-[9px] font-bold text-slate-400 uppercase tracking-widest"
@@ -111,7 +111,7 @@
                             class="block text-xs font-black text-slate-700 group-hover:text-blue-600 transition-colors"
                             >0 - Kembali</span
                         >
-                    </div>
+                    </a>
                 </div>
 
                 <div
@@ -411,7 +411,7 @@
                 </div>
             </div>
 
-            {{-- BOX ACTION MULAI UJIAN (Disatukan ke body) --}}
+            {{-- BOX ACTION MULAI UJIAN --}}
             <div
                 class="bg-white p-6 md:p-8 rounded-[2rem] border border-slate-200 shadow-sm flex flex-col md:flex-row items-center justify-between gap-6"
             >
@@ -508,13 +508,22 @@
                 synth.speak(utter);
             }
 
+            function getPanduanUtama() {
+                const durasi = {{ $durasiMenit }};
+                let teks = `Halaman Persiapan Ujian. Waktu pengerjaan Anda adalah ${durasi} menit. `;
+                teks += "Sebutkan angka satu untuk mulai mengerjakan. Atau sebutkan angka nol untuk batal dan kembali. ";
+                teks += "Katakan Ulang, jika butuh mendengarkan panduan ini lagi.";
+
+                return teks;
+            }
+
             function navigasiKe(nomor) {
                 let tujuan = "";
                 let teks = "";
 
                 if (nomor === 0) {
-                    tujuan = "BACK";
-                    teks = "Membatalkan persiapan ujian. Kembali ke halaman sebelumnya.";
+                    tujuan = "{{ route('exams') }}";
+                    teks = "Membatalkan persiapan ujian. Kembali ke daftar ujian.";
                 } else if (nomor === 1) {
                     tujuan = "SUBMIT_FORM";
                     teks = "Ujian dimulai. Waktu terus berjalan, semoga berhasil.";
@@ -523,12 +532,8 @@
                 if (teks !== "") {
                     bicara(teks, () => {
                         setTimeout(() => {
-                            if (tujuan === "BACK") {
-                                window.history.back();
-                            } else if (tujuan === "SUBMIT_FORM") {
-                                document
-                                    .getElementById("form-mulai-ujian")
-                                    .submit();
+                            if (tujuan === "SUBMIT_FORM") {
+                                document.getElementById("form-mulai-ujian").submit();
                             } else if (tujuan !== "") {
                                 window.location.href = tujuan;
                             } else {
@@ -549,6 +554,12 @@
                         ][0].transcript
                             .toLowerCase()
                             .trim();
+
+                        if(hasil.includes("ulang") || hasil.includes("panduan") || hasil.includes("bantuan")) {
+                            rec.stop();
+                            bicara(getPanduanUtama(), () => { rec.start(); });
+                            return;
+                        }
 
                         if (
                             hasil.includes("satu") ||
@@ -575,16 +586,12 @@
             }
 
             window.onload = () => {
-                const durasi = {{ $durasiMenit }};
-                const orientasi =
-                    `Halaman Persiapan Ujian. Waktu pengerjaan Anda adalah ${durasi} menit. Sebutkan angka satu untuk mulai mengerjakan. Atau sebutkan nol untuk batal dan kembali.`;
-
                 document.body.addEventListener("click", () => {}, {
                     once: true,
                 });
 
                 setTimeout(() => {
-                    bicara(orientasi, () => {
+                    bicara(getPanduanUtama(), () => {
                         mulaiMendengar();
                     });
                 }, 800);

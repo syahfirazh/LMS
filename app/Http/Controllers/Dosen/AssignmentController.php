@@ -11,6 +11,7 @@ use App\Models\Submission;
 use Illuminate\Support\Facades\Auth;
 use Illuminate\Support\Facades\Log;
 use App\Models\Notification;
+use Barryvdh\DomPDF\Facade\Pdf;
 
 class AssignmentController extends Controller
 {
@@ -95,7 +96,7 @@ class AssignmentController extends Controller
             'status' => $request->action === 'publish' ? 'published' : 'draft',
         ]);
 
-        // MENGIRIM NOTIFIKASI SECARA AMAN (Menggantikan error notifyMahasiswa)
+        // MENGIRIM NOTIFIKASI SECARA AMAN
         try {
             $dosenNama      = $kelas->dosen->nama ?? 'Dosen';
             $mataKuliahNama = $kelas->mataKuliah->nama ?? 'Kelas';
@@ -226,4 +227,33 @@ class AssignmentController extends Controller
 
         return view('dosen_assignment_recap', compact('kelas', 'assignments'));
     }
+
+   public function exportPdf(\App\Models\Kelas $kelas)
+{
+    // Pastikan hanya dosen pengampu yang bisa cetak
+    if ($kelas->dosen_id !== auth('dosen')->id()) {
+        abort(403);
+    }
+
+    // Ambil data kelas beserta relasinya
+    $kelas->load(['mataKuliah', 'assignments', 'mahasiswa.submissions']);
+
+    // --- PERHATIKAN BAGIAN INI ---
+    // Kita harus mengirimkan variabel 'is_pdf' => true agar file Blade
+    // tahu bahwa ini sedang mencetak PDF, bukan menampilkan Web.
+    $data = [
+        'kelas'       => $kelas,
+        'assignments' => $kelas->assignments,
+        'is_pdf'      => true  // <--- INI KUNCI UTAMANYA BIAR RAPI!
+    ];
+
+    // Load view utama (karena kita pakai trik 1 file 2 wajah)
+    $pdf = Pdf::loadView('dosen_assignment_recap', $data)
+              ->setPaper('a4', 'landscape'); // Bikin kertasnya landscape/miring
+
+    $namaFile = 'Rekap_Tugas_' . str_replace(' ', '_', $kelas->kode_kelas) . '.pdf';
+
+    // Gunakan stream untuk preview di browser
+    return $pdf->stream($namaFile);
+}
 }

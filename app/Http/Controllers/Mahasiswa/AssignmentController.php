@@ -10,14 +10,32 @@ use App\Models\Submission;
 use App\Models\SubmissionMessage;
 use Illuminate\Support\Facades\Auth;
 use Illuminate\Support\Facades\Log;
+use Illuminate\Support\Facades\Storage; // Wajib ditambahkan untuk hapus file lama
 use App\Models\Notification;
 
 class AssignmentController extends Controller
 {
+    /**
+     * 🔒 [KEAMANAN: IDOR PROTECTION]
+     * Helper: Pastikan mahasiswa benar-benar terdaftar di kelas yang diakses
+     */
+    protected function cekAksesKelas($kelasId)
+    {
+        $mahasiswaId = Auth::guard('mahasiswa')->id();
+        $kelas = Kelas::findOrFail($kelasId);
+        
+        // Cek relasi di tabel pivot
+        if (!$kelas->mahasiswa()->where('mahasiswa_id', $mahasiswaId)->exists()) {
+            abort(403, 'Akses Ditolak: Anda bukan peserta kelas ini.');
+        }
+        
+        return $kelas;
+    }
+
     // 1. FUNGSI INDEX (MENAMPILKAN DAFTAR TUGAS)
     public function index($kelasId)
     {
-        $kelas = Kelas::findOrFail($kelasId);
+        $kelas = $this->cekAksesKelas($kelasId); // Gunakan helper keamanan
         $assignments = Assignment::where('kelas_id', $kelasId)->orderBy('deadline', 'asc')->get();
         
         // Ambil sesi pertama untuk kebutuhan layout sidebar (jika ada)
@@ -29,10 +47,10 @@ class AssignmentController extends Controller
     // 2. FUNGSI SHOW (MENAMPILKAN DETAIL TUGAS)
     public function show($kelasId, $assignmentId)
     {
-        $kelas = Kelas::findOrFail($kelasId);
+        $kelas = $this->cekAksesKelas($kelasId); // Gunakan helper keamanan
 
         $assignment = Assignment::where('kelas_id', $kelasId)
-        ->findOrFail($assignmentId);
+            ->findOrFail($assignmentId);
 
         $mahasiswaId = Auth::guard('mahasiswa')->id();
 
@@ -53,17 +71,40 @@ class AssignmentController extends Controller
         ));
     }
 
-    // 3. FUNGSI STORE (PENGUMPULAN TUGAS)
+    // 3. FUNGSI STORE (PENGUMPULAN & KIRIM ULANG TUGAS)
     public function store(Request $request, $kelasId, $assignmentId)
     {
+        $kelas = $this->cekAksesKelas($kelasId); // Gunakan helper keamanan
+
         /** @var \App\Models\Mahasiswa $mahasiswa */
         $mahasiswa = Auth::guard('mahasiswa')->user();
         
-        $submission = Submission::firstOrCreate([
-            'assignment_id' => $assignmentId,
-            'mahasiswa_id'  => $mahasiswa->id
-        ]);
+        // Cek apakah mahasiswa sudah pernah mengumpulkan tugas ini sebelumnya
+        $submission = Submission::where('assignment_id', $assignmentId)
+                                ->where('mahasiswa_id', $mahasiswa->id)
+                                ->first();
 
+        if ($submission) {
+            // [PERBAIKAN] Jika sedang "Kirim Ulang", hapus file & voice lama di server agar storage tidak bengkak
+            if ($submission->file_path && Storage::disk('public')->exists($submission->file_path)) {
+                Storage::disk('public')->delete($submission->file_path);
+            }
+            if ($submission->voice_submission && Storage::disk('public')->exists($submission->voice_submission)) {
+                Storage::disk('public')->delete($submission->voice_submission);
+            }
+
+            // Kosongkan data di database agar bersih sebelum ditimpa yang baru
+            $submission->file_path = null;
+            $submission->text_submission = null;
+            $submission->voice_submission = null;
+        } else {
+            // Jika baru pertama kali kumpul, buat data baru
+            $submission = new Submission();
+            $submission->assignment_id = $assignmentId;
+            $submission->mahasiswa_id = $mahasiswa->id;
+        }
+
+        // Masukkan data jawaban yang baru
         if ($request->hasFile('file')) {
             $submission->file_path = $request->file('file')->store('assignments/files', 'public');
         }
@@ -76,16 +117,15 @@ class AssignmentController extends Controller
 
         $submission->save();
 
-        // [BARU] NOTIFIKASI KE DOSEN SAAT MAHASISWA KUMPUL TUGAS
+        // Notifikasi ke Dosen
         try {
-            $kelas = Kelas::findOrFail($kelasId);
             if ($kelas->dosen_id) {
                 Notification::create([
                     'user_id'   => $kelas->dosen_id,
                     'user_type' => 'dosen',
                     'type'      => 'info',
-                    'title'     => 'Tugas Baru Dikumpulkan',
-                    'message'   => 'Mahasiswa <b>' . $mahasiswa->nama . '</b> telah mengumpulkan tugas.',
+                    'title'     => 'Tugas Terkumpul / Diperbarui',
+                    'message'   => 'Mahasiswa <b>' . $mahasiswa->nama . '</b> telah mengumpulkan/memperbarui jawaban tugasnya.',
                     'is_read'   => false,
                 ]);
             }
@@ -100,6 +140,8 @@ class AssignmentController extends Controller
     public function sendMessage(Request $request, $kelasId, $assignmentId)
     {
         try {
+            $kelas = $this->cekAksesKelas($kelasId); // Gunakan helper keamanan
+
             $request->validate([
                 'message' => 'nullable|string',
                 'image'   => 'nullable|image|max:2048',
@@ -129,9 +171,7 @@ class AssignmentController extends Controller
                 'voice'         => $pathVoice,
             ]);
 
-            // [BARU] NOTIFIKASI KE DOSEN SAAT MAHASISWA CHAT
             try {
-                $kelas = Kelas::findOrFail($kelasId);
                 if ($kelas->dosen_id) {
                     Notification::create([
                         'user_id'   => $kelas->dosen_id,
@@ -146,7 +186,6 @@ class AssignmentController extends Controller
                 Log::error("Gagal mengirim notif chat tugas: " . $e->getMessage());
             }
 
-            // [BARU] Ambil URL Foto Profil untuk ditampilkan di UI
             $fotoPath = $mahasiswa->foto_profil ?? $mahasiswa->foto ?? null;
             $avatarUrl = $fotoPath ? asset('storage/' . $fotoPath) : null;
 

@@ -59,7 +59,7 @@
                             <div class="wave-bar w-[2px] bg-blue-400 rounded-full h-1 transition-all"></div>
                             <div class="wave-bar w-[2px] bg-blue-600 rounded-full h-1 transition-all"></div>
                         </div>
-                        <span id="status-desc" class="hidden md:block text-[9px] font-black text-slate-400 uppercase tracking-widest">Siap</span>
+                        <span id="status-desc" class="hidden md:block text-[9px] font-black text-slate-400 uppercase tracking-widest w-20 text-left">Siap</span>
                     </div>
                 </div>
             </div>
@@ -69,23 +69,49 @@
                 @if(count($kelas) > 0)
                     @foreach ($kelas as $i => $item)
                     @php
-                        $nomor = $item['nomor']; // Ini diambil dari array Controller (1, 2, 3...)
-
-                        // mapping warna berdasarkan urutan
+                        $nomor = $item['nomor']; 
                         $themes = [
                             0 => ['blue', 'blue'],
                             1 => ['orange', 'orange'],
                             2 => ['indigo', 'indigo'],
                         ];
                         $theme = $themes[$i % 3];
+
+                        // ==========================================
+                        // LOGIKA PENYAMAAN PROGRES DENGAN HALAMAN DETAIL
+                        // ==========================================
+                        $persenProgres = $item['progress'] ?? 0; // Fallback lama
+                        
+                        try {
+                            $kelasModel = \App\Models\Kelas::find($item['id']);
+                            if ($kelasModel) {
+                                $sesiList = $kelasModel->courseSessions()->with(['materis', 'discussions'])->get();
+                                $totalSesi = $sesiList->count();
+                                $sesiSelesai = 0;
+                                
+                                if ($totalSesi > 0) {
+                                    foreach ($sesiList as $ss) {
+                                        $adaMateri = $ss->materis && $ss->materis->count() > 0;
+                                        $adaDiskusi = $ss->discussions && $ss->discussions->count() > 0;
+                                        
+                                        if ($adaMateri && $adaDiskusi) {
+                                            $sesiSelesai += 1; // 100% Selesai
+                                        } else {
+                                            $sesiSelesai += 0.5; // 50% Baru terbuka
+                                        }
+                                    }
+                                    $persenProgres = min(100, round(($sesiSelesai / $totalSesi) * 100));
+                                }
+                            }
+                        } catch (\Exception $e) {
+                            // Abaikan jika error model, tetap gunakan fallback dari controller
+                        }
                     @endphp
 
                     <div data-aos="fade-up" data-aos-duration="600" data-aos-delay="{{ $i * 100 }}" onclick="window.location.href='{{ route('course.detail', ['kelas' => $item['id']]) }}'" class="group relative bg-white rounded-[2rem] p-6 border border-slate-100 shadow-sm hover:shadow-xl hover:-translate-y-1 transition-all duration-300 cursor-pointer overflow-hidden flex flex-col sm:flex-row items-start sm:items-center gap-5">
                         
-                        {{-- STRIP KIRI KECIL --}}
                         <div class="absolute left-0 top-0 bottom-0 w-1.5 bg-{{ $theme[0] }}-500 group-hover:w-2 transition-all"></div>
 
-                        {{-- NOMOR --}}
                         <div class="flex w-full sm:w-auto items-center justify-between sm:justify-start">
                             <div class="w-14 h-14 sm:w-16 sm:h-16 rounded-2xl bg-{{ $theme[0] }}-50 text-{{ $theme[0] }}-600 flex items-center justify-center shrink-0 border border-{{ $theme[0] }}-100 group-hover:bg-{{ $theme[0] }}-600 group-hover:text-white transition-all shadow-inner">
                                 <span class="text-xl sm:text-2xl font-black tracking-tighter">
@@ -97,7 +123,6 @@
                             </span>
                         </div>
 
-                        {{-- INFO MATKUL --}}
                         <div class="flex-1 min-w-0 w-full sm:pl-2">
                             <div class="flex items-center gap-3 mb-1">
                                 <h2 class="text-lg sm:text-xl font-black text-slate-900 group-hover:text-{{ $theme[0] }}-700 transition-colors tracking-tight truncate">
@@ -114,25 +139,22 @@
                                 <span class="truncate">{{ Str::limit($item['deskripsi'], 60) }}</span>
                             </div>
 
-                            {{-- PROGRESS BELAJAR --}}
                             <div class="flex items-center gap-3 w-full max-w-sm">
-                                <div class="flex-1 h-2 bg-slate-100 rounded-full overflow-hidden">
-                                    <div class="h-full bg-{{ $theme[0] }}-500 rounded-full transition-all duration-1000" style="width: {{ $item['progress'] }}%"></div>
+                                <div class="flex-1 h-1.5 bg-slate-100 rounded-full overflow-hidden">
+                                    <div class="h-full bg-{{ $theme[0] }}-500 rounded-full transition-all duration-1000" style="width: {{ $persenProgres }}%"></div>
                                 </div>
                                 <span class="text-[10px] font-bold text-{{ $theme[0] }}-600 shrink-0">
-                                    {{ $item['progress'] }}% Selesai
+                                    {{ $persenProgres }}% Selesai
                                 </span>
                             </div>
                         </div>
 
-                        {{-- TOMBOL (DESKTOP) --}}
                         <button class="hidden sm:flex bg-slate-900 text-white px-8 py-4 rounded-xl font-black text-xs uppercase tracking-wider shadow-md group-hover:bg-{{ $theme[0] }}-600 transition-all pointer-events-none">
                             Masuk
                         </button>
                     </div>
                     @endforeach
                 @else
-                    {{-- TAMPILAN JIKA BELUM ADA KELAS SAMA SEKALI --}}
                     <div class="flex flex-col items-center justify-center py-20 text-center" data-aos="fade-up">
                         <div class="w-24 h-24 bg-slate-100 text-slate-300 rounded-full flex items-center justify-center mb-6">
                             <svg class="w-12 h-12" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 6.253v13m0-13C10.832 5.477 9.246 5 7.5 5S4.168 5.477 3 6.253v13C4.168 18.477 5.754 18 7.5 18s3.332.477 4.5 1.253m0-13C13.168 5.477 14.754 5 16.5 5c1.747 0 3.332.477 4.5 1.253v13C19.832 18.477 18.247 18 16.5 18c-1.746 0-3.332.477-4.5 1.253"></path></svg>
@@ -149,23 +171,18 @@
         <script src="https://unpkg.com/aos@2.3.1/dist/aos.js"></script>
 
         <script>
-            // INIT ANIMASI
             AOS.init({ once: true, easing: "ease-out-cubic" });
 
-            // Menyiapkan Data Kelas dari PHP ke format Array JavaScript
             const kelasList = [
                 @foreach($kelas as $k)
                     {
                         nomor: {{ $k['nomor'] }},
-                        nama: "{{ $k['nama'] }}",
+                        nama: "{{ addslashes($k['nama']) }}",
                         url: "{{ route('course.detail', ['kelas' => $k['id']]) }}"
                     },
                 @endforeach
             ];
 
-            // ==========================================
-            // LOGIKA VOICE ASSISTANT
-            // ==========================================
             const statusDesc = document.getElementById("status-desc");
             const waveBars = document.querySelectorAll(".wave-bar");
             const synth = window.speechSynthesis;
@@ -177,8 +194,6 @@
                 rec = new SpeechRec();
                 rec.lang = "id-ID";
                 rec.continuous = true;
-            } else {
-                console.warn("Browser tidak mendukung Web Speech API");
             }
 
             function setWave(active) {
@@ -195,7 +210,6 @@
                 const utter = new SpeechSynthesisUtterance(teks);
                 utter.lang = "id-ID";
 
-                // Ambil kecepatan suara dari pengaturan (jika ada)
                 const savedRate = localStorage.getItem("speechRate");
                 utter.rate = savedRate ? parseFloat(savedRate) : 1.0;
 
@@ -214,6 +228,25 @@
                 synth.speak(utter);
             }
 
+            // Fungsi Terpusat untuk Membuat Panduan Suara
+            function getPanduanSuara() {
+                let orientasi = "";
+                if (kelasList.length === 0) {
+                    orientasi = "Anda belum mendaftar di mata kuliah apapun. Silakan kembali ke menu utama dengan menyebutkan angka nol, lalu cari menu gabung kelas.";
+                } else {
+                    orientasi = `Daftar mata kuliah aktif. Anda memiliki ${kelasList.length} kelas. `;
+                    
+                    let maxRead = kelasList.length > 3 ? 3 : kelasList.length;
+                    for (let i = 0; i < maxRead; i++) {
+                        orientasi += `Sebutkan angka ${kelasList[i].nomor} untuk membuka kelas ${kelasList[i].nama}. `;
+                    }
+                    
+                    if(kelasList.length > 3) orientasi += "Dan seterusnya. ";
+                    orientasi += "Sebutkan angka nol untuk kembali ke dashboard utama. Katakan Ulang, jika Anda ingin mendengar panduan ini dari awal.";
+                }
+                return orientasi;
+            }
+
             function navigasiKe(nomor) {
                 let tujuan = "";
                 let teks = "";
@@ -222,7 +255,6 @@
                     tujuan = "{{ route('dashboard') }}";
                     teks = "Kembali ke Dashboard utama.";
                 } else {
-                    // Cari kelas berdasarkan nomor yang disebutkan
                     let kelasTujuan = kelasList.find(k => k.nomor === nomor);
                     if (kelasTujuan) {
                         tujuan = kelasTujuan.url;
@@ -233,10 +265,10 @@
                 }
 
                 if (teks !== "") {
-                    bicara(teks);
-                    setTimeout(() => {
+                    bicara(teks, () => {
                         if (tujuan !== "") window.location.href = tujuan;
-                    }, 1500);
+                        else { try { rec.start(); } catch(e) {} }
+                    });
                 }
             }
 
@@ -247,7 +279,12 @@
                     rec.onresult = (event) => {
                         const hasil = event.results[event.results.length - 1][0].transcript.toLowerCase().trim();
                         
-                        // Objek Konversi Kata ke Angka
+                        // Fitur Ulangi Panduan
+                        if(hasil.includes("ulang") || hasil.includes("panduan") || hasil.includes("bantuan") || hasil.includes("tolong")) {
+                            bicara(getPanduanSuara(), () => { mulaiMendengar(); });
+                            return;
+                        }
+
                         const kataAngka = {
                             "nol": 0, "satu": 1, "dua": 2, "tiga": 3, "empat": 4, "lima": 5, 
                             "enam": 6, "tujuh": 7, "delapan": 8, "sembilan": 9, "sepuluh": 10,
@@ -257,20 +294,14 @@
                         let terdeteksiAngka = null;
                         const regexAngka = hasil.match(/\d+/);
                         
-                        // Cek angka numerik (1, 2, 3)
                         if (regexAngka) {
                             terdeteksiAngka = parseInt(regexAngka[0]);
                         } else {
-                            // Cek angka huruf (satu, dua, tiga)
                             for (let kata in kataAngka) {
-                                if (hasil.includes(kata)) { 
-                                    terdeteksiAngka = kataAngka[kata]; 
-                                    break; 
-                                }
+                                if (hasil.includes(kata)) { terdeteksiAngka = kataAngka[kata]; break; }
                             }
                         }
 
-                        // Eksekusi Navigasi
                         if (terdeteksiAngka !== null) {
                             navigasiKe(terdeteksiAngka);
                         } else if (hasil.includes("kembali") || hasil.includes("beranda")) {
@@ -278,42 +309,18 @@
                         }
                     };
 
-                    rec.onend = () => {
-                        rec.start();
-                    };
+                    rec.onend = () => { rec.start(); };
                 } catch (e) {
                     console.error("Error recognition:", e);
                 }
             }
 
-            // AUTO-START KETIKA HALAMAN DIMUAT
             window.onload = () => {
-                let orientasi = "";
-                
-                // Jika kelas kosong
-                if (kelasList.length === 0) {
-                    orientasi = "Anda belum mendaftar di mata kuliah apapun. Silakan kembali ke menu utama dengan menyebutkan angka nol, lalu cari menu gabung kelas.";
-                } 
-                // Jika ada kelas
-                else {
-                    orientasi = `Daftar mata kuliah aktif. Anda memiliki ${kelasList.length} kelas. `;
-                    
-                    // Baca maksimal 3 kelas pertama agar tidak kelamaan
-                    let maxRead = kelasList.length > 3 ? 3 : kelasList.length;
-                    for (let i = 0; i < maxRead; i++) {
-                        orientasi += `Sebutkan angka ${kelasList[i].nomor} untuk membuka kelas ${kelasList[i].nama}. `;
-                    }
-                    
-                    if(kelasList.length > 3) orientasi += "Dan seterusnya. ";
-                    orientasi += "Sebutkan angka nol jika Anda ingin kembali ke halaman utama.";
-                }
-
+                let orientasi = getPanduanSuara();
                 document.body.addEventListener("click", () => {}, { once: true });
-
+                
                 setTimeout(() => {
-                    bicara(orientasi, () => {
-                        mulaiMendengar();
-                    });
+                    bicara(orientasi, () => { mulaiMendengar(); });
                 }, 800);
             };
         </script>

@@ -19,6 +19,9 @@
         />
 
         <style>
+            html {
+                scrollbar-gutter: stable;
+            }
             .custom-scrollbar::-webkit-scrollbar {
                 width: 5px;
             }
@@ -32,7 +35,7 @@
         </style>
     </head>
     <body
-        class="m-0 font-['Plus_Jakarta_Sans'] bg-[#f8fafc] min-h-screen flex flex-col lg:flex-row border-box text-slate-800 custom-scrollbar"
+        class="m-0 font-['Plus_Jakarta_Sans'] bg-[#f8fafc] min-h-screen text-slate-800"
     >
         <div
             id="mobileBackdrop"
@@ -42,9 +45,11 @@
 
         <aside
             id="sidebar"
-            class="fixed inset-y-0 left-0 z-50 w-80 bg-white border-r border-slate-200 flex flex-col h-screen transform -translate-x-full lg:translate-x-0 lg:static transition-transform duration-300 ease-in-out shrink-0"
+            class="fixed inset-y-0 left-0 z-50 w-80 bg-white border-r border-slate-200 flex flex-col h-screen transform -translate-x-full lg:translate-x-0 transition-transform duration-300 ease-in-out"
         >
-            <div class="p-8 border-b border-slate-100 flex items-center gap-4">
+            <div
+                class="p-8 border-b border-slate-100 flex items-center gap-4 shrink-0"
+            >
                 <img
                     src="{{ asset('images/logo-ummi.png') }}"
                     class="w-10 h-10 object-contain"
@@ -65,10 +70,10 @@
                 </div>
                 <button
                     onclick="toggleSidebar()"
-                    class="lg:hidden ml-auto text-slate-400 hover:text-slate-600 cursor-pointer"
+                    class="lg:hidden ml-auto text-slate-400 hover:text-slate-600 cursor-pointer p-2 bg-slate-50 rounded-lg"
                 >
                     <svg
-                        class="w-6 h-6"
+                        class="w-5 h-5"
                         fill="none"
                         stroke="currentColor"
                         viewBox="0 0 24 24"
@@ -220,7 +225,7 @@
                 </a>
             </nav>
 
-            <div class="p-6 border-t border-slate-100">
+            <div class="p-6 border-t border-slate-100 shrink-0">
                 <button
                     onclick="navigasiKe(0)"
                     class="w-full p-4 flex items-center justify-between text-red-600 font-bold bg-red-50 rounded-2xl hover:bg-red-100 transition-all border border-red-100 cursor-pointer"
@@ -250,18 +255,16 @@
         </aside>
 
         <main
-            class="flex-1 min-h-screen flex flex-col relative bg-slate-50 transition-all duration-300 custom-scrollbar"
+            class="flex-1 min-h-screen flex flex-col relative lg:ml-80 transition-all duration-300 custom-scrollbar"
         >
             <div
                 class="absolute top-0 left-0 w-full h-80 bg-gradient-to-b from-blue-50 to-transparent -z-10"
             ></div>
 
             <header
-                class="bg-white/80 backdrop-blur-xl border-b border-slate-200/60 px-8 py-6 sticky top-0 z-30 shrink-0"
+                class="bg-white/80 backdrop-blur-xl border-b border-slate-200/60 px-6 md:px-8 py-6 sticky top-0 z-30 shrink-0"
             >
-                <div
-                    class="max-w-7xl mx-auto flex items-center justify-between h-14 w-full"
-                >
+                <div class="w-full flex items-center justify-between h-14">
                     <div class="flex items-center gap-4">
                         <button
                             onclick="toggleSidebar()"
@@ -287,9 +290,7 @@
                             >
                                 Pusat Bantuan
                             </h2>
-                            <p
-                                class="text-xs font-bold text-slate-400 uppercase tracking-widest mt-1"
-                            >
+                            <p class="text-sm font-medium text-slate-500">
                                 Panduan Penggunaan
                             </p>
                         </div>
@@ -316,9 +317,6 @@
                                         d="M15 17h5l-1.405-1.405A2.032 2.032 0 0118 14.158V11a6.002 6.002 0 00-4-5.659V5a2 2 0 10-4 0v.341C7.67 6.165 6 8.388 6 11v3.159c0 .538-.214 1.055-.595 1.436L4 17h5m6 0v1a3 3 0 11-6 0v-1m6 0H9"
                                     ></path>
                                 </svg>
-                                <span
-                                    class="absolute top-2 right-2 w-2 h-2 bg-red-500 rounded-full border-2 border-white"
-                                ></span>
                             </button>
                             <button
                                 onclick="navigasiKe(9)"
@@ -339,6 +337,7 @@
                                 </svg>
                             </button>
                         </div>
+
                         <div class="hidden md:flex items-center gap-3 pl-4">
                             <div
                                 id="wave-container"
@@ -356,7 +355,7 @@
                             </div>
                             <span
                                 id="status-desc"
-                                class="text-[9px] font-black text-slate-400 uppercase tracking-widest"
+                                class="text-[9px] font-black text-slate-400 uppercase tracking-widest text-left w-20"
                                 >Siap</span
                             >
                         </div>
@@ -364,7 +363,7 @@
                 </div>
             </header>
 
-            <div class="p-6 lg:p-10 max-w-6xl mx-auto w-full space-y-8">
+            <div class="p-6 lg:p-10 w-full max-w-6xl space-y-8 shrink-0">
                 <div
                     data-aos="fade-up"
                     class="bg-gradient-to-br from-blue-600 to-indigo-700 rounded-[2.5rem] p-10 text-white shadow-xl shadow-blue-200 relative overflow-hidden"
@@ -455,7 +454,7 @@
                 </div>
 
                 <div
-                    class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6"
+                    class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6 pb-10"
                 >
                     <div
                         data-aos="fade-up"
@@ -519,7 +518,7 @@
                             class="text-sm text-slate-500 font-medium leading-relaxed"
                         >
                             Masuk ke menu Penugasan, pilih tugas aktif, lalu
-                            tekan tombol Upload File.
+                            ikuti instruksi yang diucapkan asisten suara.
                         </p>
                     </div>
 
@@ -552,7 +551,7 @@
                             class="text-sm text-slate-500 font-medium leading-relaxed"
                         >
                             Hubungi Admin UPT TIK di Gedung A Lantai 2 untuk
-                            reset password SIAK.
+                            mereset password SIAK Anda.
                         </p>
                     </div>
                 </div>
@@ -560,7 +559,7 @@
                 <div
                     data-aos="fade-up"
                     data-aos-delay="400"
-                    class="bg-white rounded-[2.5rem] p-8 border border-slate-100 flex flex-col md:flex-row items-center justify-between gap-6 shadow-sm"
+                    class="bg-white rounded-[2.5rem] p-8 border border-slate-100 flex flex-col md:flex-row items-center justify-between gap-6 shadow-sm mb-10"
                 >
                     <div class="flex items-center gap-6">
                         <div
@@ -659,6 +658,19 @@
                 synth.speak(utter);
             }
 
+            function getPanduanUtama() {
+                let teks =
+                    "Halo, ini adalah Pusat Bantuan. Anda dapat membaca panduan atau melihat solusi dari masalah umum. ";
+                teks +=
+                    "Silakan sebutkan angka berikut untuk memilih menu navigasi: ";
+                teks +=
+                    "Lima untuk Beranda. Enam untuk Profil Saya. Tujuh untuk Pemberitahuan. Delapan untuk Pesan. Sembilan untuk tetap di Bantuan. Nol untuk Keluar. ";
+                teks +=
+                    "Katakan Ulang, kapanpun Anda butuh mendengarkan panduan ini lagi.";
+
+                return teks;
+            }
+
             function navigasiKe(nomor) {
                 let tujuan = "";
                 let teks = "";
@@ -683,12 +695,17 @@
                 }
 
                 if (teks !== "") {
-                    bicara(teks);
-                    if (tujuan !== "" && tujuan !== "#") {
-                        setTimeout(() => {
-                            window.location.href = tujuan;
-                        }, 2000);
-                    }
+                    bicara(teks, () => {
+                        if (tujuan !== "" && tujuan !== "#") {
+                            setTimeout(() => {
+                                window.location.href = tujuan;
+                            }, 1500);
+                        } else {
+                            try {
+                                rec.start();
+                            } catch (e) {}
+                        }
+                    });
                 }
             }
 
@@ -702,6 +719,18 @@
                         ][0].transcript
                             .toLowerCase()
                             .trim();
+
+                        if (
+                            hasil.includes("ulang") ||
+                            hasil.includes("panduan") ||
+                            hasil.includes("bantuan")
+                        ) {
+                            bicara(getPanduanUtama(), () => {
+                                mulaiMendengar();
+                            });
+                            return;
+                        }
+
                         const angka = hasil.match(/\d+/);
 
                         if (angka) navigasiKe(parseInt(angka[0]));
@@ -725,14 +754,11 @@
                             hasil.includes("pesan")
                         )
                             navigasiKe(8);
-                        else if (
-                            hasil.includes("sembilan") ||
-                            hasil.includes("bantuan")
-                        )
-                            navigasiKe(9);
+                        else if (hasil.includes("sembilan")) navigasiKe(9);
                         else if (
                             hasil.includes("nol") ||
-                            hasil.includes("keluar")
+                            hasil.includes("keluar") ||
+                            hasil.includes("kembali")
                         )
                             navigasiKe(0);
                     };
@@ -746,14 +772,11 @@
             }
 
             window.onload = () => {
-                const orientasi =
-                    "Halo Ridwan, ini adalah Pusat Bantuan. Anda dapat membaca panduan atau melihat solusi dari masalah umum. Silakan sebutkan angka berikut untuk memilih menu di samping: lima untuk Beranda, enam untuk Profil, tujuh untuk Pemberitahuan, delapan untuk Pesan, dan nol untuk Keluar. Menu apa yang ingin Anda buka?";
-
                 document.body.addEventListener("click", () => {}, {
                     once: true,
                 });
                 setTimeout(() => {
-                    bicara(orientasi, () => {
+                    bicara(getPanduanUtama(), () => {
                         mulaiMendengar();
                     });
                 }, 800);

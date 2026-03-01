@@ -10,6 +10,8 @@ use Illuminate\Support\Facades\Auth;
 use Illuminate\Support\Facades\Log;
 use App\Models\Notification;
 use App\Models\DosenNotification;
+use Illuminate\Validation\ValidationException;
+use Throwable;
 
 class DiscussionController extends Controller
 {
@@ -28,7 +30,8 @@ class DiscussionController extends Controller
         try {
             $request->validate([
                 'message'     => 'nullable|string',
-                'image'       => 'nullable|image|max:2048',
+                'image'       => 'nullable|file|mimes:jpg,jpeg,png,gif,webp,svg,bmp,heic,heif|max:5120',
+                // [PERBAIKAN] Tambahkan 'webm' karena browser merekam audio dalam format webm
                 'voice'       => 'nullable|mimes:mp3,wav,ogg,webm|max:5120',
                 'sender_type' => 'nullable|string',
             ]);
@@ -37,16 +40,17 @@ class DiscussionController extends Controller
             $senderType = null;
             $requestedSender = $request->input('sender_type');
 
+            // [PERBAIKAN] Gunakan namespace model yang lengkap agar relasi MorphTo Laravel tidak bingung
             if ($requestedSender === 'mahasiswa' && Auth::guard('mahasiswa')->check()) {
                 $senderId = Auth::guard('mahasiswa')->id();
-                $senderType = 'mahasiswa';
+                $senderType = 'App\Models\Mahasiswa';
             } elseif ($requestedSender === 'dosen' && Auth::guard('dosen')->check()) {
                 $senderId = Auth::guard('dosen')->id();
-                $senderType = 'dosen';
+                $senderType = 'App\Models\Dosen';
             }
 
             if (!$senderId) {
-                return response()->json(['success' => false, 'error' => 'Sesi login tidak valid.'], 403);
+                return response()->json(['success' => false, 'error' => 'Sesi login tidak valid atau sudah kedaluwarsa. Silakan muat ulang halaman.'], 403);
             }
 
             $pathImage = $request->hasFile('image')
@@ -58,7 +62,7 @@ class DiscussionController extends Controller
                 : null;
 
             if (!$request->message && !$pathImage && !$pathVoice) {
-                return response()->json(['success' => false, 'error' => 'Konten pesan tidak boleh kosong.'], 422);
+                return response()->json(['success' => false, 'error' => 'Pesan diskusi tidak boleh kosong.'], 422);
             }
 
             $discussion = Discussion::create([
@@ -70,23 +74,23 @@ class DiscussionController extends Controller
                 'voice'       => $pathVoice,
             ]);
 
-            // NOTIFIKASI DISKUSI (Teks Sederhana)
             try {
                 $session = CourseSession::with('kelas')->findOrFail($sessionId);
                 $dosenId = $session->kelas->dosen_id ?? null;
 
-                if ($senderType === 'mahasiswa' && $dosenId) {
+                // Pastikan yang mengirim adalah mahasiswa sebelum memberi notif ke dosen
+                if ($senderType === 'App\Models\Mahasiswa' && $dosenId) {
                     DosenNotification::create([
                         'dosen_id'  => $dosenId,
                         'type'      => 'info',
-                        'title'     => 'Diskusi',
-                        'message'   => 'Ada 1 pesan diskusi.',
+                        'title'     => 'Diskusi Sesi',
+                        'message'   => 'Ada pesan masuk di ruang diskusi kelas.',
                         'url'       => route('dosen.course.session.detail', ['kelas' => $session->kelas_id, 'session' => $sessionId]),
                         'is_read'   => false,
                     ]);
                 }
             } catch (\Exception $notifError) {
-                Log::error('Gagal membuat notifikasi: ' . $notifError->getMessage());
+                Log::error('Gagal membuat notifikasi diskusi: ' . $notifError->getMessage());
             }
 
             $discussion->load('sender');
@@ -108,10 +112,18 @@ class DiscussionController extends Controller
                 ]
             ]);
 
-        } catch (\Exception $e) {
+        // Menangkap peringatan ukuran file/format
+        } catch (ValidationException $e) {
             return response()->json([
                 'success' => false, 
-                'error'   => 'System Error: ' . $e->getMessage()
+                'error'   => 'Format atau ukuran file tidak sesuai.'
+            ], 422);
+            
+        } catch (\Exception $e) {
+            Log::error('Error Simpan Diskusi: ' . $e->getMessage());
+            return response()->json([
+                'success' => false, 
+                'error'   => 'Terjadi kesalahan pada server. Coba lagi.'
             ], 500);
         }
     }

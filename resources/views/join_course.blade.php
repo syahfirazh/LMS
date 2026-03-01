@@ -43,7 +43,7 @@
         <main
             class="flex-1 flex flex-col h-screen overflow-y-auto custom-scrollbar relative"
         >
-            {{-- NAVBAR SEPERTI DAFTAR MATA KULIAH --}}
+            {{-- NAVBAR --}}
             <div
                 class="bg-white/90 backdrop-blur-2xl border-b border-slate-200/60 sticky top-0 z-40 px-4 md:px-8 py-4 shadow-sm transition-all w-full"
             >
@@ -283,6 +283,16 @@
                 synth.speak(utter);
             }
 
+            // FUNGSI PANDUAN UTAMA
+            function getPanduanUtama() {
+                let teks = "Halaman Gabung Kelas. ";
+                teks +=
+                    "Silakan sebutkan kode kelas Anda secara perlahan, huruf demi huruf. ";
+                teks +=
+                    "Atau sebutkan angka nol untuk kembali ke dashboard utama. Katakan Ulang, jika butuh bantuan panduan.";
+                return teks;
+            }
+
             function navigasiKe(nomor) {
                 let tujuan = "";
                 let teks = "";
@@ -331,7 +341,10 @@
                 let kode = transcript.replace(/\s+/g, "").toUpperCase();
 
                 // Hapus kata-kata perintah navigasi jika tidak sengaja terbawa
-                kode = kode.replace(/(SATU|DUA|NOL|KEMBALI|GABUNG|ULANG)/g, "");
+                kode = kode.replace(
+                    /(SATU|DUA|NOL|KEMBALI|GABUNG|ULANG|PANDUAN|BANTUAN)/g,
+                    "",
+                );
 
                 if (kode.length > 0) {
                     // Masukkan ke input teks
@@ -366,6 +379,19 @@
                         ][0].transcript
                             .toLowerCase()
                             .trim();
+
+                        // Fitur Ulangi / Panduan
+                        if (
+                            hasil.includes("ulang") ||
+                            hasil.includes("panduan") ||
+                            hasil.includes("bantuan")
+                        ) {
+                            rec.stop();
+                            bicara(getPanduanUtama(), () => {
+                                rec.start();
+                            });
+                            return;
+                        }
 
                         // JIKA SEDANG DALAM MODE KONFIRMASI (Sistem nunggu jawaban 1 atau 2)
                         if (isConfirming) {
@@ -406,7 +432,7 @@
                             ) {
                                 rec.stop();
                                 navigasiKe(0);
-                            } else if (hasil === "satu" || hasil === "ulang") {
+                            } else if (hasil === "satu") {
                                 rec.stop();
                                 navigasiKe(1);
                             } else if (hasil === "dua" || hasil === "gabung") {
@@ -429,15 +455,12 @@
             }
 
             window.onload = () => {
-                const orientasi =
-                    "Halaman Gabung Kelas. Silakan sebutkan kode kelas Anda secara perlahan. Atau sebutkan nol untuk kembali.";
-
                 document.body.addEventListener("click", () => {}, {
                     once: true,
                 });
 
                 setTimeout(() => {
-                    bicara(orientasi, () => {
+                    bicara(getPanduanUtama(), () => {
                         mulaiMendengar();
                     });
                 }, 800);

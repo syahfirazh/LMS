@@ -81,7 +81,7 @@
                         Reset
                     </button>
                     <button type="submit" class="flex-1 lg:flex-none px-4 sm:px-8 py-3 sm:py-3.5 bg-blue-600 text-white rounded-xl font-black text-[10px] sm:text-[11px] uppercase tracking-widest hover:bg-blue-700 hover:-translate-y-0.5 transition-all shadow-lg shadow-blue-200">
-                        Simpan ({{ $mahasiswa->count() }})
+                        Simpan 
                     </button>
                 </div>
             </div>

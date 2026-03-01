@@ -7,6 +7,7 @@
             content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no"
         />
         <title>Mengerjakan Ujian | LMS Inklusi UMMI</title>
+
         @vite(['resources/css/app.css', 'resources/js/app.js'])
         <link
             href="https://fonts.googleapis.com/css2?family=Plus+Jakarta+Sans:wght@400;500;600;700;800;900&display=swap"
@@ -14,26 +15,9 @@
         />
 
         <style>
-            html,
-            body {
-                height: 100%;
-                overflow: hidden;
+            html {
+                scroll-behavior: smooth;
             }
-            body {
-                display: flex;
-                flex-direction: column;
-                background-color: #f8fafc;
-            }
-
-            .scrollbar-hide::-webkit-scrollbar {
-                display: none;
-            }
-            .scrollbar-hide {
-                -ms-overflow-style: none;
-                scrollbar-width: none;
-            }
-
-            /* Custom Scrollbar untuk area soal */
             .custom-scrollbar::-webkit-scrollbar {
                 width: 5px;
                 height: 5px;
@@ -46,6 +30,22 @@
                 border-radius: 20px;
             }
 
+            @keyframes fadeIn {
+                from {
+                    opacity: 0;
+                    transform: translateY(10px);
+                }
+                to {
+                    opacity: 1;
+                    transform: translateY(0);
+                }
+            }
+            .safe-fade-in {
+                animation: fadeIn 0.6s ease-out forwards;
+                opacity: 0;
+            }
+
+            /* Voice Wave Animation */
             @keyframes wave-bounce {
                 0%,
                 100% {
@@ -70,9 +70,9 @@
                 box-shadow: 0 10px 15px -3px rgba(37, 99, 235, 0.3);
             }
             .nav-btn.answered:not(.active) {
-                background-color: #ecfdf5;
-                color: #059669;
-                border-color: #34d399;
+                background-color: #eff6ff; /* Biru sangat muda */
+                color: #2563eb;
+                border-color: #93c5fd;
             }
 
             .option-item {
@@ -84,9 +84,27 @@
         </style>
     </head>
     <body
-        class="font-['Plus_Jakarta_Sans'] text-slate-800 border-box selection:bg-blue-200 relative custom-scrollbar"
+        class="m-0 font-['Plus_Jakarta_Sans'] bg-[#f8fafc] text-slate-800 border-box selection:bg-blue-200 relative custom-scrollbar flex flex-col h-screen overflow-hidden"
     >
-        {{-- NAVBAR BARU (Mengikuti Persiapan Ujian) --}}
+        @php $mulai = \Carbon\Carbon::parse($exam->waktu_mulai); $selesai =
+        \Carbon\Carbon::parse($exam->waktu_selesai); $durasiMenit =
+        $mulai->diffInMinutes($selesai); $jumlahSoal = $exam->questions ?
+        $exam->questions->count() : 0; $namaDosen = $exam->kelas->dosen->nama ??
+        $exam->dosen->nama ?? 'Dosen Pengampu'; @endphp
+
+        {{-- BACKGROUND DEKORASI --}}
+        <div
+            class="fixed top-0 left-0 w-full h-full overflow-hidden -z-10 pointer-events-none"
+        >
+            <div
+                class="absolute top-[-10%] right-[-5%] w-[400px] h-[400px] bg-blue-100/40 rounded-full blur-3xl opacity-50"
+            ></div>
+            <div
+                class="absolute bottom-[-10%] left-[-10%] w-[400px] h-[400px] bg-indigo-50/40 rounded-full blur-3xl opacity-50"
+            ></div>
+        </div>
+
+        {{-- NAVBAR BARU --}}
         <header
             class="bg-white/90 backdrop-blur-2xl border-b border-slate-200/60 sticky top-0 z-40 px-4 md:px-8 py-4 shadow-sm w-full shrink-0"
         >
@@ -134,7 +152,7 @@
                     </div>
                 </div>
 
-                {{-- Tengah: Judul & Timer (Absolute Center) --}}
+                {{-- Tengah: Judul & Timer --}}
                 <div
                     class="text-center absolute left-1/2 transform -translate-x-1/2 w-1/3 z-0 pointer-events-none flex flex-col items-center justify-center"
                 >
@@ -176,7 +194,7 @@
                     </div>
                 </div>
 
-                {{-- Kanan: Animasi Wave --}}
+                {{-- Kanan: Indikator Voice --}}
                 <div
                     class="flex items-center justify-end gap-3 relative z-10 w-1/3 shrink-0"
                 >
@@ -203,11 +221,10 @@
             </div>
         </header>
 
-        {{-- AREA UTAMA (FULL LEBAR) --}}
+        {{-- AREA UTAMA --}}
         <main class="flex-1 flex overflow-hidden w-full relative">
             {{-- AREA KIRI: Konten Soal + Footer Navigasi --}}
             <div class="flex-1 flex flex-col h-full bg-slate-50/50 relative">
-                {{-- Scrollable Konten Soal --}}
                 <div
                     class="flex-1 overflow-y-auto custom-scrollbar p-4 md:p-8 lg:p-12"
                 >
@@ -268,9 +285,9 @@
                     </div>
                 </div>
 
-                {{-- FOOTER NAV (Fixed di bawah area soal saja) --}}
+                {{-- FOOTER NAV (Fixed di bawah area soal) --}}
                 <footer
-                    class="bg-white/90 backdrop-blur-md border-t border-slate-200 p-4 shrink-0 shadow-[0_-4px_20px_rgba(0,0,0,0.02)]"
+                    class="bg-white/90 backdrop-blur-md border-t border-slate-200 p-4 shrink-0 shadow-[0_-4px_20px_rgba(0,0,0,0.02)] z-30"
                 >
                     <div
                         class="w-full max-w-5xl mx-auto flex items-center justify-between gap-4"
@@ -278,18 +295,14 @@
                         <button
                             onclick="navPrev()"
                             id="btnPrev"
-                            class="flex-1 md:flex-none px-8 py-4 bg-slate-100 text-slate-600 rounded-2xl font-black text-[10px] uppercase tracking-widest hover:bg-slate-200 transition-all disabled:opacity-40 disabled:cursor-not-allowed"
+                            class="flex-1 md:flex-none px-8 py-4 bg-slate-100 text-slate-600 rounded-2xl font-black text-[10px] uppercase tracking-widest hover:bg-slate-200 transition-all disabled:opacity-40 disabled:cursor-not-allowed active:scale-95"
                         >
                             Sebelumnya
                         </button>
 
                         <button
-                            onclick="
-                                document
-                                    .getElementById('mobileNavOverlay')
-                                    .classList.remove('hidden')
-                            "
-                            class="lg:hidden p-4 bg-blue-50 text-blue-600 rounded-2xl border border-blue-100"
+                            onclick="openMobileNav()"
+                            class="lg:hidden p-4 bg-blue-50 text-blue-600 rounded-2xl border border-blue-100 hover:bg-blue-100 transition-colors active:scale-95 relative"
                         >
                             <svg
                                 class="w-6 h-6"
@@ -301,7 +314,7 @@
                                     stroke-linecap="round"
                                     stroke-linejoin="round"
                                     stroke-width="2"
-                                    d="M4 6h16M4 12h16m-7 6h7"
+                                    d="M4 6a2 2 0 012-2h2a2 2 0 012 2v2a2 2 0 01-2 2H6a2 2 0 01-2-2V6zM14 6a2 2 0 012-2h2a2 2 0 012 2v2a2 2 0 01-2 2h-2a2 2 0 01-2-2V6zM4 16a2 2 0 012-2h2a2 2 0 012 2v2a2 2 0 01-2 2H6a2 2 0 01-2-2v-2zM14 16a2 2 0 012-2h2a2 2 0 012 2v2a2 2 0 01-2 2h-2a2 2 0 01-2-2v-2z"
                                 ></path>
                             </svg>
                         </button>
@@ -317,7 +330,7 @@
                 </footer>
             </div>
 
-            {{-- AREA KANAN: Peta Soal FULL MENTOK KANAN --}}
+            {{-- AREA KANAN: Peta Soal FULL MENTOK KANAN (Desktop) --}}
             <aside
                 class="hidden lg:flex w-[340px] xl:w-[380px] flex-col h-full bg-white border-l border-slate-200 shadow-[-10px_0_30px_rgba(0,0,0,0.03)] shrink-0 z-10"
             >
@@ -341,7 +354,7 @@
                             class="flex items-center gap-2 text-[10px] font-bold text-slate-400 uppercase tracking-wider"
                         >
                             <span
-                                class="w-3 h-3 rounded-full bg-emerald-500 shadow-sm"
+                                class="w-3 h-3 rounded-full bg-blue-500 shadow-sm"
                             ></span>
                             Terjawab
                         </div>
@@ -375,41 +388,71 @@
             </aside>
         </main>
 
-        {{-- MODAL MOBILE NAV --}}
-        <div
-            id="mobileNavOverlay"
-            class="fixed inset-0 z-[100] bg-white hidden flex flex-col"
-        >
+        {{-- MODAL MOBILE NAV (MODERN BOTTOM SHEET) --}}
+        <div id="mobileNavOverlay" class="fixed inset-0 z-[100] hidden">
             <div
-                class="p-6 border-b flex justify-between items-center bg-slate-50"
-            >
-                <h3 class="font-black uppercase tracking-widest">Peta Soal</h3>
-                <button
-                    onclick="
-                        document
-                            .getElementById('mobileNavOverlay')
-                            .classList.add('hidden')
-                    "
-                    class="w-10 h-10 bg-white border border-slate-200 rounded-full flex items-center justify-center font-bold shadow-sm"
-                >
-                    ✕
-                </button>
-            </div>
+                class="absolute inset-0 bg-slate-900/40 backdrop-blur-sm transition-opacity opacity-0 duration-300"
+                id="mobileNavBackdrop"
+                onclick="closeMobileNav()"
+            ></div>
+
             <div
-                class="flex-1 overflow-y-auto p-6 bg-slate-50/50 custom-scrollbar"
+                id="mobileNavContent"
+                class="absolute bottom-0 left-0 w-full bg-white rounded-t-[2rem] shadow-[0_-10px_40px_rgba(0,0,0,0.1)] transform translate-y-full transition-transform duration-300 ease-out flex flex-col max-h-[85vh]"
             >
                 <div
-                    id="gridNavigasiMobile"
-                    class="grid grid-cols-5 sm:grid-cols-6 gap-3"
-                ></div>
-            </div>
-            <div class="p-6 border-t bg-white">
-                <button
-                    onclick="konfirmasiSelesai()"
-                    class="w-full py-4 bg-slate-900 text-white rounded-2xl font-black text-[11px] uppercase tracking-[0.2em] shadow-lg"
+                    class="pt-4 pb-2 flex flex-col items-center border-b border-slate-100 shrink-0 bg-white rounded-t-[2rem]"
                 >
-                    Kumpulkan Ujian
-                </button>
+                    <div
+                        class="w-12 h-1.5 bg-slate-200 rounded-full mb-4"
+                    ></div>
+                    <div
+                        class="w-full px-6 flex justify-between items-center mb-2"
+                    >
+                        <div>
+                            <h3
+                                class="font-black text-slate-900 uppercase tracking-widest text-sm"
+                            >
+                                Peta Soal
+                            </h3>
+                            <p
+                                class="text-[10px] text-slate-400 font-bold mt-1"
+                            >
+                                <span
+                                    class="text-blue-600"
+                                    id="lblTerjawabMobile"
+                                    >0</span
+                                >
+                                Terjawab /
+                                {{ count($exam->questions ?? []) }} Total
+                            </p>
+                        </div>
+                        <button
+                            onclick="closeMobileNav()"
+                            class="w-8 h-8 bg-slate-100 text-slate-500 rounded-full flex items-center justify-center font-bold hover:bg-slate-200 transition-colors active:scale-95"
+                        >
+                            ✕
+                        </button>
+                    </div>
+                </div>
+
+                <div
+                    class="flex-1 overflow-y-auto p-6 custom-scrollbar bg-slate-50/50"
+                >
+                    <div
+                        id="gridNavigasiMobile"
+                        class="grid grid-cols-5 sm:grid-cols-6 gap-3"
+                    ></div>
+                </div>
+
+                <div class="p-6 bg-white border-t border-slate-100 shrink-0">
+                    <button
+                        onclick="konfirmasiSelesai()"
+                        class="w-full py-4 bg-slate-900 text-white rounded-2xl font-black text-[11px] uppercase tracking-[0.2em] shadow-lg hover:bg-blue-600 transition-colors active:scale-95"
+                    >
+                        Kumpulkan Ujian
+                    </button>
+                </div>
             </div>
         </div>
 
@@ -449,12 +492,41 @@
                 renderNavigasi();
                 muatSoal(0);
                 mulaiTimer();
+
+                document.body.addEventListener("click", () => {}, { once: true });
+
                 setTimeout(() => {
                     document.getElementById('loader').classList.add('opacity-0');
                     setTimeout(() => document.getElementById('loader').classList.add('hidden'), 500);
                     bacaSoalAktif();
                 }, 800);
             };
+
+            /* --- FUNGSI MODAL BOTTOM SHEET MOBILE --- */
+            function openMobileNav() {
+                const overlay = document.getElementById('mobileNavOverlay');
+                const backdrop = document.getElementById('mobileNavBackdrop');
+                const content = document.getElementById('mobileNavContent');
+
+                overlay.classList.remove('hidden');
+                // Sedikit delay agar class transisi membaca display block
+                setTimeout(() => {
+                    backdrop.classList.remove('opacity-0');
+                    content.classList.remove('translate-y-full');
+                }, 10);
+            }
+
+            function closeMobileNav() {
+                const backdrop = document.getElementById('mobileNavBackdrop');
+                const content = document.getElementById('mobileNavContent');
+
+                backdrop.classList.add('opacity-0');
+                content.classList.add('translate-y-full');
+
+                setTimeout(() => {
+                    document.getElementById('mobileNavOverlay').classList.add('hidden');
+                }, 300); // durasi sama dengan CSS transition duration
+            }
 
             function renderNavigasi() {
                 const gridDesktop = document.getElementById('gridNavigasi');
@@ -478,7 +550,9 @@
 
                 if(gridDesktop) gridDesktop.innerHTML = html;
                 if(gridMobile) gridMobile.innerHTML = html;
+
                 document.getElementById('lblTerjawab').innerText = countTerjawab;
+                document.getElementById('lblTerjawabMobile').innerText = countTerjawab;
             }
 
             function muatSoal(index) {
@@ -536,14 +610,6 @@
                 renderNavigasi();
             }
 
-            function pilihJawaban(optId, idx) {
-                answers[questions[currentIndex].id] = optId;
-                muatSoal(currentIndex);
-                const feedback = "Anda memilih " + ['A', 'B', 'C', 'D', 'E'][idx];
-                if (currentIndex < questions.length - 1) bicara(feedback + ". Lanjut.", navNext);
-                else bicara(feedback + ". Ini soal terakhir.", mulaiMendengar);
-            }
-
             // --- Logika Suara ---
             function setWave(active) {
                 if (waveBars.length > 0) {
@@ -573,7 +639,7 @@
                 utter.onend = () => {
                     if (statusDesc) {
                         statusDesc.innerText = "MENDENGARKAN...";
-                        statusDesc.className = "hidden md:block text-[9px] font-black text-emerald-600 uppercase tracking-widest w-20 text-left animate-pulse";
+                        statusDesc.className = "hidden md:block text-[9px] font-black text-blue-600 uppercase tracking-widest w-20 text-left animate-pulse";
                     }
                     clearInterval(waveInterval);
                     setWave(false);
@@ -582,48 +648,109 @@
                 synth.speak(utter);
             }
 
-            function bacaSoalAktif() {
+            function bacaSoalAktif(isUlang = false) {
                 const q = questions[currentIndex];
                 let t = `Soal nomor ${currentIndex+1}. ${q.teks_soal}. `;
+
                 if(q.tipe === 'PG') {
                     q.options.forEach((o, i) => t += `Pilihan ${['A','B','C','D','E'][i]}, ${o.teks_opsi}. `);
-                    t += "Sebutkan huruf pilihan Anda.";
+                    t += "Sebutkan huruf pilihan jawaban Anda.";
                 } else {
-                    t += "Ini adalah soal esai. Ketik jawaban Anda, lalu bilang lanjut.";
+                    t += "Ini adalah soal esai. Silakan ketik jawaban Anda di kolom yang tersedia, lalu bilang lanjut.";
                 }
+
+                if (isUlang) {
+                    t += " Anda bisa bilang Lanjut ke soal berikutnya, Kembali ke soal sebelumnya, atau Kumpulkan untuk mengakhiri.";
+                } else {
+                    t += " Katakan Ulang, jika Anda ingin soal ini dibacakan lagi.";
+                }
+
                 bicara(t, mulaiMendengar);
             }
 
             function mulaiMendengar() {
                 if(!SpeechRec) return;
                 if(rec) rec.stop();
+
                 rec = new SpeechRec();
                 rec.lang = 'id-ID';
+
                 rec.onresult = (e) => {
-                    const msg = e.results[0][0].transcript.toLowerCase();
-                    if(msg.includes("lanjut")) navNext();
-                    else if(msg.includes("kembali") && !msg.includes("nol")) navPrev();
-                    else if(msg.includes("ulangi")) bacaSoalAktif();
-                    else if(msg.includes("kumpulkan")) konfirmasiSelesai();
-                    else if(msg.includes("nol")) navigasiKe(0);
+                    const msg = e.results[0][0].transcript.toLowerCase().trim();
+
+                    if(msg.includes("ulang") || msg.includes("panduan") || msg.includes("bantuan")) {
+                        rec.stop();
+                        bacaSoalAktif(true);
+                        return;
+                    }
+
+                    if(msg.includes("lanjut") || msg.includes("selanjutnya")) { rec.stop(); navNext(); }
+                    else if(msg.includes("kembali") && !msg.includes("nol")) { rec.stop(); navPrev(); }
+                    else if(msg.includes("kumpulkan") || msg.includes("selesai")) { rec.stop(); konfirmasiSelesai(); }
+                    else if(msg.includes("nol") || msg.includes("batal")) { rec.stop(); navigasiKe(0); }
                     else if(questions[currentIndex].tipe === 'PG') {
-                        const letters = ['a','b','c','d','e'];
-                        for(let i=0; i<letters.length; i++) {
-                            if(msg.includes(letters[i])) {
-                                if(questions[currentIndex].options[i]) {
-                                    pilihJawaban(questions[currentIndex].options[i].id, i);
-                                    return;
-                                }
-                            }
-                        }
+                        // Deteksi spesifik untuk pilihan A B C D E
+                        const isA = msg === 'a' || msg.endsWith(' a') || msg.includes('pilih a') || msg.includes('jawaban a') || msg === 'ah';
+                        const isB = msg === 'b' || msg === 'be' || msg.endsWith(' b') || msg.includes('pilih b') || msg.includes('jawaban b');
+                        const isC = msg === 'c' || msg === 'ce' || msg.endsWith(' c') || msg.includes('pilih c') || msg.includes('jawaban c');
+                        const isD = msg === 'd' || msg === 'de' || msg.endsWith(' d') || msg.includes('pilih d') || msg.includes('jawaban d');
+                        const isE = msg === 'e' || msg === 'eh' || msg.endsWith(' e') || msg.includes('pilih e') || msg.includes('jawaban e');
+
+                        if (isA && questions[currentIndex].options[0]) { rec.stop(); pilihJawaban(questions[currentIndex].options[0].id, 0); }
+                        else if (isB && questions[currentIndex].options[1]) { rec.stop(); pilihJawaban(questions[currentIndex].options[1].id, 1); }
+                        else if (isC && questions[currentIndex].options[2]) { rec.stop(); pilihJawaban(questions[currentIndex].options[2].id, 2); }
+                        else if (isD && questions[currentIndex].options[3]) { rec.stop(); pilihJawaban(questions[currentIndex].options[3].id, 3); }
+                        else if (isE && questions[currentIndex].options[4]) { rec.stop(); pilihJawaban(questions[currentIndex].options[4].id, 4); }
                     }
                 };
+
+                rec.onend = () => { rec.start(); };
                 rec.start();
             }
 
-            function navNext() { if(currentIndex < questions.length - 1) muatSoal(currentIndex + 1); }
-            function navPrev() { if(currentIndex > 0) muatSoal(currentIndex - 1); }
-            function pindahSoalManual(i) { synth.cancel(); muatSoal(i); if(isVoiceActive) setTimeout(bacaSoalAktif, 300); }
+            function pilihJawaban(optId, idx) {
+                answers[questions[currentIndex].id] = optId;
+                muatSoal(currentIndex); // Update UI
+
+                const feedback = "Anda memilih jawaban " + ['A', 'B', 'C', 'D', 'E'][idx];
+
+                if (currentIndex < questions.length - 1) {
+                    bicara(feedback + ". Melanjutkan ke soal berikutnya.", () => {
+                        navNext();
+                    });
+                } else {
+                    bicara(feedback + ". Ini adalah soal terakhir. Katakan kumpulkan untuk menyelesaikan ujian.", mulaiMendengar);
+                }
+            }
+
+            function navNext() {
+                if(currentIndex < questions.length - 1) {
+                    synth.cancel();
+                    closeMobileNav(); // Tutup modal nav mobile jika terbuka
+                    muatSoal(currentIndex + 1);
+                    if(isVoiceActive) setTimeout(() => bacaSoalAktif(), 300);
+                } else {
+                    bicara("Ini sudah soal terakhir. Katakan kumpulkan untuk mengakhiri ujian.", mulaiMendengar);
+                }
+            }
+
+            function navPrev() {
+                if(currentIndex > 0) {
+                    synth.cancel();
+                    closeMobileNav(); // Tutup modal nav mobile jika terbuka
+                    muatSoal(currentIndex - 1);
+                    if(isVoiceActive) setTimeout(() => bacaSoalAktif(), 300);
+                } else {
+                    bicara("Ini sudah soal pertama.", mulaiMendengar);
+                }
+            }
+
+            function pindahSoalManual(i) {
+                synth.cancel();
+                closeMobileNav();
+                muatSoal(i);
+                if(isVoiceActive) setTimeout(bacaSoalAktif, 300);
+            }
 
             function mulaiTimer() {
                 const timerContainer = document.querySelector('.bg-red-50');
@@ -645,9 +772,12 @@
             function konfirmasiSelesai() {
                 synth.cancel();
                 if(confirm("Apakah Anda yakin ingin mengumpulkan ujian? Pastikan semua soal telah terjawab.")) submitUjian();
+                else bicara("Pengumpulan dibatalkan. Silakan lanjutkan.", mulaiMendengar);
             }
 
             function submitUjian() {
+                isVoiceActive = false; // matikan suara
+                if(rec) rec.stop();
                 document.getElementById('loader').classList.remove('hidden');
                 setTimeout(() => { document.getElementById('loader').classList.remove('opacity-0'); }, 10);
                 document.querySelector('#loader span').innerText = "Mengirim Jawaban...";
@@ -657,11 +787,13 @@
             }
 
             function navigasiKe(v) {
-                if(v===0) {
+                if(v === 0) {
                     synth.cancel();
-                    bicara("Membatalkan ujian. Jawaban Anda tidak disimpan. Kembali ke halaman sebelumnya.", () => {
-                        setTimeout(() => { window.location.href="/exams"; }, 500);
-                    });
+                    if(confirm("Yakin ingin keluar ujian? Jawaban Anda mungkin tidak tersimpan jika belum di kumpulkan.")){
+                        bicara("Membatalkan ujian. Kembali ke halaman sebelumnya.", () => {
+                            setTimeout(() => { window.location.href="/exams"; }, 500);
+                        });
+                    }
                 }
             }
         </script>

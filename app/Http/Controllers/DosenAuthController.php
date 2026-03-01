@@ -14,12 +14,17 @@ class DosenAuthController extends Controller
     // =======================================================
     public function login(Request $request)
     {
-        // Ubah 'nidn' di frontend kamu menjadi name="login_id" (atau sesuaikan)
         $loginId = $request->input('login_id'); 
         $password = $request->input('password');
 
-        // Cek apakah yang diketik user adalah format email, kalau bukan anggap itu NIDN
         $fieldType = filter_var($loginId, FILTER_VALIDATE_EMAIL) ? 'email' : 'nidn';
+
+        // [KEAMANAN] Hapus sesi Mahasiswa jika ada, sebelum Dosen login
+        if (Auth::guard('mahasiswa')->check()) {
+            Auth::guard('mahasiswa')->logout();
+            $request->session()->invalidate();
+            $request->session()->regenerateToken();
+        }
 
         if (Auth::guard('dosen')->attempt([$fieldType => $loginId, 'password' => $password])) {
             $request->session()->regenerate();
@@ -47,25 +52,28 @@ class DosenAuthController extends Controller
     // =======================================================
     // 3. PROSES DATA BALIKAN DARI GOOGLE
     // =======================================================
-    public function handleGoogleCallback()
+    public function handleGoogleCallback(Request $request)
     {
         try {
             $googleUser = Socialite::driver('google')->user();
             
-            // Cari Dosen berdasarkan email Google yang diklik
             $dosen = Dosen::where('email', $googleUser->getEmail())->first();
 
             if ($dosen) {
-                // Update google_id jika sebelumnya kosong
                 if (!$dosen->google_id) {
                     $dosen->update(['google_id' => $googleUser->getId()]);
                 }
                 
-                // Login sebagai dosen
+                // [KEAMANAN] Pastikan sesi mahasiswa terhapus saat login Google
+                if (Auth::guard('mahasiswa')->check()) {
+                    Auth::guard('mahasiswa')->logout();
+                    $request->session()->invalidate();
+                    $request->session()->regenerateToken();
+                }
+
                 Auth::guard('dosen')->login($dosen);
                 return redirect()->route('dosen.dashboard');
             } else {
-                // Jika email tidak terdaftar di database dosen
                 return redirect()->route('login.dosen')->with('error', 'Email tidak terdaftar sebagai Dosen. Hubungi Admin.');
             }
         } catch (\Exception $e) {

@@ -58,11 +58,23 @@ Route::get('/login', function () { return view('login'); })->name('login');
 Route::post('/login-process', [AuthController::class, 'loginMahasiswa'])->name('login.post');
 Route::post('/login/mahasiswa', [MahasiswaAuthController::class, 'login'])->name('login.mahasiswa.post');
 
+// [PERBAIKAN LOGOUT] Smart Logout
 Route::get('/logout', function () {
+    // Cek jika yang logout adalah Dosen
+    if (Auth::guard('dosen')->check()) {
+        Auth::guard('dosen')->logout();
+        request()->session()->invalidate();
+        request()->session()->regenerateToken();
+        // Redirect ke Login Dosen
+        return redirect()->route('login.dosen');
+    }
+
+    // Jika yang logout adalah Mahasiswa
     Auth::guard('mahasiswa')->logout();
     request()->session()->invalidate();
     request()->session()->regenerateToken();
-    return redirect()->route('login');
+    // Redirect ke Setup Voice
+    return redirect()->route('setup.voice');
 })->name('logout');
 
 // --- Auth Dosen ---
@@ -146,7 +158,6 @@ Route::middleware('auth:mahasiswa')->group(function () {
     });
 
     // --- Diskusi Sesi (Hanya Mahasiswa) ---
-    // [PERBAIKAN] Mengubah nama rute diskusi agar tidak bentrok dengan rute diskusi Dosen
     Route::post('/discussion/{session}', [DiscussionController::class, 'store'])->name('mahasiswa.discussion.store'); 
     
     Route::get('/student/chat/{conversation}/messages', [DiscussionController::class,'messages']);
@@ -221,7 +232,6 @@ Route::prefix('dosen')->middleware('auth:dosen')->group(function () {
         Route::post('/session/{id}/diskusi', 'storeDiskusi')->name('session.diskusi.store');
     });
 
-    // [PERBAIKAN]: Nama rute diskusi dosen diubah agar tidak bentrok dengan mahasiswa
     Route::post('/discussion-dosen/{session}', [DiscussionController::class, 'store'])->name('dosen.discussion.store');
     Route::get('/session/{id}', [SessionController::class, 'show'])->name('session.show');
     
@@ -280,7 +290,6 @@ Route::prefix('dosen')->middleware('auth:dosen')->group(function () {
         Route::put('/kelas/{kelas}/rekap-nilai/edit/{mahasiswa}', 'update')->name('dosen.grades.update');
         Route::post('/kelas/{kelas}/grades/settings', 'updateSettings')->name('dosen.grades.settings.update');
         Route::post('/kelas/{kelas}/input-nilai/import', 'importExcel')->name('dosen.grades.import');
-        // Rute Export Excel Nilai Akhir
         Route::get('/kelas/{kelas}/rekap-nilai/export', 'exportExcel')->name('dosen.grades.export');
     });
 
@@ -295,7 +304,6 @@ Route::prefix('dosen')->middleware('auth:dosen')->group(function () {
         Route::get('/ujian/{exam}/hasil', 'results')->name('dosen.exams.results');
         Route::post('/ujian/{exam}/stop', 'stop')->name('dosen.exams.stop');
         Route::delete('/ujian/{exam}', 'destroy')->name('dosen.exams.destroy');
-        // Rute Export Excel Hasil Ujian
         Route::get('/ujian/{exam}/hasil/export', 'exportHasil')->name('dosen.exams.results.export');
     });
 

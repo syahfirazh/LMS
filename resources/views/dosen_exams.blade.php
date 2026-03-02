@@ -346,8 +346,8 @@
 
     {{-- MODAL FORM BUAT DRAFT UJIAN --}}
     <div id="modalExam" class="fixed inset-0 z-50 hidden bg-slate-900/50 backdrop-blur-sm items-center justify-center p-4 transition-opacity">
-        <div class="bg-white rounded-[2rem] w-full max-w-lg shadow-2xl overflow-hidden animate-pop relative max-h-[90vh] flex flex-col border border-slate-100">
-            <div class="p-6 border-b border-slate-100 flex justify-between items-center bg-slate-50 shrink-0">
+        <div class="bg-white rounded-[2rem] w-full max-w-4xl shadow-2xl overflow-hidden animate-pop relative max-h-[90vh] flex flex-col border border-slate-100">
+            <div class="p-6 md:px-8 border-b border-slate-100 flex justify-between items-center bg-slate-50 shrink-0">
                 <div>
                     <h3 class="font-black text-slate-900 text-xl leading-tight">Buat Draft Ujian</h3>
                     <p class="text-[10px] font-bold text-slate-500 mt-1.5 uppercase tracking-wider">Ujian tidak akan diterbitkan sebelum soal lengkap</p>
@@ -355,9 +355,15 @@
                 <button type="button" onclick="closeModalExam()" class="text-slate-400 hover:text-red-500 transition-colors p-2.5 bg-white rounded-xl shadow-sm border border-slate-200 hover:border-red-200"><svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M6 18L18 6M6 6l12 12"></path></svg></button>
             </div>
             
-            <form action="{{ route('dosen.exams.store') }}" method="POST" class="overflow-y-auto custom-scrollbar p-6">
+            <form action="{{ route('dosen.exams.store') }}" method="POST" class="overflow-y-auto custom-scrollbar p-6 md:px-8">
                 @csrf
-                <div class="space-y-5">
+                <div class="grid grid-cols-1 md:grid-cols-2 gap-6">
+                    
+                    <div class="md:col-span-2">
+                        <label class="block text-[10px] font-black text-slate-500 uppercase tracking-widest mb-2">Judul Ujian</label>
+                        <input type="text" name="judul" required placeholder="Contoh: UTS Pemrograman Web" class="w-full bg-slate-50 border border-slate-200 rounded-xl p-3.5 font-bold text-slate-800 text-sm focus:ring-2 focus:ring-blue-500 outline-none hover:border-blue-300 transition-colors shadow-sm placeholder:text-slate-400 placeholder:font-medium">
+                    </div>
+
                     <div>
                         <label class="block text-[10px] font-black text-slate-500 uppercase tracking-widest mb-2">Mata Kuliah / Kelas</label>
                         <select name="kelas_id" required class="w-full bg-slate-50 border border-slate-200 rounded-xl p-3.5 font-bold text-slate-800 text-sm focus:ring-2 focus:ring-blue-500 outline-none cursor-pointer hover:border-blue-300 transition-colors shadow-sm">
@@ -366,11 +372,6 @@
                                 <option value="{{ $kls->id }}">{{ $kls->mataKuliah->nama ?? 'Kelas' }} ({{ $kls->kode_kelas }})</option>
                             @endforeach
                         </select>
-                    </div>
-                    
-                    <div>
-                        <label class="block text-[10px] font-black text-slate-500 uppercase tracking-widest mb-2">Judul Ujian</label>
-                        <input type="text" name="judul" required placeholder="Contoh: UTS Pemrograman Web" class="w-full bg-slate-50 border border-slate-200 rounded-xl p-3.5 font-bold text-slate-800 text-sm focus:ring-2 focus:ring-blue-500 outline-none hover:border-blue-300 transition-colors shadow-sm placeholder:text-slate-400 placeholder:font-medium">
                     </div>
 
                     <div>
@@ -382,18 +383,16 @@
                         </select>
                     </div>
 
-                    <div class="grid grid-cols-2 gap-4">
-                        <div>
-                            <label class="block text-[10px] font-black text-slate-500 uppercase tracking-widest mb-2">Waktu Mulai</label>
-                            <input type="datetime-local" name="waktu_mulai" required class="w-full bg-slate-50 border border-slate-200 rounded-xl p-3.5 font-bold text-slate-800 text-xs focus:ring-2 focus:ring-blue-500 outline-none cursor-text hover:border-blue-300 transition-colors shadow-sm">
+                    <div>
+                        <label class="block text-[10px] font-black text-slate-500 uppercase tracking-widest mb-2">Waktu Mulai</label>
+                        <input type="datetime-local" name="waktu_mulai" required class="w-full bg-slate-50 border border-slate-200 rounded-xl p-3.5 font-bold text-slate-800 text-sm focus:ring-2 focus:ring-blue-500 outline-none cursor-text hover:border-blue-300 transition-colors shadow-sm">
                         </div>
                         <div>
                             <label class="block text-[10px] font-black text-slate-500 uppercase tracking-widest mb-2">Waktu Selesai</label>
-                            <input type="datetime-local" name="waktu_selesai" required class="w-full bg-slate-50 border border-slate-200 rounded-xl p-3.5 font-bold text-slate-800 text-xs focus:ring-2 focus:ring-blue-500 outline-none cursor-text hover:border-blue-300 transition-colors shadow-sm">
-                        </div>
+                            <input type="datetime-local" name="waktu_selesai" required class="w-full bg-slate-50 border border-slate-200 rounded-xl p-3.5 font-bold text-slate-800 text-sm focus:ring-2 focus:ring-blue-500 outline-none cursor-text hover:border-blue-300 transition-colors shadow-sm">
                     </div>
 
-                    <div>
+                    <div class="md:col-span-2">
                         <label class="block text-[10px] font-black text-slate-500 uppercase tracking-widest mb-2 flex items-center justify-between">
                             Token Ujian
                             <span class="text-blue-500 normal-case tracking-normal bg-blue-50 px-2 py-0.5 rounded-md font-bold text-[9px]">otomatis / manual</span>
@@ -402,9 +401,9 @@
                     </div>
                 </div>
 
-                <div class="mt-8 flex gap-3">
-                    <button type="button" onclick="closeModalExam()" class="flex-1 px-4 py-3.5 bg-white border border-slate-200 text-slate-600 font-bold rounded-xl hover:bg-slate-50 transition-colors text-sm shadow-sm">Batal</button>
-                    <button type="submit" class="flex-1 px-4 py-3.5 bg-blue-600 text-white font-bold rounded-xl hover:bg-blue-700 transition-all shadow-md shadow-blue-200 text-sm flex items-center justify-center gap-2">
+                <div class="mt-8 flex flex-col md:flex-row gap-3 md:justify-end">
+                    <button type="button" onclick="closeModalExam()" class="w-full md:w-auto px-6 py-3.5 bg-white border border-slate-200 text-slate-600 font-bold rounded-xl hover:bg-slate-50 transition-colors text-sm shadow-sm">Batal</button>
+                    <button type="submit" class="w-full md:w-auto px-6 py-3.5 bg-blue-600 text-white font-bold rounded-xl hover:bg-blue-700 transition-all shadow-md shadow-blue-200 text-sm flex items-center justify-center gap-2">
                         <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2.5" d="M8 7H5a2 2 0 00-2 2v9a2 2 0 002 2h14a2 2 0 002-2V9a2 2 0 00-2-2h-3m-1 4l-3 3m0 0l-3-3m3 3V4"></path></svg>
                         Simpan Draft
                     </button>

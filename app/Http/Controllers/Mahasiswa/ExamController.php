@@ -75,7 +75,7 @@ class ExamController extends Controller
         $exam = Exam::with('questions.options')->findOrFail($id);
         
         // Memanggil file UI Blade
-        return view('mahasiswa_exam_play', compact('exam'));
+        return view('exam_play', compact('exam'));
     }
 
     // 7. [REVISI] Memproses pengumpulan jawaban dari Mahasiswa
